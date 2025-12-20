@@ -40,8 +40,7 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      "react-native-bottom-tabs"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

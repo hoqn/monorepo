@@ -1,35 +1,31 @@
 
 import React from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Tabs } from '@/components/bottom-tabs';
+
+import { Badge, Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: () => ({  sfSymbol: 'house.fill' })
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: () => ({ sfSymbol: 'paperplane' }),
-        }}
-      />
-    </Tabs>
+    <NativeTabs>
+      <NativeTabs.Trigger name='index'>
+        <Label>홈</Label>
+        <Icon sf={{ default: "house", selected: "house.fill" }} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name='explore'>
+        <Label>지도</Label>
+        <Icon sf={{ default: "map", selected: "map.fill" }} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name='notification'>
+        <Label>알림</Label>
+        <Icon sf={{ default: "bell", selected: "bell.fill" }} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name='search' role="search">
+        <Label>검색</Label>
+        <Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }
