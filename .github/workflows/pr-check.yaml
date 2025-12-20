@@ -1,0 +1,50 @@
+name: PR Check
+
+on:
+  pull_request:
+
+jobs:
+  install-dependencies:
+    name: 🏗️ Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout
+      - uses: actions/setup-node
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup
+        with:
+          run_install: false
+      - name: 캐싱
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - uses: actions/cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+      - run: pnpm install --frozen-lockfile
+
+  lint:
+    name: 📝 Lint
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout
+      - uses: actions/setup-node
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup
+
+  typecheck:
+    name: 🔍 Typecheck
+    runs-on: ubuntu-latest
+    needs: install-dependencies
+    steps:
+      - uses: actions/checkout
+      - uses: actions/setup-node
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup
+        with:
+          run_install: false
