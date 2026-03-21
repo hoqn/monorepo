@@ -1,0 +1,114 @@
+.page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  gap: 12px;
+  text-align: center;
+}
+
+.illustArea {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.desc {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.recoveryBadge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+/* 풀스크린 광고 */
+.adFullscreen {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.adText {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+}
+
+.adSkip {
+  padding: 10px 24px;
+  background-color: var(--color-bg);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* 하단 버튼 영역 */
+.footer {
+  padding: 12px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.primaryButton {
+  width: 100%;
+  padding: 16px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.primaryButton:active {
+  transform: scale(0.97);
+}
+
+.ghostButton {
+  width: 100%;
+  padding: 14px;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}

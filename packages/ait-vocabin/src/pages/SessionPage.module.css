@@ -1,0 +1,340 @@
+.page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+  overflow: hidden;
+}
+
+/* 상단 헤더 */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px 12px;
+}
+
+.closeButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.closeButton:active {
+  transform: scale(0.88);
+}
+
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  background-color: var(--color-progress-track);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hearts {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.heart {
+  font-size: 18px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  line-height: 1;
+}
+
+.heartLost {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+/* 단어 카드 영역 */
+.cardArea {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.wordCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wordCard.correct {
+  animation: cardPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  border: 2px solid var(--color-correct);
+}
+
+.wordCard.incorrect {
+  animation: cardShake 0.4s ease forwards;
+  border: 2px solid var(--color-incorrect);
+}
+
+@keyframes cardPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04) translateY(-4px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+@keyframes cardShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+.wordText {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -1px;
+  text-align: center;
+}
+
+.wordMeaning {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/* 문항 하단 영역 */
+.quizArea {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.questionLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* 성 퀴즈 — 가로 3버튼 */
+.articleOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* 복수형 퀴즈 — 세로 리스트 */
+.pluralOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 공통 답안 버튼 */
+.optionButton {
+  padding: 16px 12px;
+  background-color: var(--color-surface);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.optionButton:active {
+  transform: scale(0.96);
+}
+
+.optionButton.selected.correct {
+  background-color: #E8FAF2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
+}
+
+.optionButton.selected.incorrect {
+  background-color: #FFF0F1;
+  border-color: var(--color-incorrect);
+  color: var(--color-incorrect);
+}
+
+.optionButton.showAnswer {
+  background-color: #E8FAF2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
+}
+
+.optionButton:disabled {
+  cursor: default;
+}
+
+/* 피드백 패널 */
+.feedbackPanel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  border-radius: 20px 20px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1);
+  z-index: 100;
+}
+
+.feedbackPanel.visible {
+  transform: translateY(0);
+}
+
+.feedbackPanel.correct {
+  background-color: #E8FAF2;
+}
+
+.feedbackPanel.incorrect {
+  background-color: #FFF0F1;
+}
+
+.feedbackContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.feedbackTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.feedbackPanel.correct .feedbackTitle {
+  color: var(--color-correct);
+}
+
+.feedbackPanel.incorrect .feedbackTitle {
+  color: var(--color-incorrect);
+}
+
+.feedbackDesc {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.nextButton {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.nextButton:active {
+  transform: scale(0.97);
+}
+
+.feedbackPanel.correct .nextButton {
+  background-color: var(--color-correct);
+  color: #fff;
+}
+
+.feedbackPanel.incorrect .nextButton {
+  background-color: var(--color-incorrect);
+  color: #fff;
+}
+
+/* 종료 확인 모달 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.48);
+  display: flex;
+  align-items: flex-end;
+  z-index: 200;
+}
+
+.modal {
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: 20px 20px 0 0;
+  padding: 28px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideUp 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+.modalDesc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.modalButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modalQuitButton {
+  padding: 16px;
+  background-color: #FFF0F1;
+  color: var(--color-incorrect);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modalContinueButton {
+  padding: 16px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
