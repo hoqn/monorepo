@@ -7,6 +7,13 @@ import { SessionRecoveryPage } from './pages/SessionRecoveryPage.tsx';
 import { LeaderboardPage } from './pages/LeaderboardPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
 
+export const ONBOARDING_DONE_KEY = 'vocabin_onboarding_done';
+
+function RootRedirect() {
+  const onboardingDone = localStorage.getItem(ONBOARDING_DONE_KEY) === 'true';
+  return <Navigate to={onboardingDone ? '/' : '/onboarding'} replace />;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,7 +25,7 @@ function App() {
         <Route path="/session/recovery" element={<SessionRecoveryPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<RootRedirect />} />
       </Routes>
     </BrowserRouter>
   );

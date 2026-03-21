@@ -21,6 +21,7 @@ export function SessionPage() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
+  const [correctCount, setCorrectCount] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
   const [showQuitModal, setShowQuitModal] = useState(false);
@@ -38,6 +39,7 @@ export function SessionPage() {
 
       if (isCorrect) {
         generateHapticFeedback({ type: 'success' });
+        setCorrectCount((c) => c + 1);
       } else {
         generateHapticFeedback({ type: 'error' });
         setLives((prev) => prev - 1);
@@ -47,24 +49,14 @@ export function SessionPage() {
   );
 
   const handleNext = useCallback(() => {
-    const newLives = answerState === 'incorrect' ? lives : lives;
-
-    if (newLives <= 0) {
-      // 목숨 소진 → 복습 서브세션
+    if (lives <= 0) {
       navigate('/session/recovery', { state: { fromSession: true } });
       return;
     }
 
     if (currentIndex + 1 >= questions.length) {
-      // 세션 완료
       navigate('/session/result', {
-        state: {
-          total: questions.length,
-          correct: questions.reduce((acc, _, i) => {
-            // 간소화: 실제로는 각 문항 결과를 추적해야 함
-            return acc;
-          }, 0),
-        },
+        state: { total: questions.length, correct: correctCount },
       });
       return;
     }
@@ -72,7 +64,7 @@ export function SessionPage() {
     setCurrentIndex((prev) => prev + 1);
     setSelectedOption(null);
     setAnswerState('idle');
-  }, [answerState, lives, currentIndex, questions.length, navigate]);
+  }, [lives, currentIndex, questions.length, correctCount, navigate]);
 
   const handleClosePress = () => {
     setShowQuitModal(true);

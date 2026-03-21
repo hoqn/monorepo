@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
+import { ONBOARDING_DONE_KEY } from '../App.tsx';
 import styles from './OnboardingPage.module.css';
 
 const TOTAL_STEPS = 4;
@@ -54,7 +55,8 @@ export function OnboardingPage() {
       generateHapticFeedback({ type: 'softMedium' });
       setStep((s) => s + 1);
     } else {
-      // 온보딩 완료 → 홈으로
+      // 온보딩 완료 → 플래그 저장 후 홈으로
+      localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
       navigate('/', { replace: true });
     }
   };
@@ -120,7 +122,13 @@ export function OnboardingPage() {
           {step === TOTAL_STEPS - 1 ? '시작하기' : '다음'}
         </button>
         {step === 3 && (
-          <button className={styles.skipButton} onClick={() => navigate('/', { replace: true })}>
+          <button
+            className={styles.skipButton}
+            onClick={() => {
+              localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
+              navigate('/', { replace: true });
+            }}
+          >
             나중에 설정할게요
           </button>
         )}
