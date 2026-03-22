@@ -177,16 +177,20 @@ export function SessionPage() {
         </div>
       </div>
 
-      <div className={`${styles.feedbackPanel} ${feedbackVisible ? styles.visible : ''} ${answerState !== 'idle' ? styles[answerState] : ''}`}>
-        <div className={styles.feedbackContent}>
-          <span className={styles.feedbackTitle}>{isCorrectAnswer ? '정답!' : '오답'}</span>
-          <span className={styles.feedbackDesc}>
-            {isCorrectAnswer
-              ? `${current.type === 'article' ? current.answer : ''} ${current.word.word}`
-              : `정답: ${current.answer}`}
-          </span>
+      <div className={`${styles.feedbackWrapper} ${feedbackVisible ? styles.open : ''} ${answerState !== 'idle' ? styles[answerState] : ''}`}>
+        <div className={styles.feedbackPanel}>
+          <div className={styles.feedbackInner}>
+            <div className={styles.feedbackContent}>
+              <span className={styles.feedbackTitle}>{isCorrectAnswer ? '정답!' : '오답'}</span>
+              <span className={styles.feedbackDesc}>
+                {isCorrectAnswer
+                  ? `${current.type === 'article' ? current.answer : ''} ${current.word.word}`
+                  : `정답: ${current.answer}`}
+              </span>
+            </div>
+            <button className={styles.nextButton} onClick={handleNext}>다음</button>
+          </div>
         </div>
-        <button className={styles.nextButton} onClick={handleNext}>다음</button>
       </div>
 
       {showQuitModal && (
