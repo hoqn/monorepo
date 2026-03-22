@@ -40,7 +40,7 @@ export function SessionResultPage() {
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.closeButton} onClick={() => navigate('/')}>
+        <button className={styles.closeButton} onClick={() => navigate('/home')}>
           닫기
         </button>
       </div>

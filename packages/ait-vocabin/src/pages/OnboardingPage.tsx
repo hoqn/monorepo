@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateHapticFeedback } from '@apps-in-toss/web-framework';
+import { generateHapticFeedback, appLogin } from '@apps-in-toss/web-framework';
+
+const IS_DEV = import.meta.env.DEV;
+
+async function resolveAuthCode(): Promise<{ authorizationCode?: string; devUserId?: string }> {
+  if (IS_DEV) return { devUserId: 'local' };
+  const { authorizationCode } = await appLogin();
+  return { authorizationCode };
+}
 import { ONBOARDING_DONE_KEY } from '../App.tsx';
+import { login } from '../lib/api.ts';
 import styles from './OnboardingPage.module.css';
 
 const TOTAL_STEPS = 4;
@@ -36,6 +45,7 @@ export function OnboardingPage() {
   const [level, setLevel] = useState<'beginner' | 'intermediate' | null>(null);
   const [goal, setGoal] = useState<number | null>(null);
   const [notifyTime, setNotifyTime] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // 진단 테스트 상태
   const [diagIndex, setDiagIndex] = useState(0);
@@ -50,14 +60,28 @@ export function OnboardingPage() {
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < TOTAL_STEPS - 1) {
       generateHapticFeedback({ type: 'softMedium' });
       setStep((s) => s + 1);
     } else {
-      // 온보딩 완료 → 플래그 저장 후 홈으로
+      // 온보딩 완료 → 로그인 후 홈으로
+      setIsLoggingIn(true);
+      try {
+        const authParams = await resolveAuthCode();
+        await login({
+          ...authParams,
+          cefrLevel: level === 'intermediate' ? 'A2' : 'A1',
+          dailyGoal: goal ?? 1,
+          notifyTime: notifyTime ?? undefined,
+        });
+      } catch {
+        // 로그인 실패해도 온보딩은 완료로 처리 (오프라인 등)
+      } finally {
+        setIsLoggingIn(false);
+      }
       localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
-      navigate('/', { replace: true });
+      navigate('/home', { replace: true });
     }
   };
 
@@ -117,16 +141,22 @@ export function OnboardingPage() {
         <button
           className={styles.nextButton}
           onClick={handleNext}
-          disabled={!canProceed()}
+          disabled={!canProceed() || isLoggingIn}
         >
-          {step === TOTAL_STEPS - 1 ? '시작하기' : '다음'}
+          {isLoggingIn ? '잠깐만요...' : step === TOTAL_STEPS - 1 ? '시작하기' : '다음'}
         </button>
-        {step === 3 && (
+        {step === 3 && !isLoggingIn && (
           <button
             className={styles.skipButton}
-            onClick={() => {
+            onClick={async () => {
+              try {
+                const authParams = await resolveAuthCode();
+                await login({ ...authParams });
+              } catch {
+                // ignore
+              }
               localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
-              navigate('/', { replace: true });
+              navigate('/home', { replace: true });
             }}
           >
             나중에 설정할게요

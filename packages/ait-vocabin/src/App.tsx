@@ -11,14 +11,15 @@ export const ONBOARDING_DONE_KEY = 'vocabin_onboarding_done';
 
 function RootRedirect() {
   const onboardingDone = localStorage.getItem(ONBOARDING_DONE_KEY) === 'true';
-  return <Navigate to={onboardingDone ? '/' : '/onboarding'} replace />;
+  return <Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />;
 }
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/session" element={<SessionPage />} />
         <Route path="/session/result" element={<SessionResultPage />} />

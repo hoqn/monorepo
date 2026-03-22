@@ -9,7 +9,7 @@ export function SessionRecoveryPage() {
   const [step, setStep] = useState<Step>('intro');
 
   if (step === 'intro') {
-    return <RecoveryIntro onStart={() => setStep('ad')} onQuit={() => navigate('/')} />;
+    return <RecoveryIntro onStart={() => setStep('ad')} onQuit={() => navigate('/home')} />;
   }
 
   if (step === 'ad') {

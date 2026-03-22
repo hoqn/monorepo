@@ -71,7 +71,7 @@ export function SessionPage() {
   };
 
   const handleConfirmQuit = () => {
-    navigate('/');
+    navigate('/home');
   };
 
   const feedbackVisible = answerState !== 'idle';
