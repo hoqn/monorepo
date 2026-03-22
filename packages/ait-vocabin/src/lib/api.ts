@@ -152,6 +152,23 @@ export function completeSession(
   });
 }
 
+// ── Mappers ───────────────────────────────────────────────────────────────────
+
+import type { Word as FrontendWord } from '../types/word.ts';
+
+export function mapWord(w: Word): FrontendWord {
+  return {
+    id: w.id,
+    word: w.word,
+    article: w.article,
+    plural: w.plural,
+    meaningKo: w.meaning_ko,
+    ipa: w.ipa ?? '',
+    cefrLevel: w.cefr_level as FrontendWord['cefrLevel'],
+    category: w.category ?? '',
+  };
+}
+
 // ── Leaderboard ───────────────────────────────────────────────────────────────
 
 export interface LeaderboardEntry {

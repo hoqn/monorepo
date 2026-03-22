@@ -7,10 +7,10 @@ export function SessionResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // SessionPage에서 state로 전달받은 결과 (없으면 mock)
-  const { total = 12, correct = 10 } = (location.state as { total: number; correct: number }) ?? {};
+  const { total = 12, correct = 10, xpEarned: xpFromApi } =
+    (location.state as { total: number; correct: number; xpEarned?: number }) ?? {};
   const accuracy = Math.round((correct / total) * 100);
-  const xpEarned = correct * XP_PER_CORRECT;
+  const xpEarned = xpFromApi ?? correct * XP_PER_CORRECT;
 
   return (
     <div className={styles.page}>
