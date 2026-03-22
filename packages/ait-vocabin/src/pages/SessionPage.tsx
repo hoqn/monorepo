@@ -153,28 +153,28 @@ export function SessionPage() {
           <span className={styles.wordText}>{current.word.word}</span>
           <span className={styles.wordMeaning}>{current.word.meaningKo}</span>
         </div>
-      </div>
 
-      <div className={styles.quizArea}>
-        <p className={styles.questionLabel}>
-          {current.type === 'article' ? '이 단어의 성(관사)은?' : '복수형은?'}
-        </p>
+        <div className={styles.quizArea}>
+          <p className={styles.questionLabel}>
+            {current.type === 'article' ? '이 단어의 성(관사)은?' : '복수형은?'}
+          </p>
 
-        {current.type === 'article' ? (
-          <div className={styles.articleOptions}>
-            {current.options.map((option) => (
-              <OptionButton key={option} option={option} selected={selectedOption === option}
-                answerState={answerState} correctAnswer={current.answer} onSelect={handleSelectOption} />
-            ))}
-          </div>
-        ) : (
-          <div className={styles.pluralOptions}>
-            {current.options.map((option) => (
-              <OptionButton key={option} option={option} selected={selectedOption === option}
-                answerState={answerState} correctAnswer={current.answer} onSelect={handleSelectOption} />
-            ))}
-          </div>
-        )}
+          {current.type === 'article' ? (
+            <div className={styles.articleOptions}>
+              {current.options.map((option) => (
+                <OptionButton key={option} option={option} selected={selectedOption === option}
+                  answerState={answerState} correctAnswer={current.answer} onSelect={handleSelectOption} />
+              ))}
+            </div>
+          ) : (
+            <div className={styles.pluralOptions}>
+              {current.options.map((option) => (
+                <OptionButton key={option} option={option} selected={selectedOption === option}
+                  answerState={answerState} correctAnswer={current.answer} onSelect={handleSelectOption} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className={`${styles.feedbackPanel} ${feedbackVisible ? styles.visible : ''} ${answerState !== 'idle' ? styles[answerState] : ''}`}>
