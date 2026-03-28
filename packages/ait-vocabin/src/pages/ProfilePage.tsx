@@ -1,4 +1,6 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import styles from './ProfilePage.module.css';
 
 const MOCK_USER = {
@@ -23,6 +25,7 @@ const MOCK_BADGES = [
 
 export function ProfilePage() {
   const navigate = useNavigate();
+  useAITBackHandler(useCallback(() => navigate(-1), [navigate]));
 
   return (
     <div className={styles.page}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { partner, tdsEvent } from '@apps-in-toss/web-framework';
 import { getMe, getLeaderboard, MeResponse, LeaderboardEntry } from '../lib/api.ts';
 import styles from './HomePage.module.css';
 
@@ -10,6 +11,25 @@ export function HomePage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // AIT 환경: 상단 네비게이션 바에 프로필 버튼 추가
+  // 독립 실행 환경에서는 헤더의 기존 프로필 버튼이 동작
+  useEffect(() => {
+    partner.addAccessoryButton({
+      id: 'profile',
+      title: '프로필',
+      icon: { name: 'icon-person-mono' },
+    });
+    const cleanup = tdsEvent.addEventListener('navigationAccessoryEvent', {
+      onEvent: ({ id }) => {
+        if (id === 'profile') navigate('/profile');
+      },
+    });
+    return () => {
+      partner.removeAccessoryButton();
+      cleanup();
+    };
+  }, [navigate]);
 
   useEffect(() => {
     (async () => {

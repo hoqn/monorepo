@@ -1,4 +1,6 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import styles from './LeaderboardPage.module.css';
 
 const MY_ID = 'me';
@@ -22,6 +24,8 @@ function getDaysUntilMonday() {
 export function LeaderboardPage() {
   const navigate = useNavigate();
   const me = MOCK_LEADERBOARD.find((item) => item.id === MY_ID)!;
+
+  useAITBackHandler(useCallback(() => navigate(-1), [navigate]));
   const daysLeft = getDaysUntilMonday();
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { getReviewWords, createSession, completeSession, mapWord } from '../lib/api.ts';
 import { generateQuestions } from '../utils/quiz.ts';
@@ -118,6 +119,8 @@ export function SessionPage() {
 
   const feedbackVisible = answerState !== 'idle';
   const isCorrectAnswer = answerState === 'correct';
+
+  useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
 
   if (loading) {
     return (
