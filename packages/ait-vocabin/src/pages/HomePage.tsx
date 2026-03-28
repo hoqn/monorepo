@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { partner, tdsEvent } from '@apps-in-toss/web-framework';
 import { getMe, getLeaderboard, MeResponse, LeaderboardEntry } from '../lib/api.ts';
+import { isAIT } from '../lib/ait.ts';
 import styles from './HomePage.module.css';
 
 const XP_PER_LEVEL = 500;
@@ -52,7 +53,7 @@ export function HomePage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      {!isAIT && <header className={styles.header}>
         <span className={styles.logo}>VocaBin</span>
         <button className={styles.profileButton} onClick={() => navigate('/profile')} aria-label="프로필">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +61,7 @@ export function HomePage() {
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
         </button>
-      </header>
+      </header>}
 
       <div className={styles.content}>
         {/* 채집 히어로 카드 */}
