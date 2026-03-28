@@ -11,6 +11,13 @@ const SESSION_QUESTION_COUNT = 12;
 
 type AnswerState = 'idle' | 'correct' | 'incorrect';
 
+// der=파랑, die=빨강, das=초록
+const ARTICLE_COLOR: Record<string, string> = {
+  der: 'blue',
+  die: 'red',
+  das: 'green',
+};
+
 export function SessionPage() {
   const navigate = useNavigate();
 
@@ -109,9 +116,6 @@ export function SessionPage() {
     setAnswerState('idle');
   }, [lives, currentIndex, questions.length, correctCount, navigate]);
 
-  const handleClosePress = () => setShowQuitModal(true);
-  const handleConfirmQuit = () => navigate('/home');
-
   const feedbackVisible = answerState !== 'idle';
   const isCorrectAnswer = answerState === 'correct';
 
@@ -129,54 +133,75 @@ export function SessionPage() {
         <p style={{ color: 'var(--color-text-secondary)', textAlign: 'center', padding: '0 24px' }}>
           {error ?? '준비된 단어가 없어요.'}
         </p>
-        <button className={styles.nextButton} onClick={() => navigate('/home')}>홈으로</button>
+        <button className={styles.errorBackButton} onClick={() => navigate('/home')}>홈으로</button>
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
+      {/* 상단 헤더 */}
       <header className={styles.header}>
-        <button className={styles.closeButton} onClick={handleClosePress} aria-label="세션 종료">✕</button>
+        <button className={styles.closeButton} onClick={() => setShowQuitModal(true)} aria-label="세션 종료">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
         <div className={styles.progressTrack}>
           <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
         </div>
-        <div className={styles.hearts} aria-label={`남은 목숨: ${lives}`}>
+        <div className={styles.livesRow} aria-label={`남은 목숨: ${lives}`}>
           {Array.from({ length: MAX_LIVES }).map((_, i) => (
-            <span key={i} className={`${styles.heart} ${i >= lives ? styles.heartLost : ''}`}>❤️</span>
+            <span key={i} className={`${styles.liveDot} ${i >= lives ? styles.liveDotLost : ''}`} />
           ))}
         </div>
       </header>
 
+      {/* 단어 카드 + 선택지 */}
       <div className={styles.cardArea}>
-        <div className={`${styles.wordCard} ${answerState !== 'idle' ? styles[answerState] : ''}`}>
+        <div
+          key={currentIndex}
+          className={`${styles.wordCard} ${answerState !== 'idle' ? styles[answerState] : ''}`}
+        >
           <span className={styles.wordText}>{current.word.word}</span>
-          <span className={styles.wordMeaning}>{current.word.meaningKo}</span>
+          <span key={`meaning-${currentIndex}`} className={styles.wordMeaning}>
+            {current.word.meaningKo}
+          </span>
         </div>
 
-        <div className={styles.quizArea}>
-          <p className={styles.questionLabel}>
-            {current.type === 'article' ? '이 단어의 성(관사)은?' : '복수형은?'}
-          </p>
-
+        <div className={styles.optionsArea}>
           {current.type === 'article' ? (
             <div className={styles.articleOptions}>
               {current.options.map((option) => (
-                <OptionButton key={option} option={option} selected={selectedOption === option}
-                  answerState={answerState} correctAnswer={current.answer} onSelect={handleSelectOption} />
+                <ArticleButton
+                  key={option}
+                  option={option}
+                  selected={selectedOption === option}
+                  answerState={answerState}
+                  correctAnswer={current.answer}
+                  onSelect={handleSelectOption}
+                />
               ))}
             </div>
           ) : (
             <div className={styles.pluralOptions}>
               {current.options.map((option) => (
-                <OptionButton key={option} option={option} selected={selectedOption === option}
-                  answerState={answerState} correctAnswer={current.answer} onSelect={handleSelectOption} />
+                <PluralButton
+                  key={option}
+                  option={option}
+                  selected={selectedOption === option}
+                  answerState={answerState}
+                  correctAnswer={current.answer}
+                  onSelect={handleSelectOption}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
 
+      {/* 피드백 패널 */}
       <div className={`${styles.feedbackWrapper} ${feedbackVisible ? styles.open : ''} ${answerState !== 'idle' ? styles[answerState] : ''}`}>
         <div className={styles.feedbackPanel}>
           <div className={styles.feedbackInner}>
@@ -184,7 +209,7 @@ export function SessionPage() {
               <span className={styles.feedbackTitle}>{isCorrectAnswer ? '정답!' : '오답'}</span>
               <span className={styles.feedbackDesc}>
                 {isCorrectAnswer
-                  ? `${current.type === 'article' ? current.answer : ''} ${current.word.word}`
+                  ? `${current.type === 'article' ? current.answer + ' ' : ''}${current.word.word}`
                   : `정답: ${current.answer}`}
               </span>
             </div>
@@ -193,13 +218,14 @@ export function SessionPage() {
         </div>
       </div>
 
+      {/* 종료 확인 모달 */}
       {showQuitModal && (
         <div className={styles.modalOverlay} onClick={() => setShowQuitModal(false)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <p className={styles.modalTitle}>정말 그만할까요?</p>
             <p className={styles.modalDesc}>진행 중인 세션이 저장되지 않아요.</p>
             <div className={styles.modalButtons}>
-              <button className={styles.modalQuitButton} onClick={handleConfirmQuit}>그만하기</button>
+              <button className={styles.modalQuitButton} onClick={() => navigate('/home')}>그만하기</button>
               <button className={styles.modalContinueButton} onClick={() => setShowQuitModal(false)}>계속하기</button>
             </div>
           </div>
@@ -209,7 +235,9 @@ export function SessionPage() {
   );
 }
 
-interface OptionButtonProps {
+// ── 아티클 버튼 (der/die/das 색상 코딩) ─────────────────────────────────────
+
+interface ArticleButtonProps {
   option: string;
   selected: boolean;
   answerState: AnswerState;
@@ -217,19 +245,48 @@ interface OptionButtonProps {
   onSelect: (option: string) => void;
 }
 
-function OptionButton({ option, selected, answerState, correctAnswer, onSelect }: OptionButtonProps) {
+function ArticleButton({ option, selected, answerState, correctAnswer, onSelect }: ArticleButtonProps) {
   const isAnswered = answerState !== 'idle';
   const isCorrect = option === correctAnswer;
+  const colorKey = ARTICLE_COLOR[option] ?? '';
 
-  let className = styles.optionButton;
+  let cls = `${styles.articleButton} ${styles[`article_${colorKey}`] ?? ''}`;
   if (selected) {
-    className += ` ${styles.selected} ${styles[answerState]}`;
+    cls += isCorrect ? ` ${styles.articleSelected_correct}` : ` ${styles.articleSelected_incorrect}`;
   } else if (isAnswered && isCorrect) {
-    className += ` ${styles.showAnswer}`;
+    cls += ` ${styles.articleSelected_correct}`;
   }
 
   return (
-    <button className={className} onClick={() => onSelect(option)} disabled={isAnswered}>
+    <button className={cls} onClick={() => onSelect(option)} disabled={isAnswered}>
+      {option}
+    </button>
+  );
+}
+
+// ── 복수형 버튼 ──────────────────────────────────────────────────────────────
+
+interface PluralButtonProps {
+  option: string;
+  selected: boolean;
+  answerState: AnswerState;
+  correctAnswer: string;
+  onSelect: (option: string) => void;
+}
+
+function PluralButton({ option, selected, answerState, correctAnswer, onSelect }: PluralButtonProps) {
+  const isAnswered = answerState !== 'idle';
+  const isCorrect = option === correctAnswer;
+
+  let cls = styles.pluralButton;
+  if (selected) {
+    cls += isCorrect ? ` ${styles.pluralCorrect}` : ` ${styles.pluralIncorrect}`;
+  } else if (isAnswered && isCorrect) {
+    cls += ` ${styles.pluralCorrect}`;
+  }
+
+  return (
+    <button className={cls} onClick={() => onSelect(option)} disabled={isAnswered}>
       {option}
     </button>
   );

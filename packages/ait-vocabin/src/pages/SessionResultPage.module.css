@@ -6,52 +6,82 @@
   background-color: var(--color-bg);
 }
 
+/* ── 상단 다크 히어로 ── */
+.heroArea {
+  background-color: #0F1923;
+  padding: 56px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.heroSub {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(249, 250, 251, 0.4);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  animation: fadeUp 0.4s ease both;
+}
+
+.heroCount {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  animation: fadeUp 0.4s ease 0.1s both;
+}
+
+.heroNumber {
+  font-size: 80px;
+  font-weight: 800;
+  color: #F9FAFB;
+  letter-spacing: -4px;
+  line-height: 1;
+}
+
+.heroTotal {
+  font-size: 28px;
+  font-weight: 600;
+  color: rgba(249, 250, 251, 0.35);
+  letter-spacing: -1px;
+}
+
+.heroLabel {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(249, 250, 251, 0.55);
+  animation: fadeUp 0.4s ease 0.2s both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 컨텐츠 영역 ── */
 .content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 20px;
-  gap: 8px;
+  padding: 24px 20px;
+  gap: 16px;
+  animation: fadeUp 0.4s ease 0.3s both;
 }
 
-.title {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  margin-bottom: 8px;
-}
-
-/* 광고 / 일러스트 영역 */
-.adArea {
-  width: 100%;
-  aspect-ratio: 3 / 1;
+/* 통계 행 */
+.statsRow {
   background-color: var(--color-surface);
-  border-radius: var(--radius-md);
+  border-radius: 20px;
+  padding: 24px 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 8px 0 20px;
-}
-
-.adPlaceholder {
-  font-size: 13px;
-  color: var(--color-text-tertiary);
-}
-
-/* 통계 카드 */
-.statsCard {
-  width: 100%;
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 24px 20px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
 }
 
 .statItem {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -59,38 +89,73 @@
 }
 
 .statValue {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.xpValue {
+  color: var(--color-primary);
 }
 
 .statLabel {
   font-size: 12px;
   font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+.statDivider {
+  width: 1px;
+  height: 32px;
+  background-color: var(--color-progress-track);
+  flex-shrink: 0;
+}
+
+/* 내일 안내 */
+.tomorrowNote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--color-surface);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.tomorrowIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.tomorrowText {
+  font-size: 14px;
+  font-weight: 500;
   color: var(--color-text-secondary);
+  line-height: 1.4;
 }
 
-.xpEarned {
-  color: var(--color-primary);
-}
-
+/* ── 하단 버튼 ── */
 .footer {
-  padding: 12px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  animation: fadeUp 0.4s ease 0.4s both;
 }
 
-.closeButton {
+.homeButton {
   width: 100%;
-  padding: 16px;
-  background-color: var(--color-primary);
-  color: #fff;
+  padding: 18px;
+  background-color: #0F1923;
+  color: #F9FAFB;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 16px;
+  border-radius: 14px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease;
+  letter-spacing: -0.3px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
 }
 
-.closeButton:active {
+.homeButton:active {
   transform: scale(0.97);
+  opacity: 0.85;
 }
