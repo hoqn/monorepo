@@ -7,51 +7,34 @@
   overflow-y: auto;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px 12px;
+/* ── 다크 히어로 ── */
+.heroArea {
+  background-color: #0F1923;
+  padding: 16px 20px 36px;
+  flex-shrink: 0;
 }
 
 .backButton {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  background: none;
-  font-size: 20px;
-  color: var(--color-text-secondary);
+  background: rgba(249, 250, 251, 0.08);
+  border-radius: 50%;
+  color: rgba(249, 250, 251, 0.7);
   cursor: pointer;
   padding: 0;
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
+  transition: background-color 0.15s ease;
+  margin-bottom: 24px;
 }
 
 .backButton:active {
-  transform: scale(0.88);
+  background: rgba(249, 250, 251, 0.15);
 }
 
-.headerTitle {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 8px 20px 32px;
-}
-
-/* 유저 정보 카드 */
-.userCard {
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 24px 20px;
+.heroContent {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -59,87 +42,101 @@
 }
 
 .avatar {
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
-  background-color: var(--color-primary-subtle);
+  background-color: rgba(249, 250, 251, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  color: rgba(249, 250, 251, 0.6);
 }
 
 .userName {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
-  color: var(--color-text-primary);
+  color: #F9FAFB;
+  letter-spacing: -0.5px;
 }
 
 .levelBadge {
   font-size: 13px;
   font-weight: 700;
-  color: var(--color-primary);
-  background-color: var(--color-primary-subtle);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
+  color: rgba(49, 130, 246, 0.9);
+  background-color: rgba(49, 130, 246, 0.15);
+  padding: 4px 12px;
+  border-radius: 999px;
 }
 
-/* 누적 통계 */
-.statsCard {
+/* ── 컨텐츠 ── */
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 20px calc(32px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 통계 행 */
+.statsRow {
   background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   padding: 20px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  display: flex;
+  align-items: center;
 }
 
 .statItem {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 0;
+  gap: 3px;
 }
 
 .statValue {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1;
 }
 
 .statLabel {
   font-size: 11px;
   font-weight: 500;
-  color: var(--color-text-secondary);
-  text-align: center;
+  color: var(--color-text-tertiary);
 }
 
-/* 배지 */
+.statDivider {
+  width: 1px;
+  height: 28px;
+  background-color: var(--color-progress-track);
+  flex-shrink: 0;
+}
+
+/* 섹션 타이틀 */
 .sectionTitle {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-text-primary);
   padding: 4px 0 0;
 }
 
+/* 배지 */
 .badgesCard {
   background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   padding: 20px;
-}
-
-.badgesGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .badgeItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .badgeEmoji {
@@ -149,19 +146,21 @@
 
 .badgeName {
   font-size: 10px;
+  font-weight: 500;
   color: var(--color-text-secondary);
   text-align: center;
+  line-height: 1.3;
 }
 
 .badgeLocked {
   filter: grayscale(1);
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 /* 설정 */
 .settingsCard {
   background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border-radius: 20px;
   overflow: hidden;
 }
 
@@ -192,10 +191,10 @@
 .settingValue {
   font-size: 14px;
   color: var(--color-text-secondary);
-  margin-right: 8px;
+  margin-right: 6px;
 }
 
-.settingArrow {
-  font-size: 14px;
+.settingChevron {
+  font-size: 16px;
   color: var(--color-text-tertiary);
 }
