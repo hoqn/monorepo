@@ -1,0 +1,25 @@
+{
+  "name": "@hoqn/ait-vocabin",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "granite dev",
+    "build": "ait build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "latest",
+    "@toss/tds-mobile": "latest",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.13.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.2",
+    "vite": "^6.0.5"
+  }
+}
