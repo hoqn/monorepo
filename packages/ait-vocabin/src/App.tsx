@@ -12,6 +12,7 @@ import { getToken, login } from './lib/api.ts';
 
 export const ONBOARDING_DONE_KEY = 'vocabin_onboarding_done';
 const IS_DEV = import.meta.env.DEV;
+const DEV_USER = import.meta.env.VITE_DEV_USER as string | undefined;
 
 function RootRedirect() {
   const onboardingDone = localStorage.getItem(ONBOARDING_DONE_KEY) === 'true';
@@ -29,8 +30,8 @@ function App() {
     }
     (async () => {
       try {
-        if (IS_DEV) {
-          await login({ devUserId: 'local' });
+        if (IS_DEV || DEV_USER) {
+          await login({ devUserId: DEV_USER || 'local' });
         } else {
           const { authorizationCode } = await appLogin();
           await login({ authorizationCode });
