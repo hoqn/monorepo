@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { generateHapticFeedback, appLogin } from '@apps-in-toss/web-framework';
 
 const IS_DEV = import.meta.env.DEV;
+const DEV_USER = import.meta.env.VITE_DEV_USER as string | undefined;
 
 async function resolveAuthCode(): Promise<{ authorizationCode?: string; devUserId?: string }> {
-  if (IS_DEV) return { devUserId: 'local' };
+  if (IS_DEV || DEV_USER) return { devUserId: DEV_USER || 'local' };
   const { authorizationCode } = await appLogin();
   return { authorizationCode };
 }
