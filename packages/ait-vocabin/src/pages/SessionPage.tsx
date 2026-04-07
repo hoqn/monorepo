@@ -51,8 +51,8 @@ export function SessionPage() {
 
         sessionIdRef.current = sessionId;
         setQuestions(generateQuestions(words.map(mapWord), SESSION_QUESTION_COUNT));
-      } catch {
-        setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.');
+      } catch (e) {
+        setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.\n\n' + (e instanceof Error ? e.message : ''));
       } finally {
         setLoading(false);
       }
@@ -133,7 +133,7 @@ export function SessionPage() {
   if (error || !current) {
     return (
       <div className={styles.page} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-        <p style={{ color: 'var(--color-text-secondary)', textAlign: 'center', padding: '0 24px' }}>
+        <p style={{ color: 'var(--color-text-secondary)', textAlign: 'center', padding: '0 24px' , whiteSpace: 'pre-wrap' }}>
           {error ?? '준비된 단어가 없어요.'}
         </p>
         <button className={styles.errorBackButton} onClick={() => navigate('/home')}>홈으로</button>
