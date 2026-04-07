@@ -198,3 +198,16 @@
   font-size: 16px;
   color: var(--color-text-tertiary);
 }
+
+.devResetButton {
+  display: block;
+  width: 100%;
+  margin-top: 24px;
+  padding: 12px;
+  background: none;
+  border: 1px dashed #ff4444;
+  border-radius: 8px;
+  color: #ff4444;
+  font-size: 13px;
+  cursor: pointer;
+}
