@@ -3,7 +3,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-bg);
+  background: linear-gradient(to bottom, #fff 0px, #F2F4F6 80px);
   overflow: hidden;
 }
 
@@ -453,23 +453,23 @@
   }
 }
 
-/* ── 아티클 색상 코딩 (der=파랑, die=빨강, das=초록) ── */
+/* ── 아티클 색상 코딩 (der=파랑, die=빨강, das=초록) — 뮤트 톤 ── */
 .article_blue {
-  background-color: #EEF4FF;
-  border-color: #C7DAFB;
-  color: #1E5FBF;
+  background-color: #F4F6FA;
+  border-color: #D2DAE8;
+  color: #5E78A0;
 }
 
 .article_red {
-  background-color: #FFF0F2;
-  border-color: #FBC7CE;
-  color: #BF1E2E;
+  background-color: #FAF4F5;
+  border-color: #E8D2D5;
+  color: #A05E68;
 }
 
 .article_green {
-  background-color: #EEFAF3;
-  border-color: #C7F0D8;
-  color: #1E8A4A;
+  background-color: #F4FAF6;
+  border-color: #D2E8DA;
+  color: #5E9A72;
 }
 
 .article_blue.optionCorrect,
