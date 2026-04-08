@@ -26,14 +26,14 @@ function getTransition(pathname: string) {
     return {
       initial: { opacity: 0, y: 32 },
       animate: { opacity: 1, y: 0 },
-      exit:    { opacity: 0, y: -16 },
+      exit: { opacity: 0, y: -16 },
       transition: { type: 'spring' as const, stiffness: 280, damping: 28 },
     };
   }
   return {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
-    exit:    { opacity: 0 },
+    exit: { opacity: 0 },
     transition: { duration: 0.22 },
   };
 }
@@ -45,12 +45,6 @@ function AnimatedRoutes() {
 
   // 네비게이션 바 우측 프로필 버튼 등록 및 이벤트 수신
   useEffect(() => {
-    partner.addAccessoryButton({
-      id: 'profile',
-      title: '프로필',
-      icon: { name: 'icon-person-mono' },
-    });
-
     const unsubscribe = tdsEvent.addEventListener('navigationAccessoryEvent', {
       onEvent: ({ id }) => {
         if (id === 'profile') {
@@ -92,7 +86,10 @@ function App() {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
-    if (getToken()) { setAuthReady(true); return; }
+    if (getToken()) {
+      setAuthReady(true);
+      return;
+    }
     (async () => {
       try {
         if (IS_DEV || DEV_USER) {
@@ -101,8 +98,11 @@ function App() {
           const { authorizationCode } = await appLogin();
           await login({ authorizationCode });
         }
-      } catch { /* silent 실패 */ }
-      finally { setAuthReady(true); }
+      } catch {
+        /* silent 실패 */
+      } finally {
+        setAuthReady(true);
+      }
     })();
   }, []);
 

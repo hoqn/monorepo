@@ -1,0 +1,1 @@
+- [VocaBin 프로젝트 컨텍스트](project_vocabin_context.md) — 도메인, 기술 스택, 현재 라우트 구조, Toss 프레임워크 제약
