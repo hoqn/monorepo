@@ -1,15 +1,26 @@
-/* ── 공통 ── */
+/* ── 공통 페이지 ── */
 .page {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
   overflow: hidden;
+  position: relative;
 }
 
-/* ── Step 0: Hook ── */
+/* ── 다크 훅 오버레이 (position absolute, 전체 덮음) ── */
+.hookOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background-color: #0F1923;
+}
+
+/* ── Hook 내부 레이아웃 ── */
 .hookPage {
   width: 100%;
   height: 100%;
-  background-color: #0F1923;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -125,159 +136,292 @@
   transform: scale(0.97);
 }
 
-.startButton:disabled {
-  opacity: 0.5;
-  cursor: default;
+/* ── 스텝 인디케이터 (steps 1-3) ── */
+.stepIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 20px 0;
+  flex-shrink: 0;
 }
 
-/* ── Step 1: 진단 ── */
-.diagPage {
-  width: 100%;
-  height: 100%;
+.stepDot {
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--color-progress-track);
+}
+
+/* ── 슬라이드 영역 ── */
+.stepArea {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.stepContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 콘텐츠 공통 ── */
+.content {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 24px calc(40px + env(safe-area-inset-bottom, 0px));
-  gap: 32px;
-  background-color: var(--color-bg);
+  padding: 24px 28px;
+  gap: 16px;
+  text-align: center;
 }
 
-.diagHint {
-  margin: 0;
-  font-size: 15px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
+.illustArea {
+  font-size: 72px;
+  line-height: 1;
+  margin-bottom: 4px;
 }
 
-.diagCard {
-  width: 100%;
-  background-color: var(--color-surface);
-  border-radius: 20px;
-  padding: 40px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
-}
-
-.diagWord {
-  font-size: 52px;
+.title {
+  font-size: 26px;
   font-weight: 800;
   color: var(--color-text-primary);
-  letter-spacing: -2px;
-  line-height: 1;
+  margin: 0;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+  white-space: pre-line;
 }
 
-.diagMeaning {
-  font-size: 18px;
+.desc {
+  font-size: 15px;
   color: var(--color-text-secondary);
-  font-weight: 400;
+  line-height: 1.65;
+  margin: 0;
+  white-space: pre-line;
 }
 
-.articleButtons {
+/* ── 목표 선택 ── */
+.goalOptions {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  margin-top: 8px;
 }
 
-.articleButton {
-  padding: 18px 8px;
+.goalCard {
+  padding: 18px 8px 14px;
   background-color: var(--color-surface);
   border: 2px solid transparent;
-  border-radius: 12px;
-  font-size: 18px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.goalCardSelected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+}
+
+.goalCount {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.goalLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.goalDesc {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.goalCardSelected .goalCount,
+.goalCardSelected .goalLabel,
+.goalCardSelected .goalDesc {
+  color: var(--color-primary);
+}
+
+/* ── 알림 시간 ── */
+.timeOptions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.timeCard {
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.timeCardSelected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+}
+
+.timeEmoji {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.timeLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.timeRange {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.timeCardSelected .timeLabel {
+  color: var(--color-primary);
+}
+
+/* ── 진단 카드 ── */
+.diagCard {
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+}
+
+.diagProgressDots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.diagDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-progress-track);
+  display: inline-block;
+}
+
+.diagWord {
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -1px;
+}
+
+.diagMeaning {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin-top: -4px;
+}
+
+.diagArticleOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.diagOptionButton {
+  padding: 15px 8px;
+  background-color: var(--color-bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 17px;
   font-weight: 700;
   color: var(--color-text-primary);
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+  font-family: 'SF Mono', 'Fira Mono', monospace, inherit;
 }
 
-.articleButton:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
-.articleButton:disabled {
+.diagOptionButton:disabled {
   cursor: default;
 }
 
-.articleCorrect {
+.diagOptionCorrect {
   border-color: var(--color-correct);
-  background-color: #E8FAF2;
+  background-color: #e8faf2;
   color: var(--color-correct);
 }
 
-.articleIncorrect {
+.diagOptionIncorrect {
   border-color: var(--color-incorrect);
-  background-color: #FFF0F1;
+  background-color: #fff0f1;
   color: var(--color-incorrect);
 }
 
-/* ── Step 2: 컬렉션 예고 ── */
-.previewPage {
-  width: 100%;
-  height: 100%;
+/* ── 하단 ── */
+.footer {
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
-  background-color: #0F1923;
-  position: relative;
-  overflow: hidden;
-  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.previewWordGrid {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 10px;
-  padding: 24px;
-  pointer-events: none;
+.nextButton {
+  width: 100%;
+  padding: 17px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
 }
 
-.previewWord {
-  font-size: 15px;
-  font-weight: 600;
-  color: rgba(249, 250, 251, 0.12);
-  background-color: rgba(249, 250, 251, 0.06);
-  border-radius: 8px;
-  padding: 6px 12px;
-  letter-spacing: -0.3px;
+.nextButton:disabled {
+  opacity: 0.38;
+  cursor: default;
 }
 
-.previewCenter {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 40px;
-  position: relative;
-  z-index: 1;
+.skipButton {
+  width: 100%;
+  padding: 14px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
 }
 
-.previewText {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 800;
-  color: #F9FAFB;
-  text-align: center;
-  line-height: 1.4;
-  letter-spacing: -0.8px;
-}
-
-.previewSub {
-  margin: 0;
-  font-size: 13px;
-  color: rgba(249, 250, 251, 0.3);
-  text-align: center;
-}
-
-/* hookFooter를 previewPage 안에서도 사용 */
-.previewPage .hookFooter {
-  position: relative;
-  z-index: 1;
+@media (prefers-reduced-motion: reduce) {
+  .stepDot,
+  .hookWord,
+  .hookLine,
+  .hookFooter {
+    transition: none;
+  }
 }

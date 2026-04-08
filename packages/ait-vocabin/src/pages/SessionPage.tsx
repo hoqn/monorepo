@@ -1,14 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
+import { motion, AnimatePresence } from 'framer-motion';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
+import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import { getReviewWords, createSession, completeSession, mapWord } from '../lib/api.ts';
 import { generateQuestions } from '../utils/quiz.ts';
+import { playCorrect, playIncorrect, playCombo, playGameOver } from '../lib/sound.ts';
 import { Question } from '../types/word.ts';
 import styles from './SessionPage.module.css';
 
 const MAX_LIVES = 5;
 const SESSION_QUESTION_COUNT = 12;
+const AUTO_ADVANCE_DELAY = 1400;
 
 type AnswerState = 'idle' | 'correct' | 'incorrect';
 
@@ -34,7 +37,12 @@ export function SessionPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
+  const [comboCount, setComboCount] = useState(0);
   const [showQuitModal, setShowQuitModal] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
 
   useEffect(() => {
     (async () => {
@@ -51,20 +59,48 @@ export function SessionPage() {
 
         sessionIdRef.current = sessionId;
         setQuestions(generateQuestions(words.map(mapWord), SESSION_QUESTION_COUNT));
-      } catch (e) {
-        setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.\n\n' + (e instanceof Error ? e.message : ''));
+      } catch {
+        setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.');
       } finally {
         setLoading(false);
       }
     })();
+
+    return () => {
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    };
   }, []);
 
   const current: Question | undefined = questions[currentIndex];
   const progress = questions.length > 0 ? currentIndex / questions.length : 0;
 
+  const goNext = useCallback(async () => {
+    if (currentIndex + 1 >= questions.length) {
+      const sessionId = sessionIdRef.current;
+      let xpEarned = correctCount * 10;
+
+      if (sessionId) {
+        try {
+          const result = await completeSession(sessionId, resultsRef.current);
+          xpEarned = result.xpEarned;
+        } catch { /* ignore */ }
+      }
+
+      navigate('/session/result', {
+        state: { total: questions.length, correct: correctCount, xpEarned },
+      });
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+    setSelectedOption(null);
+    setAnswerState('idle');
+  }, [currentIndex, questions.length, correctCount, navigate]);
+
   const handleSelectOption = useCallback(
     (option: string) => {
       if (answerState !== 'idle' || !current) return;
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
 
       const isCorrect = option === current.answer;
       setSelectedOption(option);
@@ -78,49 +114,38 @@ export function SessionPage() {
 
       if (isCorrect) {
         generateHapticFeedback({ type: 'success' });
+        playCorrect();
         setCorrectCount((c) => c + 1);
+        setComboCount((c) => {
+          const next = c + 1;
+          if (next >= 2) playCombo(next);
+          return next;
+        });
+        autoTimerRef.current = setTimeout(goNext, AUTO_ADVANCE_DELAY);
       } else {
         generateHapticFeedback({ type: 'error' });
-        setLives((prev) => prev - 1);
-      }
-    },
-    [answerState, current]
-  );
+        playIncorrect();
+        setComboCount(0);
+        const newLives = lives - 1;
+        setLives(newLives);
 
-  const handleNext = useCallback(async () => {
-    if (lives <= 0) {
-      navigate('/session/recovery', { state: { fromSession: true } });
-      return;
-    }
-
-    if (currentIndex + 1 >= questions.length) {
-      const sessionId = sessionIdRef.current;
-      let xpEarned = correctCount * 10;
-
-      if (sessionId) {
-        try {
-          const result = await completeSession(sessionId, resultsRef.current);
-          xpEarned = result.xpEarned;
-        } catch {
-          // API 실패해도 결과 화면은 표시
+        if (newLives <= 0) {
+          setTimeout(() => {
+            playGameOver();
+            setShowGameOver(true);
+          }, 900);
+        } else {
+          autoTimerRef.current = setTimeout(goNext, AUTO_ADVANCE_DELAY);
         }
       }
+    },
+    [answerState, current, lives, goNext]
+  );
 
-      navigate('/session/result', {
-        state: { total: questions.length, correct: correctCount, xpEarned },
-      });
-      return;
-    }
-
-    setCurrentIndex((prev) => prev + 1);
-    setSelectedOption(null);
-    setAnswerState('idle');
-  }, [lives, currentIndex, questions.length, correctCount, navigate]);
-
-  const feedbackVisible = answerState !== 'idle';
-  const isCorrectAnswer = answerState === 'correct';
-
-  useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
+  const handleManualNext = useCallback(() => {
+    if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    goNext();
+  }, [goNext]);
 
   if (loading) {
     return (
@@ -133,164 +158,383 @@ export function SessionPage() {
   if (error || !current) {
     return (
       <div className={styles.page} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-        <p style={{ color: 'var(--color-text-secondary)', textAlign: 'center', padding: '0 24px' , whiteSpace: 'pre-wrap' }}>
+        <p style={{ color: 'var(--color-text-secondary)', textAlign: 'center', padding: '0 24px' }}>
           {error ?? '준비된 단어가 없어요.'}
         </p>
-        <button className={styles.errorBackButton} onClick={() => navigate('/home')}>홈으로</button>
+        <button className={styles.primaryButton} onClick={() => navigate('/home')}>홈으로</button>
       </div>
     );
   }
 
   return (
     <div className={styles.page}>
-      {/* 상단 헤더 */}
       <header className={styles.header}>
         <button className={styles.closeButton} onClick={() => setShowQuitModal(true)} aria-label="세션 종료">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          ✕
         </button>
         <div className={styles.progressTrack}>
           <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
         </div>
-        <div className={styles.livesRow} aria-label={`남은 목숨: ${lives}`}>
+        <div className={styles.hearts} aria-label={`남은 목숨: ${lives}`}>
           {Array.from({ length: MAX_LIVES }).map((_, i) => (
-            <span key={i} className={`${styles.liveDot} ${i >= lives ? styles.liveDotLost : ''}`} />
+            <Heart key={i} isLost={i >= lives} />
           ))}
         </div>
       </header>
 
-      {/* 단어 카드 + 선택지 */}
-      <div className={styles.cardArea}>
-        <div
-          key={currentIndex}
-          className={`${styles.wordCard} ${answerState !== 'idle' ? styles[answerState] : ''}`}
-        >
-          <span className={styles.wordText}>{current.word.word}</span>
-          <span key={`meaning-${currentIndex}`} className={styles.wordMeaning}>
-            {current.word.meaningKo}
-          </span>
-        </div>
+      <div className={styles.questionCounter}>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={currentIndex}
+            className={styles.questionCounterCurrent}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.18 }}
+          >
+            {currentIndex + 1}
+          </motion.span>
+        </AnimatePresence>
+        <span className={styles.questionCounterTotal}> / {questions.length}</span>
+      </div>
 
-        <div className={styles.optionsArea}>
-          {current.type === 'article' ? (
-            <div className={styles.articleOptions}>
-              {current.options.map((option) => (
-                <ArticleButton
-                  key={option}
-                  option={option}
-                  selected={selectedOption === option}
-                  answerState={answerState}
-                  correctAnswer={current.answer}
-                  onSelect={handleSelectOption}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className={styles.pluralOptions}>
-              {current.options.map((option) => (
-                <PluralButton
-                  key={option}
-                  option={option}
-                  selected={selectedOption === option}
-                  answerState={answerState}
-                  correctAnswer={current.answer}
-                  onSelect={handleSelectOption}
-                />
-              ))}
-            </div>
+      <div className={styles.comboChipArea}>
+        <AnimatePresence>
+          {comboCount >= 2 && (
+            <motion.div
+              key={comboCount >= 5 ? 'hot' : 'normal'}
+              className={`${styles.comboChip} ${comboCount >= 5 ? styles.comboChipHot : ''}`}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+            >
+              {comboCount >= 5
+                ? `🔥🔥 ${comboCount} COMBO!`
+                : comboCount >= 3
+                  ? `🔥 ${comboCount} 콤보!`
+                  : `✨ ${comboCount} 콤보`}
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
-      {/* 피드백 패널 */}
-      <div className={`${styles.feedbackWrapper} ${feedbackVisible ? styles.open : ''} ${answerState !== 'idle' ? styles[answerState] : ''}`}>
-        <div className={styles.feedbackPanel}>
-          <div className={styles.feedbackInner}>
-            <div className={styles.feedbackContent}>
-              <span className={styles.feedbackTitle}>{isCorrectAnswer ? '정답!' : '오답'}</span>
-              <span className={styles.feedbackDesc}>
-                {isCorrectAnswer
-                  ? `${current.type === 'article' ? current.answer + ' ' : ''}${current.word.word}`
-                  : `정답: ${current.answer}`}
-              </span>
-            </div>
-            <button className={styles.nextButton} onClick={handleNext}>다음</button>
-          </div>
-        </div>
+      <div className={styles.cardArea}>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={currentIndex}
+            className={styles.cardSlide}
+            initial={{ x: '60%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-60%', opacity: 0 }}
+            transition={{
+              x: { type: 'spring', stiffness: 320, damping: 32, mass: 0.8 },
+              opacity: { duration: 0.2 },
+            }}
+          >
+            <QuizCard
+              question={current}
+              answerState={answerState}
+              selectedOption={selectedOption}
+              onSelect={handleSelectOption}
+              onNext={handleManualNext}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* 종료 확인 모달 */}
-      {showQuitModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowQuitModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <p className={styles.modalTitle}>정말 그만할까요?</p>
-            <p className={styles.modalDesc}>진행 중인 세션이 저장되지 않아요.</p>
-            <div className={styles.modalButtons}>
-              <button className={styles.modalQuitButton} onClick={() => navigate('/home')}>그만하기</button>
-              <button className={styles.modalContinueButton} onClick={() => setShowQuitModal(false)}>계속하기</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showGameOver && (
+          <GameOverSheet
+            correctCount={correctCount}
+            totalCount={questions.length}
+            onContinue={() => navigate('/session/recovery', { state: { fromSession: true } })}
+            onQuit={() => navigate('/home')}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showQuitModal && (
+          <QuitSheet
+            onConfirm={() => navigate('/home')}
+            onCancel={() => setShowQuitModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ── 아티클 버튼 (der/die/das 색상 코딩) ─────────────────────────────────────
-
-interface ArticleButtonProps {
-  option: string;
-  selected: boolean;
+interface QuizCardProps {
+  question: Question;
   answerState: AnswerState;
-  correctAnswer: string;
+  selectedOption: string | null;
   onSelect: (option: string) => void;
+  onNext: () => void;
 }
 
-function ArticleButton({ option, selected, answerState, correctAnswer, onSelect }: ArticleButtonProps) {
+function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: QuizCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const isAnswered = answerState !== 'idle';
-  const isCorrect = option === correctAnswer;
-  const colorKey = ARTICLE_COLOR[option] ?? '';
+  const isCorrect = answerState === 'correct';
 
-  let cls = `${styles.articleButton} ${styles[`article_${colorKey}`] ?? ''}`;
-  if (selected) {
-    cls += isCorrect ? ` ${styles.articleSelected_correct}` : ` ${styles.articleSelected_incorrect}`;
-  } else if (isAnswered && isCorrect) {
-    cls += ` ${styles.articleSelected_correct}`;
-  }
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || answerState === 'idle') return;
+
+    if (answerState === 'correct') {
+      el.animate(
+        [
+          { transform: 'translateY(0) scale(1)' },
+          { transform: 'translateY(-14px) scale(1.03)' },
+          { transform: 'translateY(0) scale(1)' },
+        ],
+        { duration: 480, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'none' }
+      );
+    } else {
+      el.animate(
+        [
+          { transform: 'translateX(0)' },
+          { transform: 'translateX(-10px)' },
+          { transform: 'translateX(10px)' },
+          { transform: 'translateX(-7px)' },
+          { transform: 'translateX(7px)' },
+          { transform: 'translateX(-3px)' },
+          { transform: 'translateX(3px)' },
+          { transform: 'translateX(0)' },
+        ],
+        { duration: 440, easing: 'ease-in-out', fill: 'none' }
+      );
+    }
+  }, [answerState]);
 
   return (
-    <button className={cls} onClick={() => onSelect(option)} disabled={isAnswered}>
-      {option}
-    </button>
+    <div className={styles.quizCardInner}>
+      <div className={styles.wordCardWrapper}>
+        <div
+          ref={cardRef}
+          className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}
+        >
+          <AnimatePresence>
+            {isCorrect && (
+              <motion.span
+                className={styles.correctMark}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.08 }}
+              >
+                ✓
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <span className={styles.wordText}>{question.word.word}</span>
+          <span className={styles.wordMeaning}>{question.word.meaningKo}</span>
+        </div>
+      </div>
+
+      <div className={styles.quizArea}>
+        <p className={styles.questionLabel}>
+          {question.type === 'article' ? '이 단어의 성(관사)은?' : '복수형은?'}
+        </p>
+
+        <div className={question.type === 'article' ? styles.articleOptions : styles.pluralOptions}>
+          {question.options.map((option) => (
+            <OptionButton
+              key={option}
+              option={option}
+              selected={selectedOption === option}
+              answerState={answerState}
+              correctAnswer={question.answer}
+              isArticle={question.type === 'article'}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+
+        <AnimatePresence>
+          {isAnswered && (
+            <motion.div
+              className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+            >
+              <div className={styles.feedbackText}>
+                <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
+                <span>
+                  {isCorrect
+                    ? '정답이에요!'
+                    : `정답: ${question.answer}${question.type === 'article' ? ` ${question.word.word}` : ''}`}
+                </span>
+              </div>
+              <motion.button
+                className={styles.nextButton}
+                onClick={onNext}
+                whileTap={{ scale: 0.96 }}
+              >
+                다음 →
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }
 
-// ── 복수형 버튼 ──────────────────────────────────────────────────────────────
-
-interface PluralButtonProps {
+interface OptionButtonProps {
   option: string;
   selected: boolean;
   answerState: AnswerState;
   correctAnswer: string;
+  isArticle: boolean;
   onSelect: (option: string) => void;
 }
 
-function PluralButton({ option, selected, answerState, correctAnswer, onSelect }: PluralButtonProps) {
+function OptionButton({ option, selected, answerState, correctAnswer, isArticle, onSelect }: OptionButtonProps) {
   const isAnswered = answerState !== 'idle';
   const isCorrect = option === correctAnswer;
+  const colorKey = isArticle ? (ARTICLE_COLOR[option] ?? '') : '';
 
-  let cls = styles.pluralButton;
-  if (selected) {
-    cls += isCorrect ? ` ${styles.pluralCorrect}` : ` ${styles.pluralIncorrect}`;
-  } else if (isAnswered && isCorrect) {
-    cls += ` ${styles.pluralCorrect}`;
-  }
+  let stateClass = '';
+  if (selected && answerState === 'correct') stateClass = styles.optionCorrect;
+  else if (selected && answerState === 'incorrect') stateClass = styles.optionIncorrect;
+  else if (isAnswered && isCorrect) stateClass = styles.optionReveal;
 
   return (
-    <button className={cls} onClick={() => onSelect(option)} disabled={isAnswered}>
+    <motion.button
+      className={`${styles.optionButton} ${colorKey ? styles[`article_${colorKey}`] : ''} ${stateClass}`}
+      onClick={() => onSelect(option)}
+      disabled={isAnswered}
+      whileTap={!isAnswered ? { scale: 0.94 } : undefined}
+      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+    >
       {option}
-    </button>
+    </motion.button>
+  );
+}
+
+function Heart({ isLost }: { isLost: boolean }) {
+  return (
+    <motion.span
+      className={`${styles.heart} ${isLost ? styles.heartLost : ''}`}
+      animate={
+        isLost
+          ? { scale: [1, 1.35, 0.7, 1], transition: { duration: 0.38, ease: 'easeInOut' } }
+          : { scale: 1 }
+      }
+    >
+      ❤️
+    </motion.span>
+  );
+}
+
+interface GameOverSheetProps {
+  correctCount: number;
+  totalCount: number;
+  onContinue: () => void;
+  onQuit: () => void;
+}
+
+function GameOverSheet({ correctCount, totalCount, onContinue, onQuit }: GameOverSheetProps) {
+  return (
+    <>
+      <motion.div
+        className={styles.backdrop}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.28 }}
+      />
+      <motion.div
+        className={styles.sheet}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+      >
+        <div className={styles.sheetHandle} />
+        <div className={styles.gameOverHearts}>
+          {Array.from({ length: MAX_LIVES }).map((_, i) => (
+            <motion.span
+              key={i}
+              className={styles.gameOverHeart}
+              initial={{ scale: 1, opacity: 1 }}
+              animate={{ scale: [1, 1.4, 0], opacity: [1, 1, 0] }}
+              transition={{ delay: i * 0.1, duration: 0.35, ease: 'easeIn' }}
+            >
+              🤍
+            </motion.span>
+          ))}
+        </div>
+        <p className={styles.sheetTitle}>아쉬워요!</p>
+        <p className={styles.sheetDesc}>
+          {totalCount}문제 중 <strong>{correctCount}개</strong> 맞췄어요
+        </p>
+        <div className={styles.sheetButtons}>
+          <motion.button
+            className={styles.continueButton}
+            onClick={onContinue}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.65 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            계속하기
+          </motion.button>
+          <motion.button
+            className={styles.quitTextButton}
+            onClick={onQuit}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.85 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            포기하고 나가기
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+interface QuitSheetProps {
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function QuitSheet({ onConfirm, onCancel }: QuitSheetProps) {
+  return (
+    <>
+      <motion.div
+        className={styles.backdrop}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.24 }}
+        onClick={onCancel}
+      />
+      <motion.div
+        className={styles.sheet}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      >
+        <div className={styles.sheetHandle} />
+        <p className={styles.sheetTitle}>정말 그만할까요?</p>
+        <p className={styles.sheetDesc}>진행 중인 세션이 저장되지 않아요.</p>
+        <div className={styles.sheetButtons}>
+          <motion.button className={styles.quitButton} onClick={onConfirm} whileTap={{ scale: 0.97 }}>
+            그만하기
+          </motion.button>
+          <motion.button className={styles.continueButton} onClick={onCancel} whileTap={{ scale: 0.97 }}>
+            계속하기
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
   );
 }

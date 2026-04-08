@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { appLogin } from '@apps-in-toss/web-framework';
 import { HomePage } from './pages/HomePage.tsx';
 import { OnboardingPage } from './pages/OnboardingPage.tsx';
@@ -19,10 +20,56 @@ function RootRedirect() {
   return <Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />;
 }
 
+function getTransition(pathname: string) {
+  if (pathname.startsWith('/session')) {
+    return {
+      initial: { opacity: 0, y: 32 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -16 },
+      transition: { type: 'spring' as const, stiffness: 280, damping: 28 },
+    };
+  }
+  return {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.22 },
+  };
+}
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  const { initial, animate, exit, transition } = getTransition(location.pathname);
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        style={{ position: 'absolute', inset: 0 }}
+        initial={initial}
+        animate={animate}
+        exit={exit}
+        transition={transition}
+      >
+        <Routes location={location}>
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/session" element={<SessionPage />} />
+          <Route path="/session/result" element={<SessionResultPage />} />
+          <Route path="/session/recovery" element={<SessionRecoveryPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="*" element={<RootRedirect />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   const [authReady, setAuthReady] = useState(false);
 
-  // 앱 시작 시 토큰이 없으면 silent 로그인 시도
   useEffect(() => {
     if (getToken()) {
       setAuthReady(true);
@@ -48,17 +95,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/session" element={<SessionPage />} />
-        <Route path="/session/result" element={<SessionResultPage />} />
-        <Route path="/session/recovery" element={<SessionRecoveryPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<RootRedirect />} />
-      </Routes>
+      <AnimatedRoutes />
     </BrowserRouter>
   );
 }

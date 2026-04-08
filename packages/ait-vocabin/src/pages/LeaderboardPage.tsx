@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import { isAIT } from '../lib/ait.ts';
 import { getLeaderboard, LeaderboardEntry } from '../lib/api.ts';
@@ -31,11 +32,13 @@ export function LeaderboardPage() {
     <div className={styles.page}>
       {/* 다크 히어로 — 내 순위 */}
       <div className={styles.heroArea}>
-        {!isAIT && <button className={styles.backButton} onClick={() => navigate(-1)} aria-label="뒤로가기">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>}
+        {!isAIT && (
+          <button className={styles.backButton} onClick={() => navigate(-1)} aria-label="뒤로가기">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        )}
 
         <div className={styles.heroContent}>
           <p className={styles.heroSub}>이번 주 순위</p>
@@ -54,10 +57,13 @@ export function LeaderboardPage() {
         <p style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>아직 순위가 없어요</p>
       ) : (
         <ul className={styles.list}>
-          {entries.map((item) => (
-            <li
+          {entries.map((item, i) => (
+            <motion.li
               key={item.rank}
               className={`${styles.rankItem} ${item.is_me ? styles.rankItemMe : ''}`}
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 + i * 0.05, type: 'spring', stiffness: 280, damping: 24 }}
             >
               <span className={styles.rankCell}>
                 {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank}
@@ -66,7 +72,7 @@ export function LeaderboardPage() {
                 {item.is_me ? '나' : (item.display_name ?? '익명')}
               </span>
               <span className={styles.rankXp}>{item.xp_total.toLocaleString()}</span>
-            </li>
+            </motion.li>
           ))}
         </ul>
       )}

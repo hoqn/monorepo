@@ -9,30 +9,11 @@
 
 /* ── 다크 히어로 ── */
 .heroArea {
-  background-color: #0F1923;
+  background: radial-gradient(ellipse at 50% 110%, #000 0%, #0F1923 65%);
   padding: 16px 20px 36px;
   flex-shrink: 0;
 }
 
-.backButton {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: rgba(249, 250, 251, 0.08);
-  border-radius: 50%;
-  color: rgba(249, 250, 251, 0.7);
-  cursor: pointer;
-  padding: 0;
-  transition: background-color 0.15s ease;
-  margin-bottom: 24px;
-}
-
-.backButton:active {
-  background: rgba(249, 250, 251, 0.15);
-}
 
 .heroContent {
   display: flex;
