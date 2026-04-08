@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { appLogin, partner, tdsEvent } from '@apps-in-toss/web-framework';
+import { appLogin } from '@apps-in-toss/web-framework';
 import { HomePage } from './pages/HomePage.tsx';
 import { OnboardingPage } from './pages/OnboardingPage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
@@ -20,7 +20,6 @@ function RootRedirect() {
   return <Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />;
 }
 
-// 세션 관련 경로는 위로 슬라이드, 그 외는 fade
 function getTransition(pathname: string) {
   if (pathname.startsWith('/session')) {
     return {
@@ -40,21 +39,7 @@ function getTransition(pathname: string) {
 
 function AnimatedRoutes() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { initial, animate, exit, transition } = getTransition(location.pathname);
-
-  // 네비게이션 바 우측 프로필 버튼 등록 및 이벤트 수신
-  useEffect(() => {
-    const unsubscribe = tdsEvent.addEventListener('navigationAccessoryEvent', {
-      onEvent: ({ id }) => {
-        if (id === 'profile') {
-          navigate('/profile');
-        }
-      },
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -99,7 +84,7 @@ function App() {
           await login({ authorizationCode });
         }
       } catch {
-        /* silent 실패 */
+        // silent 실패 — 온보딩 화면에서 다시 시도함
       } finally {
         setAuthReady(true);
       }

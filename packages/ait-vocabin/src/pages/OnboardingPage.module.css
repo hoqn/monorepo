@@ -1,293 +1,288 @@
+/* ── 공통 ── */
 .page {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-bg);
   overflow: hidden;
-}
-
-/* ── 스텝 인디케이터 ── */
-.stepIndicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  padding: 18px 20px 0;
-  flex-shrink: 0;
-}
-
-.stepDot {
-  height: 6px;
-  border-radius: 3px;
-  background-color: var(--color-progress-track);
-}
-
-/* ── 슬라이드 영역 ── */
-.stepArea {
-  flex: 1;
   position: relative;
-  overflow: hidden;
-  min-height: 0;
 }
 
-.stepContent {
+.stepFill {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
 }
 
-/* ── 콘텐츠 공통 ── */
-.content {
+/* ── Step 0: Hook ── */
+.hookPage {
+  width: 100%;
+  height: 100%;
+  background-color: #0F1923;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0 0 calc(28px + env(safe-area-inset-bottom, 0px));
+}
+
+.hookCenter {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 24px 28px;
-  gap: 16px;
-  text-align: center;
+  align-items: center;
+  padding: 0 32px;
+  gap: 40px;
 }
 
-.illustArea {
-  font-size: 72px;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.title {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  margin: 0;
-  line-height: 1.3;
-  letter-spacing: -0.5px;
-  white-space: pre-line;
-}
-
-.desc {
-  font-size: 15px;
-  color: var(--color-text-secondary);
-  line-height: 1.65;
-  margin: 0;
-  white-space: pre-line;
-}
-
-/* ── 목표 선택 ── */
-.goalOptions {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.goalCard {
-  padding: 18px 8px 14px;
-  background-color: var(--color-surface);
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
+.hookWord {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-.goalCardSelected {
-  border-color: var(--color-primary);
-  background-color: var(--color-primary-subtle);
+.hookWord.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.goalCount {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-
-.goalLabel {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-}
-
-.goalDesc {
-  font-size: 12px;
+.hookArticle {
+  font-size: 18px;
   font-weight: 600;
-  color: var(--color-primary);
-  margin-top: 2px;
+  color: #3182F6;
+  letter-spacing: 0.5px;
 }
 
-.goalCardSelected .goalCount,
-.goalCardSelected .goalLabel,
-.goalCardSelected .goalDesc {
-  color: var(--color-primary);
+.hookNoun {
+  font-size: 64px;
+  font-weight: 800;
+  color: #F9FAFB;
+  letter-spacing: -2px;
+  line-height: 1;
 }
 
-/* ── 알림 시간 ── */
-.timeOptions {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+.hookMeaning {
+  font-size: 20px;
+  font-weight: 400;
+  color: rgba(249, 250, 251, 0.45);
   margin-top: 4px;
 }
 
-.timeCard {
-  padding: 16px;
-  background-color: var(--color-surface);
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
-}
-
-.timeCardSelected {
-  border-color: var(--color-primary);
-  background-color: var(--color-primary-subtle);
-}
-
-.timeEmoji {
-  font-size: 22px;
-  line-height: 1;
-}
-
-.timeLabel {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.timeRange {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-}
-
-.timeCardSelected .timeLabel {
-  color: var(--color-primary);
-}
-
-/* ── 진단 테스트 ── */
-.diagCard {
-  width: 100%;
-  background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
-  padding: 28px 20px 24px;
+.hookLines {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+  text-align: center;
 }
 
-.diagProgressDots {
+.hookLine {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(249, 250, 251, 0.85);
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.hookLineSecondary {
+  font-size: 14px;
+  color: rgba(249, 250, 251, 0.5);
+}
+
+.hookLine.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hookFooter {
+  padding: 0 24px;
   display: flex;
-  gap: 6px;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.diagDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--color-progress-track);
-  display: inline-block;
+.hookFooter.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.startButton {
+  width: 100%;
+  padding: 18px;
+  background-color: #3182F6;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
+  letter-spacing: -0.3px;
+}
+
+.startButton:active {
+  transform: scale(0.97);
+}
+
+.startButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Step 1: 진단 ── */
+.diagPage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px calc(40px + env(safe-area-inset-bottom, 0px));
+  gap: 32px;
+  background-color: var(--color-bg);
+}
+
+.diagHint {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.diagCard {
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: 20px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
 }
 
 .diagWord {
-  font-size: 34px;
+  font-size: 52px;
   font-weight: 800;
   color: var(--color-text-primary);
-  letter-spacing: -1px;
+  letter-spacing: -2px;
+  line-height: 1;
 }
 
 .diagMeaning {
-  font-size: 15px;
+  font-size: 18px;
   color: var(--color-text-secondary);
-  margin-top: -4px;
+  font-weight: 400;
 }
 
-.diagArticleOptions {
+.articleButtons {
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  width: 100%;
-  margin-top: 4px;
+  gap: 10px;
 }
 
-.diagOptionButton {
-  padding: 15px 8px;
-  background-color: var(--color-bg);
+.articleButton {
+  padding: 18px 8px;
+  background-color: var(--color-surface);
   border: 2px solid transparent;
-  border-radius: var(--radius-sm);
-  font-size: 17px;
+  border-radius: 12px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--color-text-primary);
   cursor: pointer;
-  font-family: 'SF Mono', 'Fira Mono', monospace, inherit;
+  transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
 }
 
-.diagOptionButton:disabled {
+.articleButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.articleButton:disabled {
   cursor: default;
 }
 
-.diagOptionCorrect {
+.articleCorrect {
   border-color: var(--color-correct);
-  background-color: #e8faf2;
+  background-color: #E8FAF2;
   color: var(--color-correct);
 }
 
-.diagOptionIncorrect {
+.articleIncorrect {
   border-color: var(--color-incorrect);
-  background-color: #fff0f1;
+  background-color: #FFF0F1;
   color: var(--color-incorrect);
 }
 
-/* ── 하단 ── */
-.footer {
-  padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+/* ── Step 2: 컬렉션 예고 ── */
+.previewPage {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
+  background-color: #0F1923;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
 }
 
-.nextButton {
-  width: 100%;
-  padding: 17px;
-  background-color: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
+.previewWordGrid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 10px;
+  padding: 24px;
+  pointer-events: none;
 }
 
-.nextButton:disabled {
-  opacity: 0.38;
-  cursor: default;
+.previewWord {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(249, 250, 251, 0.12);
+  background-color: rgba(249, 250, 251, 0.06);
+  border-radius: 8px;
+  padding: 6px 12px;
+  letter-spacing: -0.3px;
 }
 
-.skipButton {
-  width: 100%;
-  padding: 14px;
-  background: none;
-  border: none;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  cursor: pointer;
+.previewCenter {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  position: relative;
+  z-index: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .stepDot { transition: none; }
+.previewText {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #F9FAFB;
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: -0.8px;
+}
+
+.previewSub {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(249, 250, 251, 0.3);
+  text-align: center;
+}
+
+.previewPage .hookFooter {
+  position: relative;
+  z-index: 1;
 }

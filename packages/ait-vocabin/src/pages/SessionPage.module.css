@@ -452,3 +452,38 @@
     transition: none;
   }
 }
+
+/* ── 아티클 색상 코딩 (der=파랑, die=빨강, das=초록) ── */
+.article_blue {
+  background-color: #EEF4FF;
+  border-color: #C7DAFB;
+  color: #1E5FBF;
+}
+
+.article_red {
+  background-color: #FFF0F2;
+  border-color: #FBC7CE;
+  color: #BF1E2E;
+}
+
+.article_green {
+  background-color: #EEFAF3;
+  border-color: #C7F0D8;
+  color: #1E8A4A;
+}
+
+.article_blue.optionCorrect,
+.article_red.optionCorrect,
+.article_green.optionCorrect {
+  background-color: #E8FAF2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
+}
+
+.article_blue.optionIncorrect,
+.article_red.optionIncorrect,
+.article_green.optionIncorrect {
+  background-color: #FFF0F1;
+  border-color: var(--color-incorrect);
+  color: var(--color-incorrect);
+}

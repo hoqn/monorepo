@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
+import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import { getReviewWords, createSession, completeSession, mapWord } from '../lib/api.ts';
 import { generateQuestions } from '../utils/quiz.ts';
 import { playCorrect, playIncorrect, playCombo, playGameOver } from '../lib/sound.ts';
@@ -13,6 +14,13 @@ const SESSION_QUESTION_COUNT = 12;
 const AUTO_ADVANCE_DELAY = 1400;
 
 type AnswerState = 'idle' | 'correct' | 'incorrect';
+
+// der=파랑, die=빨강, das=초록
+const ARTICLE_COLOR: Record<string, string> = {
+  der: 'blue',
+  die: 'red',
+  das: 'green',
+};
 
 export function SessionPage() {
   const navigate = useNavigate();
@@ -33,6 +41,8 @@ export function SessionPage() {
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
 
   useEffect(() => {
     (async () => {
@@ -158,7 +168,6 @@ export function SessionPage() {
 
   return (
     <div className={styles.page}>
-      {/* Header */}
       <header className={styles.header}>
         <button className={styles.closeButton} onClick={() => setShowQuitModal(true)} aria-label="세션 종료">
           ✕
@@ -173,7 +182,6 @@ export function SessionPage() {
         </div>
       </header>
 
-      {/* Question counter */}
       <div className={styles.questionCounter}>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
@@ -190,7 +198,6 @@ export function SessionPage() {
         <span className={styles.questionCounterTotal}> / {questions.length}</span>
       </div>
 
-      {/* Combo chip — lives outside cardArea to avoid clipping, persists across questions */}
       <div className={styles.comboChipArea}>
         <AnimatePresence>
           {comboCount >= 2 && (
@@ -212,7 +219,6 @@ export function SessionPage() {
         </AnimatePresence>
       </div>
 
-      {/* Card area — slide transitions happen here */}
       <div className={styles.cardArea}>
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
@@ -237,7 +243,6 @@ export function SessionPage() {
         </AnimatePresence>
       </div>
 
-      {/* Game Over Sheet */}
       <AnimatePresence>
         {showGameOver && (
           <GameOverSheet
@@ -249,7 +254,6 @@ export function SessionPage() {
         )}
       </AnimatePresence>
 
-      {/* Quit Confirmation Sheet */}
       <AnimatePresence>
         {showQuitModal && (
           <QuitSheet
@@ -261,10 +265,6 @@ export function SessionPage() {
     </div>
   );
 }
-
-/* ─────────────────────────────────────────────
-   QuizCard
-───────────────────────────────────────────── */
 
 interface QuizCardProps {
   question: Question;
@@ -333,7 +333,6 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
         </div>
       </div>
 
-      {/* Quiz area */}
       <div className={styles.quizArea}>
         <p className={styles.questionLabel}>
           {question.type === 'article' ? '이 단어의 성(관사)은?' : '복수형은?'}
@@ -347,12 +346,12 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
               selected={selectedOption === option}
               answerState={answerState}
               correctAnswer={question.answer}
+              isArticle={question.type === 'article'}
               onSelect={onSelect}
             />
           ))}
         </div>
 
-        {/* Inline feedback row */}
         <AnimatePresence>
           {isAnswered && (
             <motion.div
@@ -385,21 +384,19 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
   );
 }
 
-/* ─────────────────────────────────────────────
-   OptionButton
-───────────────────────────────────────────── */
-
 interface OptionButtonProps {
   option: string;
   selected: boolean;
   answerState: AnswerState;
   correctAnswer: string;
+  isArticle: boolean;
   onSelect: (option: string) => void;
 }
 
-function OptionButton({ option, selected, answerState, correctAnswer, onSelect }: OptionButtonProps) {
+function OptionButton({ option, selected, answerState, correctAnswer, isArticle, onSelect }: OptionButtonProps) {
   const isAnswered = answerState !== 'idle';
   const isCorrect = option === correctAnswer;
+  const colorKey = isArticle ? (ARTICLE_COLOR[option] ?? '') : '';
 
   let stateClass = '';
   if (selected && answerState === 'correct') stateClass = styles.optionCorrect;
@@ -408,7 +405,7 @@ function OptionButton({ option, selected, answerState, correctAnswer, onSelect }
 
   return (
     <motion.button
-      className={`${styles.optionButton} ${stateClass}`}
+      className={`${styles.optionButton} ${colorKey ? styles[`article_${colorKey}`] : ''} ${stateClass}`}
       onClick={() => onSelect(option)}
       disabled={isAnswered}
       whileTap={!isAnswered ? { scale: 0.94 } : undefined}
@@ -418,10 +415,6 @@ function OptionButton({ option, selected, answerState, correctAnswer, onSelect }
     </motion.button>
   );
 }
-
-/* ─────────────────────────────────────────────
-   Heart
-───────────────────────────────────────────── */
 
 function Heart({ isLost }: { isLost: boolean }) {
   return (
@@ -437,10 +430,6 @@ function Heart({ isLost }: { isLost: boolean }) {
     </motion.span>
   );
 }
-
-/* ─────────────────────────────────────────────
-   GameOverSheet
-───────────────────────────────────────────── */
 
 interface GameOverSheetProps {
   correctCount: number;
@@ -467,7 +456,6 @@ function GameOverSheet({ correctCount, totalCount, onContinue, onQuit }: GameOve
         transition={{ type: 'spring', stiffness: 300, damping: 32 }}
       >
         <div className={styles.sheetHandle} />
-
         <div className={styles.gameOverHearts}>
           {Array.from({ length: MAX_LIVES }).map((_, i) => (
             <motion.span
@@ -481,12 +469,10 @@ function GameOverSheet({ correctCount, totalCount, onContinue, onQuit }: GameOve
             </motion.span>
           ))}
         </div>
-
         <p className={styles.sheetTitle}>아쉬워요!</p>
         <p className={styles.sheetDesc}>
           {totalCount}문제 중 <strong>{correctCount}개</strong> 맞췄어요
         </p>
-
         <div className={styles.sheetButtons}>
           <motion.button
             className={styles.continueButton}
@@ -513,10 +499,6 @@ function GameOverSheet({ correctCount, totalCount, onContinue, onQuit }: GameOve
     </>
   );
 }
-
-/* ─────────────────────────────────────────────
-   QuitSheet
-───────────────────────────────────────────── */
 
 interface QuitSheetProps {
   onConfirm: () => void;
