@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 import { getReviewWords, createSession, completeSession, mapWord } from '../lib/api.ts';

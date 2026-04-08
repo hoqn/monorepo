@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { appLogin } from '@apps-in-toss/web-framework';
 import { HomePage } from './pages/HomePage.tsx';
 import { OnboardingPage } from './pages/OnboardingPage.tsx';
