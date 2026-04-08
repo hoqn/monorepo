@@ -271,9 +271,11 @@
 }
 
 .optionReveal {
-  background-color: #e8faf2;
+  background-color: #c8f5e2;
   border-color: var(--color-correct);
   color: var(--color-correct);
+  font-weight: 800;
+  box-shadow: 0 0 0 3px rgba(0, 196, 113, 0.18);
 }
 
 /* ── 인라인 피드백 행 ── */
@@ -478,6 +480,16 @@
   background-color: #E8FAF2;
   border-color: var(--color-correct);
   color: var(--color-correct);
+}
+
+.article_blue.optionReveal,
+.article_red.optionReveal,
+.article_green.optionReveal {
+  background-color: #c8f5e2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
+  font-weight: 800;
+  box-shadow: 0 0 0 3px rgba(0, 196, 113, 0.18);
 }
 
 .article_blue.optionIncorrect,
