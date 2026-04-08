@@ -5,6 +5,7 @@
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 const TOKEN_KEY = 'vocabin_token';
+const USE_SAMPLE_WORDS = import.meta.env.VITE_USE_SAMPLE_WORDS === 'true';
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -121,6 +122,21 @@ export interface ReviewWordsResponse {
 }
 
 export function getReviewWords(limit = 12): Promise<ReviewWordsResponse> {
+  if (USE_SAMPLE_WORDS) {
+    const words: Word[] = sampleWords.slice(0, limit).map((w) => ({
+      id: w.id,
+      word: w.word,
+      article: w.article,
+      plural: w.plural,
+      meaning_ko: w.meaningKo,
+      ipa: w.ipa,
+      cefr_level: w.cefrLevel,
+      category: w.category,
+    }));
+
+    return Promise.resolve({ words, progress: [] });
+  }
+
   return request<ReviewWordsResponse>(`/words/review?limit=${limit}`);
 }
 
@@ -155,6 +171,7 @@ export function completeSession(
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
 import type { Word as FrontendWord } from '../types/word.ts';
+import { sampleWords } from '../data/sample-words.ts';
 
 export function mapWord(w: Word): FrontendWord {
   return {
