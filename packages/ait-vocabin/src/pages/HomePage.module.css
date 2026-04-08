@@ -7,7 +7,7 @@
   flex-direction: column;
 }
 
-/* 헤더 */
+/* ── 헤더 (웹/비AIT 전용) ── */
 .header {
   display: flex;
   align-items: center;
@@ -41,7 +41,7 @@
   transform: scale(0.92);
 }
 
-/* 컨텐츠 */
+/* ── 콘텐츠 ── */
 .content {
   flex: 1;
   display: flex;
@@ -50,170 +50,196 @@
   padding: 4px 20px calc(32px + env(safe-area-inset-bottom, 0px));
 }
 
-/* ── 채집 히어로 카드 ── */
-.heroCard {
-  background-color: #0F1923;
-  border-radius: 24px;
-  padding: 28px 24px 24px;
+/* ── 칩 행 (스트릭 + 레벨) ── */
+.chipsRow {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
+  gap: 10px;
+  align-items: stretch;
 }
 
-.heroTop {
+/* 스트릭 칩 */
+.chip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.heroLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(249, 250, 251, 0.45);
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-.heroTime {
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(249, 250, 251, 0.35);
-}
-
-.streakArea {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.flame {
-  font-size: 40px;
-  line-height: 1;
-  display: block;
-}
-
-.flameBig {
-  font-size: 52px;
-  animation: flicker 2s ease-in-out infinite alternate;
-}
-
-@keyframes flicker {
-  from { transform: scale(1) rotate(-2deg); }
-  to   { transform: scale(1.08) rotate(2deg); }
-}
-
-.streakInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.streakDays {
-  font-size: 28px;
-  font-weight: 800;
-  color: #F9FAFB;
-  letter-spacing: -1px;
-  line-height: 1;
-}
-
-.streakLabel {
-  font-size: 14px;
-  font-weight: 400;
-  color: rgba(249, 250, 251, 0.5);
-}
-
-.sessionButton {
-  width: 100%;
-  padding: 18px;
-  background-color: #3182F6;
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: -0.3px;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.sessionButton:active {
-  transform: scale(0.97);
-}
-
-/* ── 현황 통계 행 ── */
-.statsRow {
+  gap: 7px;
   background-color: var(--color-surface);
-  border-radius: 16px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-}
-
-.statItem {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.statValue {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  letter-spacing: -0.5px;
-  line-height: 1;
-}
-
-.statLabel {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-tertiary);
-}
-
-.statDivider {
-  width: 1px;
-  height: 28px;
-  background-color: var(--color-progress-track);
+  border-radius: var(--radius-full);
+  padding: 10px 16px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
   flex-shrink: 0;
 }
 
-/* ── 리더보드 미리보기 ── */
-.leaderboardCard {
-  background-color: var(--color-surface);
-  border-radius: 16px;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.chipStreak {
+  background: linear-gradient(135deg, #fff4ed, #fff);
 }
 
-.leaderboardHeader {
+.chipIcon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.chipText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.chipBold {
+  font-weight: 800;
+  color: var(--color-streak);
+}
+
+/* 레벨 칩 */
+.chipLevel {
+  flex: 1;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.chipLevelTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.leaderboardTitle {
-  font-size: 14px;
+.levelBadge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-subtle);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.xpCount {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.progressBarTrack {
+  width: 100%;
+  height: 7px;
+  background-color: var(--color-progress-track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 999px;
+}
+
+/* ── 세션 CTA 카드 ── */
+.sessionCard {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  padding: 28px 20px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 140px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sessionCardBg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+}
+
+.sessionCardBg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sessionCardContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.sessionCardLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.sessionCardTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.sessionCardSub {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 4px 0 0;
+}
+
+.sessionCardArrow {
+  position: relative;
+  z-index: 1;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* ── 리더보드 카드 ── */
+.leaderboardCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.leaderboardMore {
+.sectionMore {
   font-size: 13px;
+  font-weight: 500;
   color: var(--color-text-secondary);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-}
-
-.leaderboardEmpty {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin: 0;
-  padding: 4px 0;
 }
 
 .leaderboardList {
@@ -229,20 +255,24 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
 }
 
 .leaderboardItemMe {
   background-color: var(--color-primary-subtle);
-  border-radius: 8px;
-  padding: 4px 8px;
-  margin: -4px -8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  margin: 0 -6px;
 }
 
 .rank {
   width: 24px;
-  font-size: 15px;
+  font-size: 16px;
   text-align: center;
   flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-text-tertiary);
 }
 
 .leaderboardName {
@@ -261,4 +291,54 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary);
+}
+
+/* 스켈레톤 */
+.loadingRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonRow {
+  height: 20px;
+  background: linear-gradient(90deg, var(--color-bg) 25%, #e8eaed 50%, var(--color-bg) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: skeleton 1.4s ease infinite;
+}
+
+@keyframes skeleton {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  padding: 4px 0;
+  margin: 0;
+}
+
+/* ── 누적 통계 ── */
+.todayStats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.todayStatsText {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.todayStatsCount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
