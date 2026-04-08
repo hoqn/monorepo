@@ -40,6 +40,7 @@ export function SessionPage() {
   const [comboCount, setComboCount] = useState(0);
   const [showQuitModal, setShowQuitModal] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
@@ -76,6 +77,7 @@ export function SessionPage() {
 
   const goNext = useCallback(async () => {
     if (currentIndex + 1 >= questions.length) {
+      setCompleting(true);
       const sessionId = sessionIdRef.current;
       let xpEarned = correctCount * 10;
 
@@ -148,11 +150,7 @@ export function SessionPage() {
   }, [goNext]);
 
   if (loading) {
-    return (
-      <div className={styles.page} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--color-text-secondary)' }}>단어 불러오는 중...</p>
-      </div>
-    );
+    return <SessionLoadingScreen />;
   }
 
   if (error || !current) {
@@ -202,7 +200,7 @@ export function SessionPage() {
         <AnimatePresence>
           {comboCount >= 2 && (
             <motion.div
-              key={comboCount >= 5 ? 'hot' : 'normal'}
+              key="combo"
               className={`${styles.comboChip} ${comboCount >= 5 ? styles.comboChipHot : ''}`}
               initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -261,6 +259,10 @@ export function SessionPage() {
             onCancel={() => setShowQuitModal(false)}
           />
         )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {completing && <CompletingOverlay />}
       </AnimatePresence>
     </div>
   );
@@ -503,6 +505,152 @@ function GameOverSheet({ correctCount, totalCount, onContinue, onQuit }: GameOve
 interface QuitSheetProps {
   onConfirm: () => void;
   onCancel: () => void;
+}
+
+// 흩어진 위치/각도 → 0 스냅 → 다시 흩어지는 루프
+const DOCS = [
+  { dx: -28, dy: 18, dr: -22, color: '#f5f5f5', accent: '#d4d4d440' },
+  { dx:   6, dy: -6, dr:   8, color: '#efefef', accent: '#c8c8c840' },
+  { dx:  24, dy: 14, dr:  18, color: '#e8e8e8', accent: '#bcbcbc40' },
+] as const;
+
+const SPARKLE_POS = [
+  { x: -48, y: -18 },
+  { x:  50, y: -22 },
+  { x: -42, y:  22 },
+  { x:  44, y:  18 },
+];
+
+const C = 3.2; // 사이클 길이(초)
+// keyframe 타이밍: [흩어짐 유지, 스냅 시작, 정렬 완료, 정렬 유지, 복귀]
+const T = [0, 0.08, 0.46, 0.72, 1.0] as const;
+
+function SessionLoadingScreen() {
+  return (
+    <div className={styles.page} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <div className={styles.completingDocs}>
+        {DOCS.map((doc, i) => (
+          <motion.div
+            key={i}
+            className={styles.completingDoc}
+            style={{ background: doc.color, borderColor: doc.accent, zIndex: i }}
+            animate={{
+              x:      [doc.dx, doc.dx, 0,       0,       doc.dx],
+              y:      [doc.dy, doc.dy, -i * 5,  -i * 5,  doc.dy],
+              rotate: [doc.dr, doc.dr, 0,       0,       doc.dr],
+            }}
+            transition={{
+              duration: C,
+              times: [...T],
+              ease: ['linear', [0.2, 1.6, 0.3, 1], 'linear', 'easeIn'],
+              repeat: Infinity,
+              delay: i * 0.055,
+            }}
+          >
+            <div className={styles.docLine} />
+            <div className={styles.docLine} />
+            <div className={styles.docLineShort} />
+          </motion.div>
+        ))}
+        {SPARKLE_POS.map((pos, i) => (
+          <motion.span
+            key={`spark-${i}`}
+            className={styles.sparkle}
+            style={{ left: `calc(50% + ${pos.x}px)`, top: `calc(50% + ${pos.y}px)` }}
+            animate={{
+              scale:   [0, 0, 1.4, 0, 0],
+              opacity: [0, 0, 1,   0, 0],
+              rotate:  [0, 0, 30, 60, 60],
+            }}
+            transition={{
+              duration: C,
+              times: [0, 0.38, 0.52, 0.64, 1.0],
+              repeat: Infinity,
+              delay: i * 0.06,
+            }}
+          >
+            ✦
+          </motion.span>
+        ))}
+      </div>
+      <motion.div
+        className={styles.completingTextGroup}
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <p className={styles.completingText}>준비하는 중...</p>
+        <p className={styles.completingSubText}>Einen Moment, bitte...</p>
+      </motion.div>
+    </div>
+  );
+}
+
+function CompletingOverlay() {
+  return (
+    <motion.div
+      className={styles.completingOverlay}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className={styles.completingDocs}>
+        {DOCS.map((doc, i) => (
+          <motion.div
+            key={i}
+            className={styles.completingDoc}
+            style={{ background: doc.color, borderColor: doc.accent, zIndex: i }}
+            animate={{
+              x:      [doc.dx, doc.dx, 0,       0,       doc.dx],
+              y:      [doc.dy, doc.dy, -i * 5,  -i * 5,  doc.dy],
+              rotate: [doc.dr, doc.dr, 0,       0,       doc.dr],
+            }}
+            transition={{
+              duration: C,
+              times: [...T],
+              ease: ['linear', [0.2, 1.6, 0.3, 1], 'linear', 'easeIn'],
+              repeat: Infinity,
+              delay: i * 0.055,
+            }}
+          >
+            <div className={styles.docLine} />
+            <div className={styles.docLine} />
+            <div className={styles.docLineShort} />
+          </motion.div>
+        ))}
+
+        {/* 정렬되는 순간에 반짝이는 별 */}
+        {SPARKLE_POS.map((pos, i) => (
+          <motion.span
+            key={`spark-${i}`}
+            className={styles.sparkle}
+            style={{ left: `calc(50% + ${pos.x}px)`, top: `calc(50% + ${pos.y}px)` }}
+            animate={{
+              scale:   [0, 0, 1.4, 0, 0],
+              opacity: [0, 0, 1,   0, 0],
+              rotate:  [0, 0, 30, 60, 60],
+            }}
+            transition={{
+              duration: C,
+              times: [0, 0.38, 0.52, 0.64, 1.0],
+              repeat: Infinity,
+              delay: i * 0.06,
+            }}
+          >
+            ✦
+          </motion.span>
+        ))}
+      </div>
+
+      <motion.div
+        className={styles.completingTextGroup}
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <p className={styles.completingText}>꼼꼼히 확인 중...</p>
+        <p className={styles.completingSubText}>Einen Moment, bitte...</p>
+      </motion.div>
+    </motion.div>
+  );
 }
 
 function QuitSheet({ onConfirm, onCancel }: QuitSheetProps) {

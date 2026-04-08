@@ -155,7 +155,21 @@
 .sessionCardBg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  background: linear-gradient(
+    125deg,
+    #2563eb 0%,
+    #4f46e5 35%,
+    #7c3aed 65%,
+    #4f46e5 100%
+  );
+  background-size: 250% 250%;
+  animation: cardGradientFlow 6s ease infinite;
+}
+
+@keyframes cardGradientFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .sessionCardBg::after {
