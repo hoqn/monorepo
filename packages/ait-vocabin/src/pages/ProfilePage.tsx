@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import styles from './ProfilePage.module.css';
 
 const MOCK_USER = {
@@ -31,21 +30,8 @@ const TIME_LABEL: Record<string, string> = {
 };
 
 export function ProfilePage() {
-  const navigate = useNavigate();
-
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <button
-          className={styles.backButton}
-          onClick={() => navigate(-1)}
-          aria-label="뒤로가기"
-        >
-          ←
-        </button>
-        <span className={styles.headerTitle}>프로필</span>
-      </header>
-
       <div className={styles.content}>
         {/* 유저 정보 */}
         <div className={styles.userCard}>

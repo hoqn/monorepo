@@ -7,29 +7,38 @@
   overflow: hidden;
 }
 
-/* 스텝 인디케이터 */
+/* ── 스텝 인디케이터 ── */
 .stepIndicator {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 6px;
-  padding: 16px 20px 0;
+  padding: 18px 20px 0;
+  flex-shrink: 0;
 }
 
 .stepDot {
-  width: 6px;
   height: 6px;
-  border-radius: 50%;
-  background-color: var(--color-progress-track);
-  transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.stepDotActive {
-  width: 18px;
   border-radius: 3px;
-  background-color: var(--color-primary);
+  background-color: var(--color-progress-track);
 }
 
-/* 컨텐츠 */
+/* ── 슬라이드 영역 ── */
+.stepArea {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.stepContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 콘텐츠 공통 ── */
 .content {
   flex: 1;
   display: flex;
@@ -44,68 +53,28 @@
 .illustArea {
   font-size: 72px;
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--color-text-primary);
   margin: 0;
   line-height: 1.3;
   letter-spacing: -0.5px;
+  white-space: pre-line;
 }
 
 .desc {
   font-size: 15px;
   color: var(--color-text-secondary);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
+  white-space: pre-line;
 }
 
-/* 레벨 선택 */
-.levelOptions {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.levelCard {
-  width: 100%;
-  padding: 18px 20px;
-  background-color: var(--color-surface);
-  border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.levelCard:active {
-  transform: scale(0.98);
-}
-
-.levelCardSelected {
-  border-color: var(--color-primary);
-  background-color: var(--color-primary-subtle);
-}
-
-.levelTitle {
-  display: block;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-bottom: 2px;
-}
-
-.levelDesc {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-/* 목표 설정 */
+/* ── 목표 선택 ── */
 .goalOptions {
   width: 100%;
   display: grid;
@@ -115,16 +84,17 @@
 }
 
 .goalCard {
-  padding: 16px 8px;
+  padding: 18px 8px 14px;
   background-color: var(--color-surface);
   border: 2px solid transparent;
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
 .goalCardSelected {
@@ -133,23 +103,37 @@
 }
 
 .goalCount {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--color-text-primary);
 }
 
 .goalLabel {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--color-text-secondary);
 }
 
-/* 알림 시간 선택 */
+.goalDesc {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.goalCardSelected .goalCount,
+.goalCardSelected .goalLabel,
+.goalCardSelected .goalDesc {
+  color: var(--color-primary);
+}
+
+/* ── 알림 시간 ── */
 .timeOptions {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .timeCard {
@@ -160,9 +144,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
 .timeCardSelected {
@@ -172,11 +157,12 @@
 
 .timeEmoji {
   font-size: 22px;
+  line-height: 1;
 }
 
 .timeLabel {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
@@ -185,27 +171,48 @@
   color: var(--color-text-secondary);
 }
 
-/* 진단 테스트 */
+.timeCardSelected .timeLabel {
+  color: var(--color-primary);
+}
+
+/* ── 진단 테스트 ── */
 .diagCard {
   width: 100%;
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
-  padding: 24px 20px;
+  padding: 28px 20px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+}
+
+.diagProgressDots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.diagDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-progress-track);
+  display: inline-block;
 }
 
 .diagWord {
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 800;
   color: var(--color-text-primary);
+  letter-spacing: -1px;
 }
 
 .diagMeaning {
   font-size: 15px;
   color: var(--color-text-secondary);
+  margin-top: -4px;
 }
 
 .diagArticleOptions {
@@ -213,52 +220,49 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   width: 100%;
+  margin-top: 4px;
 }
 
 .diagOptionButton {
-  padding: 14px;
+  padding: 15px 8px;
   background-color: var(--color-bg);
   border: 2px solid transparent;
   border-radius: var(--radius-sm);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--color-text-primary);
   cursor: pointer;
-  transition: border-color 0.12s ease;
+  font-family: 'SF Mono', 'Fira Mono', monospace, inherit;
 }
 
-.diagOptionButton:active {
-  transform: scale(0.96);
+.diagOptionButton:disabled {
+  cursor: default;
 }
 
 .diagOptionCorrect {
   border-color: var(--color-correct);
-  background-color: #E8FAF2;
+  background-color: #e8faf2;
   color: var(--color-correct);
 }
 
 .diagOptionIncorrect {
   border-color: var(--color-incorrect);
-  background-color: #FFF0F1;
+  background-color: #fff0f1;
   color: var(--color-incorrect);
 }
 
-.diagProgress {
-  font-size: 13px;
-  color: var(--color-text-tertiary);
-}
-
-/* 하단 */
+/* ── 하단 ── */
 .footer {
-  padding: 12px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .nextButton {
   width: 100%;
-  padding: 16px;
+  padding: 17px;
   background-color: var(--color-primary);
   color: #fff;
   border: none;
@@ -266,16 +270,12 @@
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease, opacity 0.12s ease;
+  transition: opacity 0.15s ease;
 }
 
 .nextButton:disabled {
-  opacity: 0.4;
+  opacity: 0.38;
   cursor: default;
-}
-
-.nextButton:not(:disabled):active {
-  transform: scale(0.97);
 }
 
 .skipButton {
@@ -286,4 +286,8 @@
   font-size: 14px;
   color: var(--color-text-secondary);
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepDot { transition: none; }
 }

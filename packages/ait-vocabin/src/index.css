@@ -18,6 +18,11 @@
 
   --color-progress-track: #F2F4F6;
 
+  /* 게임화 색상 */
+  --color-xp: #F59E0B;
+  --color-combo: #8B5CF6;
+  --color-level: #6366F1;
+
   /* 스페이싱 */
   --spacing-xs: 4px;
   --spacing-sm: 8px;

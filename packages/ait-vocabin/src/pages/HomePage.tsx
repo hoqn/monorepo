@@ -1,9 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useSpring, useTransform } from 'framer-motion';
+import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { getMe, getLeaderboard, MeResponse, LeaderboardEntry } from '../lib/api.ts';
 import styles from './HomePage.module.css';
 
 const XP_PER_LEVEL = 500;
+
+// XP 바를 스프링으로 부드럽게 채움
+function AnimatedXpBar({ percent }: { percent: number }) {
+  const spring = useSpring(0, { stiffness: 60, damping: 20 });
+  const width = useTransform(spring, (v) => `${v}%`);
+
+  useEffect(() => {
+    const t = setTimeout(() => spring.set(percent), 120);
+    return () => clearTimeout(t);
+  }, [percent, spring]);
+
+  return (
+    <div className={styles.progressBarTrack}>
+      <motion.div className={styles.progressBarFill} style={{ width }} />
+    </div>
+  );
+}
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -11,6 +30,8 @@ export function HomePage() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pressed, setPressed] = useState(false);
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -18,11 +39,8 @@ export function HomePage() {
         const [meData, lbData] = await Promise.all([getMe(), getLeaderboard()]);
         setMe(meData);
         setLeaderboard(lbData.entries.slice(0, 4));
-      } catch {
-        // 실패해도 UI는 빈 값으로 표시
-      } finally {
-        setLoading(false);
-      }
+      } catch { /* 실패해도 빈 값으로 */ }
+      finally { setLoading(false); }
     })();
   }, []);
 
@@ -33,79 +51,146 @@ export function HomePage() {
   const streak = me?.user.current_streak ?? 0;
   const todayWords = me?.stats.totalWords ?? 0;
 
+  const handleSessionPress = () => {
+    generateHapticFeedback({ type: 'softMedium' });
+    navigate('/session');
+  };
+
+  const containerVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 260, damping: 22 } },
+  };
+
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <span className={styles.logo}>VocaBin</span>
-        <button className={styles.profileButton} onClick={() => navigate('/profile')} aria-label="프로필">
-          👤
-        </button>
-      </header>
+      <motion.div
+        className={styles.content}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* 스트릭 + XP 칩 행 */}
+        <motion.div className={styles.chipsRow} variants={itemVariants}>
+          <StreakChip streak={streak} />
+          <LevelChip level={level} xpInLevel={xpInLevel} xpPercent={xpPercent} />
+        </motion.div>
 
-      <div className={styles.content}>
-        {/* 스트릭 + XP */}
-        <div className={styles.statsCard}>
-          <div className={styles.streakRow}>
-            <span className={styles.streakIcon}>🔥</span>
-            <span className={styles.streakText}>
-              <span className={styles.streakDays}>{streak}일</span> 스트릭
-            </span>
-          </div>
-
-          <div className={styles.xpRow}>
-            <div className={styles.xpLabel}>
-              <span className={styles.levelBadge}>Lv.{level}</span>
-              <span className={styles.xpCount}>{xpInLevel} / {XP_PER_LEVEL} XP</span>
+        {/* 세션 CTA 카드 */}
+        <motion.div variants={itemVariants}>
+          <motion.div
+            className={styles.sessionCard}
+            animate={pressed ? { scale: 0.97 } : { scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            onPointerDown={() => {
+              setPressed(true);
+              pressTimerRef.current = setTimeout(() => setPressed(false), 300);
+            }}
+            onPointerUp={() => { setPressed(false); handleSessionPress(); }}
+            onPointerCancel={() => setPressed(false)}
+          >
+            <div className={styles.sessionCardBg} />
+            <div className={styles.sessionCardContent}>
+              <p className={styles.sessionCardLabel}>오늘의 복습</p>
+              <p className={styles.sessionCardTitle}>학습 시작하기</p>
+              <p className={styles.sessionCardSub}>12개 단어가 기다리고 있어요</p>
             </div>
-            <div className={styles.progressBarTrack}>
-              <div className={styles.progressBarFill} style={{ width: `${xpPercent}%` }} />
-            </div>
-          </div>
-        </div>
+            <div className={styles.sessionCardArrow}>→</div>
+          </motion.div>
+        </motion.div>
 
-        {/* 세션 시작 */}
-        <div className={styles.sessionCard}>
-          <button className={styles.sessionStartButton} onClick={() => navigate('/session')}>
-            세션 시작하기
-          </button>
-        </div>
-
-        {/* 리더보드 미리보기 */}
-        <div className={styles.leaderboardCard}>
+        {/* 리더보드 카드 */}
+        <motion.div className={styles.leaderboardCard} variants={itemVariants}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>이번 주 리더보드</span>
-            <button className={styles.sectionMore} onClick={() => navigate('/leaderboard')}>
+            <button
+              className={styles.sectionMore}
+              onClick={() => navigate('/leaderboard')}
+            >
               전체보기 →
             </button>
           </div>
 
           {loading ? (
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', padding: '8px 0' }}>불러오는 중...</p>
+            <div className={styles.loadingRows}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={styles.skeletonRow} />
+              ))}
+            </div>
           ) : leaderboard.length === 0 ? (
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', padding: '8px 0' }}>아직 순위가 없어요</p>
+            <p className={styles.emptyText}>아직 순위가 없어요</p>
           ) : (
             <ul className={styles.leaderboardList}>
-              {leaderboard.map((item) => (
-                <li key={item.rank} className={styles.leaderboardItem}>
-                  <span className={`${styles.rank} ${item.rank <= 3 ? styles.rankTop : ''}`}>
-                    {item.rank}
+              {leaderboard.map((item, i) => (
+                <motion.li
+                  key={item.rank}
+                  className={`${styles.leaderboardItem} ${item.is_me ? styles.leaderboardItemMe : ''}`}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.25 + i * 0.07 }}
+                >
+                  <span className={styles.rank}>
+                    {item.rank <= 3 ? ['🥇', '🥈', '🥉'][item.rank - 1] : item.rank}
                   </span>
-                  <span className={`${styles.leaderboardName} ${item.is_me ? styles.leaderboardNameMe : ''}`}>
+                  <span className={styles.leaderboardName}>
                     {item.is_me ? '나' : (item.display_name ?? '익명')}
                   </span>
                   <span className={styles.leaderboardXp}>{item.xp_total.toLocaleString()} XP</span>
-                </li>
+                </motion.li>
               ))}
             </ul>
           )}
-        </div>
+        </motion.div>
 
-        {/* 오늘 통계 */}
-        <div className={styles.todayStats}>
+        {/* 누적 학습 단어 */}
+        <motion.div className={styles.todayStats} variants={itemVariants}>
           <span className={styles.todayStatsText}>누적 학습 단어</span>
           <span className={styles.todayStatsCount}>{todayWords}개</span>
-        </div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─────────────────────
+   StreakChip
+───────────────────── */
+function StreakChip({ streak }: { streak: number }) {
+  const isActive = streak > 0;
+  return (
+    <motion.div
+      className={`${styles.chip} ${isActive ? styles.chipStreak : ''}`}
+      whileTap={{ scale: 0.94 }}
+    >
+      <motion.span
+        className={styles.chipIcon}
+        animate={isActive ? { scale: [1, 1.15, 1] } : {}}
+        transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        🔥
+      </motion.span>
+      <span className={styles.chipText}>
+        <span className={styles.chipBold}>{streak}일</span> 스트릭
+      </span>
+    </motion.div>
+  );
+}
+
+/* ─────────────────────
+   LevelChip
+───────────────────── */
+function LevelChip({ level, xpInLevel, xpPercent }: { level: number; xpInLevel: number; xpPercent: number }) {
+  return (
+    <div className={styles.chipLevel}>
+      <div className={styles.chipLevelTop}>
+        <span className={styles.levelBadge}>Lv.{level}</span>
+        <span className={styles.xpCount}>{xpInLevel} / {XP_PER_LEVEL} XP</span>
       </div>
+      <AnimatedXpBar percent={xpPercent} />
     </div>
   );
 }
