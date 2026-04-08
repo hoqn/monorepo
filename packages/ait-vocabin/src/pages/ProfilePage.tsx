@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
-import { isAIT } from '../lib/ait.ts';
+
 import { ONBOARDING_DONE_KEY } from '../App.tsx';
 import { getMe, MeResponse } from '../lib/api.ts';
 import styles from './ProfilePage.module.css';
@@ -56,11 +56,11 @@ export function ProfilePage() {
     <div className={styles.page}>
       {/* 다크 히어로 — 유저 정보 */}
       <div className={styles.heroArea}>
-        {!isAIT && <button className={styles.backButton} onClick={() => navigate(-1)} aria-label="뒤로가기">
+        <button className={styles.backButton} onClick={() => navigate('/home')} aria-label="홈으로">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
-        </button>}
+        </button>
 
         <div className={styles.heroContent}>
           <div className={styles.avatar}>
