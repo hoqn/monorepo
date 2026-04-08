@@ -10,7 +10,7 @@ const XP_PER_LEVEL = 500;
 
 function AnimatedXpBar({ percent }: { percent: number }) {
   const spring = useSpring(0, { stiffness: 60, damping: 20 });
-  const width = useTransform(spring, (v) => `${v}%`);
+  const scaleX = useTransform(spring, (v) => v / 100);
 
   useEffect(() => {
     const t = setTimeout(() => spring.set(percent), 120);
@@ -19,7 +19,7 @@ function AnimatedXpBar({ percent }: { percent: number }) {
 
   return (
     <div className={styles.progressBarTrack}>
-      <motion.div className={styles.progressBarFill} style={{ width }} />
+      <motion.div className={styles.progressBarFill} style={{ scaleX, transformOrigin: 'left' }} />
     </div>
   );
 }
