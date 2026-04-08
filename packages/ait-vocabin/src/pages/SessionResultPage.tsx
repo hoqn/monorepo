@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { playComplete, playPerfect } from '../lib/sound.ts';
 import styles from './SessionResultPage.module.css';
 
 const XP_PER_CORRECT = 10;
@@ -54,6 +55,9 @@ export function SessionResultPage() {
     if (!canvas) return;
 
     const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+
+    if (isPerfect) playPerfect();
+    else playComplete();
 
     const shoot = (delay: number, angle: number, origin: { x: number; y: number }) => {
       setTimeout(() => {

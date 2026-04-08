@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { getReviewWords, createSession, completeSession, mapWord } from '../lib/api.ts';
 import { generateQuestions } from '../utils/quiz.ts';
+import { playCorrect, playIncorrect, playCombo, playGameOver } from '../lib/sound.ts';
 import { Question } from '../types/word.ts';
 import styles from './SessionPage.module.css';
 
@@ -103,17 +104,26 @@ export function SessionPage() {
 
       if (isCorrect) {
         generateHapticFeedback({ type: 'success' });
+        playCorrect();
         setCorrectCount((c) => c + 1);
-        setComboCount((c) => c + 1);
+        setComboCount((c) => {
+          const next = c + 1;
+          if (next >= 2) playCombo(next);
+          return next;
+        });
         autoTimerRef.current = setTimeout(goNext, AUTO_ADVANCE_DELAY);
       } else {
         generateHapticFeedback({ type: 'error' });
+        playIncorrect();
         setComboCount(0);
         const newLives = lives - 1;
         setLives(newLives);
 
         if (newLives <= 0) {
-          setTimeout(() => setShowGameOver(true), 900);
+          setTimeout(() => {
+            playGameOver();
+            setShowGameOver(true);
+          }, 900);
         } else {
           autoTimerRef.current = setTimeout(goNext, AUTO_ADVANCE_DELAY);
         }
