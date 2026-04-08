@@ -123,16 +123,18 @@ export interface ReviewWordsResponse {
 
 export function getReviewWords(limit = 12): Promise<ReviewWordsResponse> {
   if (USE_SAMPLE_WORDS) {
-    const words: Word[] = sampleWords.slice(0, limit).map((w) => ({
-      id: w.id,
-      word: w.word,
-      article: w.article,
-      plural: w.plural,
-      meaning_ko: w.meaningKo,
-      ipa: w.ipa,
-      cefr_level: w.cefrLevel,
-      category: w.category,
-    }));
+    const words: Word[] = shuffle(sampleWords)
+      .slice(0, limit)
+      .map((w) => ({
+        id: w.id,
+        word: w.word,
+        article: w.article,
+        plural: w.plural,
+        meaning_ko: w.meaningKo,
+        ipa: w.ipa,
+        cefr_level: w.cefrLevel,
+        category: w.category,
+      }));
 
     return Promise.resolve({ words, progress: [] });
   }
@@ -158,10 +160,7 @@ export async function createSession(): Promise<{ sessionId: string }> {
   return request<{ sessionId: string }>('/sessions', { method: 'POST' });
 }
 
-export function completeSession(
-  sessionId: string,
-  results: SessionResult[]
-): Promise<CompleteSessionResponse> {
+export function completeSession(sessionId: string, results: SessionResult[]): Promise<CompleteSessionResponse> {
   return request<CompleteSessionResponse>(`/sessions/${sessionId}/complete`, {
     method: 'POST',
     body: JSON.stringify({ results }),
@@ -172,6 +171,7 @@ export function completeSession(
 
 import type { Word as FrontendWord } from '../types/word.ts';
 import { sampleWords } from '../data/sample-words.ts';
+import { shuffle } from 'es-toolkit';
 
 export function mapWord(w: Word): FrontendWord {
   return {
