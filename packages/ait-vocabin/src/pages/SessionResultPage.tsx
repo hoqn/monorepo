@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { playComplete, playPerfect } from '../lib/sound.ts';
 import styles from './SessionResultPage.module.css';

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useSpring, useTransform } from 'framer-motion';
+import { motion, useSpring, useTransform } from 'motion/react';
 import { generateHapticFeedback, partner, tdsEvent } from '@apps-in-toss/web-framework';
 import { getMe, getLeaderboard, MeResponse, LeaderboardEntry } from '../lib/api.ts';
 import { isAIT } from '../lib/ait.ts';

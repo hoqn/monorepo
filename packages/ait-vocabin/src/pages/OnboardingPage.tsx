@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { generateHapticFeedback, appLogin } from '@apps-in-toss/web-framework';
 import { ONBOARDING_DONE_KEY } from '../App.tsx';
 import { login } from '../lib/api.ts';
