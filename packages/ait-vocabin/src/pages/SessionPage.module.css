@@ -108,6 +108,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  will-change: transform, opacity;
 }
 
 /* ── 퀴즈 카드 내부 ── */
