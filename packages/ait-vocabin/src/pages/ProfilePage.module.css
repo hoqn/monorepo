@@ -9,10 +9,9 @@
 
 /* ── 다크 히어로 ── */
 .heroArea {
-  background-color: #0F1923;
+  background: radial-gradient(ellipse at 50% 110%, #000 0%, #0F1923 65%);
   padding: 16px 20px 36px;
   flex-shrink: 0;
-  border-radius: 0 0 28px 28px;
 }
 
 .backButton {
