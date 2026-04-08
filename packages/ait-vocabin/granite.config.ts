@@ -5,11 +5,16 @@ export default defineConfig({
   brand: {
     displayName: '독일어락',
     primaryColor: '#1E7AF2',
-    icon: '',
+    icon: 'https://static.toss.im/appsintoss/30175/9d598263-578c-4d41-a497-49940ac9238b.png',
   },
   navigationBar: {
-    withBackButton: true,
-    withHomeButton: false,
+    initialAccessoryButton: {
+      id: 'profile',
+      title: '프로필',
+      icon: { name: 'icon-system-user-filled' },
+    },
+    withBackButton: false,
+    withHomeButton: true,
   },
   web: {
     // host: '172.30.1.14',

@@ -3,7 +3,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-bg);
+  background: linear-gradient(to bottom, #fff 0px, #F2F4F6 80px);
   overflow: hidden;
 }
 
@@ -11,7 +11,7 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   padding: 14px 20px 12px;
   flex-shrink: 0;
 }
@@ -24,365 +24,478 @@
   justify-content: center;
   border: none;
   background: none;
-  color: var(--color-text-tertiary);
+  font-size: 20px;
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: transform 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .closeButton:active {
-  transform: scale(0.88);
-  color: var(--color-text-primary);
+  transform: scale(0.86);
+  opacity: 0.6;
 }
 
 .progressTrack {
   flex: 1;
-  height: 3px;
+  height: 6px;
   background-color: var(--color-progress-track);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
   background-color: var(--color-primary);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.livesRow {
+.hearts {
   display: flex;
-  gap: 5px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
-.liveDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--color-incorrect);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.heart {
+  font-size: 17px;
+  line-height: 1;
+  display: inline-block;
+  transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
-.liveDotLost {
-  opacity: 0.18;
-  transform: scale(0.75);
+.heartLost {
+  opacity: 0.22;
+  filter: grayscale(1) saturate(0);
 }
 
-/* ── 카드 + 선택지 영역 ── */
+/* ── 문제 번호 ── */
+.questionCounter {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  padding: 0 20px 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.questionCounterCurrent {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  display: inline-block;
+}
+
+.questionCounterTotal {
+  color: var(--color-text-tertiary);
+}
+
+/* ── 카드 슬라이드 영역 ── */
 .cardArea {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+.cardSlide {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 퀴즈 카드 내부 ── */
+.quizCardInner {
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 8px 20px 0;
+  gap: 0;
+}
+
+/* ── 단어 카드 래퍼 ── */
+.wordCardWrapper {
+  /* 여백 없음 — 콤보 칩은 cardArea 밖에 위치 */
+}
+
+/* ── 콤보 칩 영역 — 고정 높이로 layout shift 없음 ── */
+.comboChipArea {
+  height: 32px;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 16px 20px 0;
-  gap: 20px;
+  flex-shrink: 0;
+}
+
+/* ── 콤보 칩 ── */
+.comboChip {
+  padding: 5px 14px;
+  background: linear-gradient(135deg, #f97316, #ef4444);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.comboChipHot {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
 }
 
 /* ── 단어 카드 ── */
 .wordCard {
   background-color: var(--color-surface);
-  border-radius: 24px;
-  padding: 40px 32px 36px;
+  border-radius: var(--radius-lg);
+  padding: 36px 32px 30px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.07);
   border: 2px solid transparent;
-  transition: border-color 0.15s ease;
+  position: relative;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.wordCard.correct {
-  animation: cardPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.wordCard_correct {
+  background-color: #f0fdf4;
   border-color: var(--color-correct);
 }
 
-.wordCard.incorrect {
-  animation: cardShake 0.38s ease forwards;
+.wordCard_incorrect {
+  background-color: #fff5f5;
   border-color: var(--color-incorrect);
 }
 
-@keyframes cardPop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.03) translateY(-6px); }
-  100% { transform: scale(1) translateY(0); }
-}
-
-@keyframes cardShake {
-  0%, 100% { transform: translateX(0); }
-  20%      { transform: translateX(-9px); }
-  40%      { transform: translateX(9px); }
-  60%      { transform: translateX(-6px); }
-  80%      { transform: translateX(6px); }
-}
-
-.wordText {
-  font-size: 52px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  letter-spacing: -2px;
-  text-align: center;
+.correctMark {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--color-correct);
   line-height: 1;
 }
 
+.wordText {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -1.5px;
+  text-align: center;
+}
+
 .wordMeaning {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--color-text-secondary);
-  animation: meaningFadeIn 0.4s ease 1.2s both;
 }
 
-@keyframes meaningFadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* ── 퀴즈 영역 ── */
+.quizArea {
+  padding: 16px 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* ── 선택지 영역 ── */
-.optionsArea {
-  padding: 0 0 8px;
+.questionLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 0;
 }
 
-/* 아티클 버튼 — 3열 */
+/* 관사 퀴즈: 2+1 레이아웃 */
 .articleOptions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-.articleButton {
-  padding: 20px 8px;
-  border: 2px solid transparent;
-  border-radius: 14px;
-  font-size: 19px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
-  letter-spacing: 0.3px;
+/* 세 번째 버튼(das)은 중앙 정렬 */
+.articleOptions > :nth-child(3) {
+  grid-column: 1 / 3;
+  justify-self: center;
+  width: calc(50% - 5px);
 }
 
-.articleButton:active:not(:disabled) {
-  transform: scale(0.94);
-}
-
-.articleButton:disabled {
-  cursor: default;
-}
-
-/* der → 파랑 */
-.article_blue {
-  background-color: #EEF4FF;
-  border-color: #C7DAFB;
-  color: #1E5FBF;
-}
-
-/* die → 빨강/핑크 */
-.article_red {
-  background-color: #FFF0F2;
-  border-color: #FBC7CE;
-  color: #BF1E2E;
-}
-
-/* das → 초록 */
-.article_green {
-  background-color: #EEFAF3;
-  border-color: #C7F0D8;
-  color: #1E8A4A;
-}
-
-/* 정답 선택 시 */
-.articleSelected_correct {
-  background-color: #E8FAF2 !important;
-  border-color: var(--color-correct) !important;
-  color: var(--color-correct) !important;
-}
-
-/* 오답 선택 시 */
-.articleSelected_incorrect {
-  background-color: #FFF0F1 !important;
-  border-color: var(--color-incorrect) !important;
-  color: var(--color-incorrect) !important;
-}
-
-/* 복수형 버튼 — 세로 리스트 */
+/* 복수형 퀴즈: 2x2 그리드 */
 .pluralOptions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-.pluralButton {
-  width: 100%;
-  padding: 17px 20px;
+/* ── 선택지 버튼 ── */
+.optionButton {
+  padding: 18px 12px;
   background-color: var(--color-surface);
   border: 2px solid transparent;
-  border-radius: 14px;
-  font-size: 17px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-size: 18px;
+  font-weight: 700;
   color: var(--color-text-primary);
-  text-align: left;
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07);
+  transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  font-family: 'SF Mono', 'Fira Mono', monospace, inherit;
+  /* min touch target */
+  min-height: 56px;
 }
 
-.pluralButton:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.pluralButton:disabled {
+.optionButton:disabled {
   cursor: default;
 }
 
-.pluralCorrect {
-  background-color: #E8FAF2 !important;
-  border-color: var(--color-correct) !important;
-  color: var(--color-correct) !important;
+.optionCorrect {
+  background-color: #e8faf2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
 }
 
-.pluralIncorrect {
-  background-color: #FFF0F1 !important;
-  border-color: var(--color-incorrect) !important;
-  color: var(--color-incorrect) !important;
+.optionIncorrect {
+  background-color: #fff0f1;
+  border-color: var(--color-incorrect);
+  color: var(--color-incorrect);
 }
 
-/* ── 피드백 패널 ── */
-.feedbackWrapper {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
-  flex-shrink: 0;
-}
-
-.feedbackWrapper.open {
-  grid-template-rows: 1fr;
-}
-
-.feedbackPanel {
-  overflow: hidden;
-  border-radius: 20px 20px 0 0;
-}
-
-.feedbackWrapper.correct .feedbackPanel { background-color: #E8FAF2; }
-.feedbackWrapper.incorrect .feedbackPanel { background-color: #FFF0F1; }
-
-.feedbackInner {
-  padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
-}
-
-.feedbackContent {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
-}
-
-.feedbackTitle {
-  font-size: 18px;
+.optionReveal {
+  background-color: #c8f5e2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
   font-weight: 800;
+  box-shadow: 0 0 0 3px rgba(0, 196, 113, 0.18);
 }
 
-.feedbackWrapper.correct .feedbackTitle  { color: var(--color-correct); }
-.feedbackWrapper.incorrect .feedbackTitle { color: var(--color-incorrect); }
+/* ── 인라인 피드백 행 ── */
+.feedbackRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
 
-.feedbackDesc {
+.feedbackRow_correct {
+  background-color: #f0fdf4;
+}
+
+.feedbackRow_incorrect {
+  background-color: #fff5f5;
+}
+
+.feedbackText {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.feedbackIcon {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.feedbackRow_correct .feedbackIcon,
+.feedbackRow_correct .feedbackText {
+  color: var(--color-correct);
+}
+
+.feedbackRow_incorrect .feedbackIcon,
+.feedbackRow_incorrect .feedbackText {
+  color: var(--color-incorrect);
 }
 
 .nextButton {
-  width: 100%;
-  padding: 16px;
+  flex-shrink: 0;
+  padding: 10px 18px;
   border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease;
-}
-
-.nextButton:active { transform: scale(0.97); }
-
-.feedbackWrapper.correct .nextButton   { background-color: var(--color-correct); color: #fff; }
-.feedbackWrapper.incorrect .nextButton { background-color: var(--color-incorrect); color: #fff; }
-
-/* ── 에러 상태 ── */
-.errorBackButton {
-  padding: 14px 32px;
-  background-color: var(--color-primary);
+  background-color: var(--color-text-primary);
   color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
+  white-space: nowrap;
 }
 
-/* ── 종료 확인 모달 ── */
-.modalOverlay {
+/* ── 오버레이 공통 ── */
+.backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.48);
-  display: flex;
-  align-items: flex-end;
-  z-index: 200;
+  background-color: rgba(0, 0, 0, 0.52);
+  z-index: 100;
 }
 
-.modal {
-  width: 100%;
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background-color: var(--color-surface);
-  border-radius: 20px 20px 0 0;
-  padding: 28px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px 24px 0 0;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  z-index: 101;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
-  animation: slideUp 0.26s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+.sheetHandle {
+  width: 40px;
+  height: 4px;
+  background-color: var(--color-progress-track);
+  border-radius: var(--radius-full);
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
-.modalTitle {
-  font-size: 18px;
+.sheetTitle {
+  font-size: 20px;
   font-weight: 800;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
+  margin: 4px 0 0;
 }
 
-.modalDesc {
+.sheetDesc {
   font-size: 14px;
   color: var(--color-text-secondary);
-  margin-bottom: 12px;
+  margin: 0 0 8px;
+  text-align: center;
 }
 
-.modalButtons {
+.sheetButtons {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-top: 4px;
 }
 
-.modalQuitButton {
-  padding: 16px;
-  background-color: #FFF0F1;
-  color: var(--color-incorrect);
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
+/* ── 게임 오버 하트 ── */
+.gameOverHearts {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 4px;
 }
 
-.modalContinueButton {
-  padding: 16px;
+.gameOverHeart {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* ── 버튼 종류 ── */
+.continueButton {
+  width: 100%;
+  padding: 17px;
   background-color: var(--color-primary);
   color: #fff;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.quitButton {
+  width: 100%;
+  padding: 17px;
+  background-color: #fff0f1;
+  color: var(--color-incorrect);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quitTextButton {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.primaryButton {
+  padding: 16px 32px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* prefers-reduced-motion 대응 */
+@media (prefers-reduced-motion: reduce) {
+  .progressFill,
+  .heart,
+  .wordCard {
+    transition: none;
+  }
+}
+
+/* ── 아티클 색상 코딩 (der=파랑, die=빨강, das=초록) — 뮤트 톤 ── */
+.article_blue {
+  background-color: #F4F6FA;
+  border-color: #D2DAE8;
+  color: #5E78A0;
+}
+
+.article_red {
+  background-color: #FAF4F5;
+  border-color: #E8D2D5;
+  color: #A05E68;
+}
+
+.article_green {
+  background-color: #F4FAF6;
+  border-color: #D2E8DA;
+  color: #5E9A72;
+}
+
+.article_blue.optionCorrect,
+.article_red.optionCorrect,
+.article_green.optionCorrect {
+  background-color: #E8FAF2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
+}
+
+.article_blue.optionReveal,
+.article_red.optionReveal,
+.article_green.optionReveal {
+  background-color: #c8f5e2;
+  border-color: var(--color-correct);
+  color: var(--color-correct);
+  font-weight: 800;
+  box-shadow: 0 0 0 3px rgba(0, 196, 113, 0.18);
+}
+
+.article_blue.optionIncorrect,
+.article_red.optionIncorrect,
+.article_green.optionIncorrect {
+  background-color: #FFF0F1;
+  border-color: var(--color-incorrect);
+  color: var(--color-incorrect);
 }
