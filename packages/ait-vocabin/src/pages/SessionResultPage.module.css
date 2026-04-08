@@ -3,7 +3,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-bg);
+  background: linear-gradient(to bottom, #fff 0px, #F2F4F6 80px);
   position: relative;
 }
 
