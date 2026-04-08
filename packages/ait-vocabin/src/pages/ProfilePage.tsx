@@ -1,4 +1,8 @@
+import { Storage } from '@apps-in-toss/web-framework';
+import { ONBOARDING_DONE_KEY } from '../App.tsx';
 import styles from './ProfilePage.module.css';
+
+const IS_DEV = import.meta.env.DEV;
 
 const MOCK_USER = {
   name: '홍길동',
@@ -28,6 +32,13 @@ const TIME_LABEL: Record<string, string> = {
   evening: '저녁',
   night: '밤',
 };
+
+async function handleResetAll() {
+  await Storage.clearItems();
+  localStorage.removeItem(ONBOARDING_DONE_KEY);
+  localStorage.removeItem('vocabin_token');
+  window.location.replace('/');
+}
 
 export function ProfilePage() {
   return (
@@ -91,6 +102,18 @@ export function ProfilePage() {
             <span className={styles.settingArrow}>›</span>
           </div>
         </div>
+
+        {/* 디버그 (개발 환경 전용) */}
+        {IS_DEV && (
+          <>
+            <span className={styles.sectionTitle}>디버그</span>
+            <div className={styles.settingsCard}>
+              <button className={styles.debugResetButton} onClick={handleResetAll}>
+                스토리지 초기화 + 온보딩 리셋
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

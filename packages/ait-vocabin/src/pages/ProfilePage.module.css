@@ -199,3 +199,15 @@
   font-size: 14px;
   color: var(--color-text-tertiary);
 }
+
+.debugResetButton {
+  width: 100%;
+  padding: 14px;
+  background: none;
+  border: none;
+  color: var(--color-incorrect);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
