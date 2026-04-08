@@ -17,26 +17,6 @@
   background-color: #0F1923;
 }
 
-.hookOverlay::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 160px;
-  background: linear-gradient(
-    to bottom,
-    #fff        0%,
-    rgba(255,255,255,0.87) 20%,
-    rgba(255,255,255,0.6)  40%,
-    rgba(255,255,255,0.28) 62%,
-    rgba(255,255,255,0.07) 82%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* ── Hook 내부 레이아웃 ── */
 .hookPage {
   width: 100%;
