@@ -3,12 +3,14 @@ import { defineConfig } from '@apps-in-toss/web-framework/config';
 export default defineConfig({
   appName: 'lingo-lock-de', // TODO: 앱 이름 확정 후 변경 필요
   brand: {
-    displayName: 'Lingo Lock DE',
+    displayName: '언어락 🇩🇪',
     primaryColor: '#1E7AF2',
     icon: '',
   },
+  navigationBar: {
+  },
   web: {
-    host: '172.30.1.14',
+    host: '172.30.1.40',
     port: 5173,
     commands: {
       dev: 'vite --host',

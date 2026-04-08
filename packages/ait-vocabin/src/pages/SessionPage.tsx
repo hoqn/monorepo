@@ -180,6 +180,28 @@ export function SessionPage() {
         <span className={styles.questionCounterTotal}> / {questions.length}</span>
       </div>
 
+      {/* Combo chip — lives outside cardArea to avoid clipping, persists across questions */}
+      <div className={styles.comboChipArea}>
+        <AnimatePresence>
+          {comboCount >= 2 && (
+            <motion.div
+              key={comboCount >= 5 ? 'hot' : 'normal'}
+              className={`${styles.comboChip} ${comboCount >= 5 ? styles.comboChipHot : ''}`}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+            >
+              {comboCount >= 5
+                ? `🔥🔥 ${comboCount} COMBO!`
+                : comboCount >= 3
+                  ? `🔥 ${comboCount} 콤보!`
+                  : `✨ ${comboCount} 콤보`}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Card area — slide transitions happen here */}
       <div className={styles.cardArea}>
         <AnimatePresence mode="popLayout" initial={false}>
@@ -198,7 +220,6 @@ export function SessionPage() {
               question={current}
               answerState={answerState}
               selectedOption={selectedOption}
-              comboCount={comboCount}
               onSelect={handleSelectOption}
               onNext={handleManualNext}
             />
@@ -239,17 +260,15 @@ interface QuizCardProps {
   question: Question;
   answerState: AnswerState;
   selectedOption: string | null;
-  comboCount: number;
   onSelect: (option: string) => void;
   onNext: () => void;
 }
 
-function QuizCard({ question, answerState, selectedOption, comboCount, onSelect, onNext }: QuizCardProps) {
+function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: QuizCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isAnswered = answerState !== 'idle';
   const isCorrect = answerState === 'correct';
 
-  // Imperative animations on the word card (WAAPI — doesn't conflict with Framer Motion on parent)
   useEffect(() => {
     const el = cardRef.current;
     if (!el || answerState === 'idle') return;
@@ -280,33 +299,9 @@ function QuizCard({ question, answerState, selectedOption, comboCount, onSelect,
     }
   }, [answerState]);
 
-  const comboLabel =
-    comboCount >= 5
-      ? `🔥🔥 ${comboCount} COMBO!`
-      : comboCount >= 3
-        ? `🔥 ${comboCount} 콤보!`
-        : comboCount >= 2
-          ? `✨ ${comboCount} 콤보`
-          : null;
-
   return (
     <div className={styles.quizCardInner}>
-      {/* Word card — combo chip floats above via absolute, no layout shift */}
       <div className={styles.wordCardWrapper}>
-        <AnimatePresence>
-          {comboLabel && (
-            <motion.div
-              className={`${styles.comboChip} ${comboCount >= 5 ? styles.comboChipHot : ''}`}
-              initial={{ opacity: 0, scale: 0.5, x: '-50%', y: 8 }}
-              animate={{ opacity: 1, scale: 1, x: '-50%', y: -14 }}
-              exit={{ opacity: 0, scale: 0.7, x: '-50%', y: 4 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-            >
-              {comboLabel}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <div
           ref={cardRef}
           className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}

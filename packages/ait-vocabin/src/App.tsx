@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { appLogin } from '@apps-in-toss/web-framework';
+import { appLogin, partner, tdsEvent } from '@apps-in-toss/web-framework';
 import { HomePage } from './pages/HomePage.tsx';
 import { OnboardingPage } from './pages/OnboardingPage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
@@ -40,7 +40,27 @@ function getTransition(pathname: string) {
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { initial, animate, exit, transition } = getTransition(location.pathname);
+
+  // 네비게이션 바 우측 프로필 버튼 등록 및 이벤트 수신
+  useEffect(() => {
+    partner.addAccessoryButton({
+      id: 'profile',
+      title: '프로필',
+      icon: { name: 'icon-person-mono' },
+    });
+
+    const unsubscribe = tdsEvent.addEventListener('navigationAccessoryEvent', {
+      onEvent: ({ id }) => {
+        if (id === 'profile') {
+          navigate('/profile');
+        }
+      },
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
 
   return (
     <AnimatePresence mode="wait" initial={false}>

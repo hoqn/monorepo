@@ -119,20 +119,22 @@
   gap: 0;
 }
 
-/* ── 단어 카드 래퍼 (콤보 칩 오버레이용) ── */
+/* ── 단어 카드 래퍼 ── */
 .wordCardWrapper {
-  position: relative;
-  /* 칩이 위로 튀어나올 공간 확보 */
-  padding-top: 18px;
+  /* 여백 없음 — 콤보 칩은 cardArea 밖에 위치 */
 }
 
-/* ── 콤보 칩 — 카드 상단 중앙에 absolute ── */
+/* ── 콤보 칩 영역 — 고정 높이로 layout shift 없음 ── */
+.comboChipArea {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── 콤보 칩 ── */
 .comboChip {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  white-space: nowrap;
-  z-index: 1;
   padding: 5px 14px;
   background: linear-gradient(135deg, #f97316, #ef4444);
   color: #fff;
@@ -140,7 +142,7 @@
   font-weight: 800;
   border-radius: var(--radius-full);
   letter-spacing: 0.3px;
-  pointer-events: none;
+  white-space: nowrap;
 }
 
 .comboChipHot {
