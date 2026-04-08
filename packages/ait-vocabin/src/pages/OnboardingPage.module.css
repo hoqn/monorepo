@@ -17,6 +17,18 @@
   background-color: #0F1923;
 }
 
+.hookOverlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.13) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* ── Hook 내부 레이아웃 ── */
 .hookPage {
   width: 100%;

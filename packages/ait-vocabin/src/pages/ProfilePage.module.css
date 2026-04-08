@@ -12,6 +12,19 @@
   background-color: #0F1923;
   padding: 16px 20px 36px;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* 네비바(흰색)와의 경계를 자연스럽게 블렌딩 */
+.heroArea::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.13) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .backButton {
