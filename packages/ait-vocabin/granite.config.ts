@@ -24,5 +24,11 @@ export default defineConfig({
       build: 'vite build',
     },
   },
+  webViewProps: {
+    allowsBackForwardNavigationGestures: false,
+    bounces: true,
+    pullToRefreshEnabled: false,
+    type: 'partner',
+  },
   permissions: [],
 });
