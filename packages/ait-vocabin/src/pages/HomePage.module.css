@@ -356,3 +356,87 @@
   font-weight: 700;
   color: var(--color-text-primary);
 }
+
+/* ── 데일리 미션 ── */
+.missionsCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px 14px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.missionsComplete {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: #EFF6FF;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.missionsList {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.missionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.missionItemDone .missionCheck {
+  color: #22C55E;
+  font-weight: 700;
+}
+
+.missionItemDone .missionLabel {
+  text-decoration: line-through;
+  color: var(--color-text-secondary);
+}
+
+.missionCheck {
+  font-size: 14px;
+  color: var(--color-text-tertiary, #c2c8d0);
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+
+.missionBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.missionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.missionProgressTrack {
+  height: 4px;
+  background: #F0F0F0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.missionProgressFill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.missionCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}

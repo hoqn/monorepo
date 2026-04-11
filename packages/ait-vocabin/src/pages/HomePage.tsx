@@ -1,9 +1,9 @@
+import { generateHapticFeedback, tdsEvent } from '@apps-in-toss/web-framework';
+import { motion, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useSpring, useTransform } from 'motion/react';
-import { generateHapticFeedback, partner, tdsEvent } from '@apps-in-toss/web-framework';
-import { getMe, getLeaderboard, MeResponse, LeaderboardEntry } from '../lib/api.ts';
 import { isAIT } from '../lib/ait.ts';
+import { getLeaderboard, getMe, getTodayMissions, LeaderboardEntry, MeResponse, DailyMission, MissionType } from '../lib/api.ts';
 import styles from './HomePage.module.css';
 
 const XP_PER_LEVEL = 500;
@@ -29,6 +29,7 @@ export function HomePage() {
 
   const [me, setMe] = useState<MeResponse | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [missions, setMissions] = useState<DailyMission[]>([]);
   const [loading, setLoading] = useState(true);
   const [pressed, setPressed] = useState(false);
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,9 +48,14 @@ export function HomePage() {
   useEffect(() => {
     (async () => {
       try {
-        const [meData, lbData] = await Promise.all([getMe(), getLeaderboard()]);
+        const [meData, lbData, missionsData] = await Promise.all([
+          getMe(),
+          getLeaderboard(),
+          getTodayMissions().catch(() => ({ missions: [] })),
+        ]);
         setMe(meData);
         setLeaderboard(lbData.entries.slice(0, 4));
+        setMissions(missionsData.missions);
       } catch { /* 실패해도 빈 값으로 */ }
       finally { setLoading(false); }
     })();
@@ -126,6 +132,23 @@ export function HomePage() {
           </motion.div>
         </motion.div>
 
+        {/* 데일리 미션 */}
+        {missions.length > 0 && (
+          <motion.div className={styles.missionsCard} variants={itemVariants}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionTitle}>오늘의 미션</span>
+              <span className={styles.missionsComplete}>
+                {missions.filter((m) => m.completed_at).length}/{missions.length}
+              </span>
+            </div>
+            <ul className={styles.missionsList}>
+              {missions.map((mission) => (
+                <MissionItem key={mission.id} mission={mission} />
+              ))}
+            </ul>
+          </motion.div>
+        )}
+
         {/* 리더보드 카드 */}
         <motion.div className={styles.leaderboardCard} variants={itemVariants}>
           <div className={styles.sectionHeader}>
@@ -176,6 +199,38 @@ export function HomePage() {
         </motion.div>
       </motion.div>
     </div>
+  );
+}
+
+/* ─────────────────────
+   MissionItem
+───────────────────── */
+const MISSION_LABELS: Record<MissionType, (target: number) => string> = {
+  correct_count:  (t) => `정답 ${t}개 맞추기`,
+  combo_streak:   (t) => `콤보 ${t} 이상 달성`,
+  question_count: (t) => `문제 ${t}개 풀기`,
+};
+
+function MissionItem({ mission }: { mission: DailyMission }) {
+  const isCompleted = !!mission.completed_at;
+  const progressPercent = Math.min(100, Math.round((mission.progress / mission.target) * 100));
+  const label = MISSION_LABELS[mission.type]?.(mission.target) ?? mission.type;
+
+  return (
+    <li className={`${styles.missionItem} ${isCompleted ? styles.missionItemDone : ''}`}>
+      <span className={styles.missionCheck}>{isCompleted ? '✓' : '○'}</span>
+      <div className={styles.missionBody}>
+        <span className={styles.missionLabel}>{label}</span>
+        {!isCompleted && (
+          <div className={styles.missionProgressTrack}>
+            <div className={styles.missionProgressFill} style={{ width: `${progressPercent}%` }} />
+          </div>
+        )}
+      </div>
+      <span className={styles.missionCount}>
+        {isCompleted ? mission.target : mission.progress}/{mission.target}
+      </span>
+    </li>
   );
 }
 
