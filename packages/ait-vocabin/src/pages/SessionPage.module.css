@@ -372,6 +372,124 @@
   white-space: nowrap;
 }
 
+/* ── 피드백 영역 (문맥 카드 + 예문 포함) ── */
+.feedbackArea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── 오답 문맥 카드 ── */
+.contextCard {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background-color: #FFFBEB;
+  border: 1.5px solid #FDE68A;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.contextCardIcon {
+  font-size: 16px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.contextCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.contextCardRule {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400E;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.contextCardExamples {
+  font-size: 12px;
+  color: #B45309;
+  margin: 0;
+}
+
+/* ── 예문 카드 ── */
+.exampleCard {
+  padding: 12px 14px;
+  background-color: #F8FAFF;
+  border: 1.5px solid #DBEAFE;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exampleSentence {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.exampleSentenceKo {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── 힌트 ── */
+.hintBox {
+  padding: 10px 14px;
+  background-color: #F0F7FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E40AF;
+  overflow: hidden;
+}
+
+.hintButton {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 0;
+  opacity: 0.8;
+}
+
+.hintButton:active {
+  opacity: 0.5;
+}
+
+.hintRemaining {
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+}
+
+/* ── 오답 시 다음 버튼 (풀 와이드) ── */
+.nextButtonFull {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  background-color: var(--color-text-primary);
+  color: #fff;
+}
+
 /* ── 세션 완료 대기 오버레이 ── */
 .completingOverlay {
   position: fixed;

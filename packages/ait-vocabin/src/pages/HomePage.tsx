@@ -1,10 +1,19 @@
 import { generateHapticFeedback, tdsEvent } from '@apps-in-toss/web-framework';
-import { motion, useSpring, useTransform } from 'motion/react';
+import { AnimatePresence, motion, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAIT } from '../lib/ait.ts';
 import { getLeaderboard, getMe, getTodayMissions, LeaderboardEntry, MeResponse, DailyMission, MissionType } from '../lib/api.ts';
 import styles from './HomePage.module.css';
+
+const SESSION_COUNT_KEY = 'vocabin_session_count';
+const SESSION_COUNTS = [6, 12, 24] as const;
+type SessionCount = typeof SESSION_COUNTS[number];
+const SESSION_COUNT_LABELS: Record<SessionCount, { label: string; desc: string; time: string }> = {
+  6:  { label: '6문제',  desc: '가볍게',   time: '~3분' },
+  12: { label: '12문제', desc: '적당히',   time: '~6분' },
+  24: { label: '24문제', desc: '집중적으로', time: '~12분' },
+};
 
 const XP_PER_LEVEL = 500;
 
@@ -33,6 +42,10 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
   const [pressed, setPressed] = useState(false);
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showSessionSheet, setShowSessionSheet] = useState(false);
+  const [selectedCount, setSelectedCount] = useState<SessionCount>(
+    () => (parseInt(localStorage.getItem(SESSION_COUNT_KEY) ?? '12') as SessionCount) || 12
+  );
 
   useEffect(() => {
     const cleanup = tdsEvent.addEventListener('navigationAccessoryEvent', {
@@ -70,7 +83,14 @@ export function HomePage() {
 
   const handleSessionPress = () => {
     generateHapticFeedback({ type: 'softMedium' });
-    navigate('/session');
+    setShowSessionSheet(true);
+  };
+
+  const handleSessionStart = (count: SessionCount) => {
+    localStorage.setItem(SESSION_COUNT_KEY, String(count));
+    setSelectedCount(count);
+    setShowSessionSheet(false);
+    navigate('/session', { state: { sessionCount: count } });
   };
 
   const containerVariants = {
@@ -126,7 +146,7 @@ export function HomePage() {
             <div className={styles.sessionCardContent}>
               <p className={styles.sessionCardLabel}>오늘의 채집</p>
               <p className={styles.sessionCardTitle}>채집 시작하기</p>
-              <p className={styles.sessionCardSub}>단어가 기다리고 있어요</p>
+              <p className={styles.sessionCardSub}>{SESSION_COUNT_LABELS[selectedCount].desc} · {SESSION_COUNT_LABELS[selectedCount].label}</p>
             </div>
             <div className={styles.sessionCardArrow}>→</div>
           </motion.div>
@@ -198,7 +218,82 @@ export function HomePage() {
           <span className={styles.todayStatsCount}>{totalWords.toLocaleString()}개</span>
         </motion.div>
       </motion.div>
+      <AnimatePresence>
+        {showSessionSheet && (
+          <SessionSetupSheet
+            selectedCount={selectedCount}
+            onSelect={handleSessionStart}
+            onClose={() => setShowSessionSheet(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+/* ─────────────────────
+   SessionSetupSheet
+───────────────────── */
+interface SessionSetupSheetProps {
+  selectedCount: SessionCount;
+  onSelect: (count: SessionCount) => void;
+  onClose: () => void;
+}
+
+function SessionSetupSheet({ selectedCount, onSelect, onClose }: SessionSetupSheetProps) {
+  const [localCount, setLocalCount] = useState<SessionCount>(selectedCount);
+
+  return (
+    <>
+      <motion.div
+        className={styles.backdrop}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.24 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className={styles.sheet}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+      >
+        <div className={styles.sheetHandle} />
+        <p className={styles.sheetTitle}>오늘의 채집</p>
+        <p className={styles.sheetDesc}>문제 수를 선택하세요</p>
+
+        <div className={styles.sessionCountOptions}>
+          {SESSION_COUNTS.map((count) => {
+            const info = SESSION_COUNT_LABELS[count];
+            const isSelected = localCount === count;
+            return (
+              <button
+                key={count}
+                className={`${styles.sessionCountOption} ${isSelected ? styles.sessionCountOptionSelected : ''}`}
+                onClick={() => {
+                  generateHapticFeedback({ type: 'softMedium' });
+                  setLocalCount(count);
+                }}
+              >
+                <span className={styles.sessionCountLabel}>{info.label}</span>
+                <span className={styles.sessionCountDesc}>{info.desc}</span>
+                <span className={styles.sessionCountTime}>{info.time}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <motion.button
+          className={styles.startButton}
+          onClick={() => onSelect(localCount)}
+          whileTap={{ scale: 0.97 }}
+        >
+          시작하기
+        </motion.button>
+      </motion.div>
+    </>
   );
 }
 

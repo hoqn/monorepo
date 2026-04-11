@@ -7,11 +7,17 @@ import { getReviewWords, getReviewVerbs, createSession, completeSession, mapWord
 import { generateQuestions } from '../utils/quiz.ts';
 import { playCorrect, playIncorrect, playCombo, playGameOver } from '../lib/sound.ts';
 import { Question, VerbQuestion } from '../types/word.ts';
+import { findArticlePattern } from '../data/grammar-patterns.ts';
 import styles from './SessionPage.module.css';
 
 const MAX_LIVES = 5;
 const SESSION_QUESTION_COUNT = 12;
 const AUTO_ADVANCE_DELAY = 1400;
+const DIFFICULTY_CHIP: Record<string, string> = {
+  easy: '쉬움',
+  normal: '보통',
+  hard: '어려움',
+};
 
 type AnswerState = 'idle' | 'correct' | 'incorrect';
 
@@ -27,8 +33,9 @@ export function SessionPage() {
   const location = useLocation();
 
   // 리뷰 모드: 결과 화면에서 오답 목록을 state로 전달받은 경우
-  const reviewQuestions = (location.state as { reviewQuestions?: Question[] } | null)?.reviewQuestions;
+  const reviewQuestions = (location.state as { reviewQuestions?: Question[]; sessionCount?: number } | null)?.reviewQuestions;
   const isReviewMode = !!reviewQuestions?.length;
+  const sessionCount = (location.state as { sessionCount?: number } | null)?.sessionCount ?? SESSION_QUESTION_COUNT;
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +55,9 @@ export function SessionPage() {
   const [showGameOver, setShowGameOver] = useState(false);
   const [completing, setCompleting] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hintLevel, setHintLevel] = useState(0);       // 현재 문제 힌트 단계 (0=미사용, 1, 2)
+  const [totalHintsUsed, setTotalHintsUsed] = useState(0); // 세션 전체 힌트 사용 횟수
+  const MAX_HINTS_PER_SESSION = 3;
 
   useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
 
@@ -61,9 +71,10 @@ export function SessionPage() {
 
     (async () => {
       try {
+        const verbLimit = Math.max(1, Math.floor(sessionCount / 3));
         const [{ words }, verbsResponse, { sessionId }] = await Promise.all([
-          getReviewWords(SESSION_QUESTION_COUNT),
-          getReviewVerbs(4).catch(() => ({ verbs: [] })),
+          getReviewWords(sessionCount),
+          getReviewVerbs(verbLimit).catch(() => ({ verbs: [] })),
           createSession(),
         ]);
 
@@ -78,7 +89,7 @@ export function SessionPage() {
         }));
 
         sessionIdRef.current = sessionId;
-        setQuestions(generateQuestions(words.map(mapWord), SESSION_QUESTION_COUNT, verbPool));
+        setQuestions(generateQuestions(words.map(mapWord), sessionCount, verbPool));
       } catch {
         setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.');
       } finally {
@@ -122,7 +133,15 @@ export function SessionPage() {
     setCurrentIndex((prev) => prev + 1);
     setSelectedOption(null);
     setAnswerState('idle');
+    setHintLevel(0);
   }, [currentIndex, questions.length, correctCount, navigate]);
+
+  const handleUseHint = useCallback(() => {
+    if (answerState !== 'idle' || totalHintsUsed >= MAX_HINTS_PER_SESSION || hintLevel >= 2) return;
+    generateHapticFeedback({ type: 'softMedium' });
+    setHintLevel((prev) => prev + 1);
+    setTotalHintsUsed((prev) => prev + 1);
+  }, [answerState, totalHintsUsed, hintLevel]);
 
   const handleSelectOption = useCallback(
     (option: string) => {
@@ -165,9 +184,8 @@ export function SessionPage() {
             playGameOver();
             setShowGameOver(true);
           }, 900);
-        } else {
-          autoTimerRef.current = setTimeout(goNext, AUTO_ADVANCE_DELAY);
         }
+        // 오답 시에는 자동 진행하지 않음 — 문맥 카드를 읽을 시간을 줌
       }
     },
     [answerState, current, lives, goNext]
@@ -268,6 +286,9 @@ export function SessionPage() {
               selectedOption={selectedOption}
               onSelect={handleSelectOption}
               onNext={handleManualNext}
+              hintLevel={hintLevel}
+              hintsRemaining={MAX_HINTS_PER_SESSION - totalHintsUsed}
+              onUseHint={handleUseHint}
             />
           </motion.div>
         </AnimatePresence>
@@ -327,9 +348,12 @@ interface QuizCardProps {
   selectedOption: string | null;
   onSelect: (option: string) => void;
   onNext: () => void;
+  hintLevel: number;
+  hintsRemaining: number;
+  onUseHint: () => void;
 }
 
-function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: QuizCardProps) {
+function QuizCard({ question, answerState, selectedOption, onSelect, onNext, hintLevel, hintsRemaining, onUseHint }: QuizCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isAnswered = answerState !== 'idle';
   const isCorrect = answerState === 'correct';
@@ -365,7 +389,7 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
   }, [answerState]);
 
   if (question.kind === 'verb') {
-    return <VerbQuizCard question={question} answerState={answerState} selectedOption={selectedOption} onSelect={onSelect} onNext={onNext} cardRef={cardRef} />;
+    return <VerbQuizCard question={question} answerState={answerState} selectedOption={selectedOption} onSelect={onSelect} onNext={onNext} cardRef={cardRef} hintLevel={hintLevel} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />;
   }
 
   return (
@@ -397,6 +421,33 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
           {question.type === 'article' ? '이 단어의 성(관사)은?' : '복수형은?'}
         </p>
 
+        {/* 힌트 표시 */}
+        <AnimatePresence>
+          {hintLevel > 0 && (
+            <motion.div
+              className={styles.hintBox}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22 }}
+            >
+              {question.type === 'article' && hintLevel === 1 && (
+                <span>이 단어는 <strong>{question.answer === 'der' ? '남성' : question.answer === 'die' ? '여성' : '중성'}</strong> 명사예요</span>
+              )}
+              {question.type === 'article' && hintLevel === 2 && (() => {
+                const pattern = findArticlePattern(question.word.word);
+                return pattern ? <span>{pattern.rule}</span> : <span>정답은 <strong>{question.answer}</strong>이에요</span>;
+              })()}
+              {question.type === 'plural' && hintLevel === 1 && (
+                <span>복수형은 <strong>{question.answer[0]}</strong>로 시작해요</span>
+              )}
+              {question.type === 'plural' && hintLevel === 2 && (
+                <span>복수형: <strong>{question.answer.slice(0, Math.ceil(question.answer.length / 2))}...</strong></span>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className={question.type === 'article' ? styles.articleOptions : styles.pluralOptions}>
           {question.options.map((option) => (
             <OptionButton
@@ -411,30 +462,83 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
           ))}
         </div>
 
+        {/* 힌트 버튼 */}
+        {!isAnswered && hintsRemaining > 0 && hintLevel < 2 && (
+          <button className={styles.hintButton} onClick={onUseHint}>
+            💡 힌트 보기 <span className={styles.hintRemaining}>({hintsRemaining}회 남음)</span>
+          </button>
+        )}
+
         <AnimatePresence>
           {isAnswered && (
             <motion.div
-              className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}
+              className={styles.feedbackArea}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
             >
-              <div className={styles.feedbackText}>
-                <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
-                <span>
-                  {isCorrect
-                    ? '정답이에요!'
-                    : `정답: ${question.answer}${question.type === 'article' ? ` ${question.word.word}` : ''}`}
-                </span>
+              {/* 기본 피드백 행 */}
+              <div className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}>
+                <div className={styles.feedbackText}>
+                  <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
+                  <span>
+                    {isCorrect
+                      ? '정답이에요!'
+                      : `정답: ${question.answer}${question.type === 'article' ? ` ${question.word.word}` : ''}`}
+                  </span>
+                </div>
+                {isCorrect && (
+                  <motion.button className={styles.nextButton} onClick={onNext} whileTap={{ scale: 0.96 }}>
+                    다음 →
+                  </motion.button>
+                )}
               </div>
-              <motion.button
-                className={styles.nextButton}
-                onClick={onNext}
-                whileTap={{ scale: 0.96 }}
-              >
-                다음 →
-              </motion.button>
+
+              {/* 오답 시: 관사 패턴 문맥 카드 */}
+              {!isCorrect && question.type === 'article' && (() => {
+                const pattern = findArticlePattern(question.word.word);
+                return pattern ? (
+                  <motion.div
+                    className={styles.contextCard}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.28, delay: 0.15 }}
+                  >
+                    <span className={styles.contextCardIcon}>💡</span>
+                    <div className={styles.contextCardBody}>
+                      <p className={styles.contextCardRule}>{pattern.rule}</p>
+                      <p className={styles.contextCardExamples}>{pattern.examples}</p>
+                    </div>
+                  </motion.div>
+                ) : null;
+              })()}
+
+              {/* 예문 카드 (정답/오답 모두, exampleSentence 있는 경우) */}
+              {question.word.exampleSentence && (
+                <motion.div
+                  className={styles.exampleCard}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.28, delay: isCorrect ? 0.1 : 0.3 }}
+                >
+                  <p className={styles.exampleSentence}>{question.word.exampleSentence}</p>
+                </motion.div>
+              )}
+
+              {/* 오답 시 수동 다음 버튼 */}
+              {!isCorrect && (
+                <motion.button
+                  className={styles.nextButtonFull}
+                  onClick={onNext}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  다음 →
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -450,9 +554,12 @@ interface VerbQuizCardProps {
   onSelect: (option: string) => void;
   onNext: () => void;
   cardRef: React.RefObject<HTMLDivElement | null>;
+  hintLevel: number;
+  hintsRemaining: number;
+  onUseHint: () => void;
 }
 
-function VerbQuizCard({ question, answerState, selectedOption, onSelect, onNext, cardRef }: VerbQuizCardProps) {
+function VerbQuizCard({ question, answerState, selectedOption, onSelect, onNext, cardRef, hintLevel, hintsRemaining, onUseHint }: VerbQuizCardProps) {
   const isAnswered = answerState !== 'idle';
   const isCorrect = answerState === 'correct';
 
@@ -495,6 +602,26 @@ function VerbQuizCard({ question, answerState, selectedOption, onSelect, onNext,
           <p className={styles.contextSentenceKo}>{question.verbForm.exampleSentenceKo}</p>
         )}
 
+        {/* 힌트 표시 */}
+        <AnimatePresence>
+          {hintLevel > 0 && (
+            <motion.div
+              className={styles.hintBox}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22 }}
+            >
+              {hintLevel === 1 && (
+                <span>{question.verb.isIrregular ? '불규칙 변화 동사예요' : '규칙 변화 동사예요'}</span>
+              )}
+              {hintLevel === 2 && (
+                <span>답의 첫 글자: <strong>{question.answer[0]}</strong></span>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className={styles.pluralOptions}>
           {question.options.map((option) => (
             <OptionButton
@@ -509,28 +636,82 @@ function VerbQuizCard({ question, answerState, selectedOption, onSelect, onNext,
           ))}
         </div>
 
+        {!isAnswered && hintsRemaining > 0 && hintLevel < 2 && (
+          <button className={styles.hintButton} onClick={onUseHint}>
+            💡 힌트 보기 <span className={styles.hintRemaining}>({hintsRemaining}회 남음)</span>
+          </button>
+        )}
+
         <AnimatePresence>
           {isAnswered && (
             <motion.div
-              className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}
+              className={styles.feedbackArea}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.22, ease: 'easeOut' }}
             >
-              <div className={styles.feedbackText}>
-                <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
-                <span>
-                  {isCorrect ? '정답이에요!' : `정답: ${question.answer}`}
-                </span>
+              <div className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}>
+                <div className={styles.feedbackText}>
+                  <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
+                  <span>{isCorrect ? '정답이에요!' : `정답: ${question.answer}`}</span>
+                </div>
+                {isCorrect && (
+                  <motion.button className={styles.nextButton} onClick={onNext} whileTap={{ scale: 0.96 }}>
+                    다음 →
+                  </motion.button>
+                )}
               </div>
-              <motion.button
-                className={styles.nextButton}
-                onClick={onNext}
-                whileTap={{ scale: 0.96 }}
-              >
-                다음 →
-              </motion.button>
+
+              {/* 오답 시: 동사 패턴 힌트 */}
+              {!isCorrect && (
+                <motion.div
+                  className={styles.contextCard}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.28, delay: 0.15 }}
+                >
+                  <span className={styles.contextCardIcon}>💡</span>
+                  <div className={styles.contextCardBody}>
+                    <p className={styles.contextCardRule}>
+                      {question.verb.isIrregular
+                        ? '이 동사는 불규칙 변화를 해요. 각 인칭형을 따로 외워두세요.'
+                        : `이 동사는 규칙 변화를 해요. 어간 + 인칭 어미를 붙이면 돼요.`}
+                    </p>
+                    <p className={styles.contextCardExamples}>
+                      {question.verbForm.pronoun} → {question.answer}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* 예문 카드 */}
+              {question.verbForm.exampleSentenceKo && (
+                <motion.div
+                  className={styles.exampleCard}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.28, delay: isCorrect ? 0.1 : 0.3 }}
+                >
+                  <p className={styles.exampleSentence}>
+                    {question.contextSentence.replace('___', question.answer)}
+                  </p>
+                  <p className={styles.exampleSentenceKo}>{question.verbForm.exampleSentenceKo}</p>
+                </motion.div>
+              )}
+
+              {!isCorrect && (
+                <motion.button
+                  className={styles.nextButtonFull}
+                  onClick={onNext}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  다음 →
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

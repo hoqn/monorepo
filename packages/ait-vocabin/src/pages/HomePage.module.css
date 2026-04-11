@@ -440,3 +440,109 @@
   color: var(--color-text-secondary);
   flex-shrink: 0;
 }
+
+/* ── 세션 설정 바텀시트 ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.48);
+  z-index: 100;
+}
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--color-surface);
+  border-radius: 24px 24px 0 0;
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheetHandle {
+  width: 40px;
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 999px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.sheetTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 4px 0 0;
+  align-self: flex-start;
+}
+
+.sheetDesc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 4px;
+  align-self: flex-start;
+}
+
+.sessionCountOptions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.sessionCountOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 8px;
+  background-color: #f5f6f8;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sessionCountOptionSelected {
+  background-color: #EFF6FF;
+  border-color: var(--color-primary);
+}
+
+.sessionCountLabel {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.sessionCountOptionSelected .sessionCountLabel {
+  color: var(--color-primary);
+}
+
+.sessionCountDesc {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.sessionCountTime {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.startButton {
+  width: 100%;
+  padding: 17px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
