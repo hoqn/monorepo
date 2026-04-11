@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
-import { getReviewWords, createSession, completeSession, mapWord } from '../lib/api.ts';
+import { getReviewWords, getReviewVerbs, createSession, completeSession, mapWord, mapVerb, mapVerbForm } from '../lib/api.ts';
 import { generateQuestions } from '../utils/quiz.ts';
 import { playCorrect, playIncorrect, playCombo, playGameOver } from '../lib/sound.ts';
-import { Question } from '../types/word.ts';
+import { Question, VerbQuestion } from '../types/word.ts';
 import styles from './SessionPage.module.css';
 
 const MAX_LIVES = 5;
@@ -24,13 +24,19 @@ const ARTICLE_COLOR: Record<string, string> = {
 
 export function SessionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 리뷰 모드: 결과 화면에서 오답 목록을 state로 전달받은 경우
+  const reviewQuestions = (location.state as { reviewQuestions?: Question[] } | null)?.reviewQuestions;
+  const isReviewMode = !!reviewQuestions?.length;
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const sessionIdRef = useRef<string | null>(null);
-  const resultsRef = useRef<Array<{ wordId: string; questionType: 'article' | 'plural'; correct: boolean }>>([]);
+  const resultsRef = useRef<Array<{ wordId?: string; verbId?: string; questionType: 'article' | 'plural' | 'verb_conjugation'; correct: boolean }>>([]);
+  const wrongQuestionsRef = useRef<Question[]>([]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
@@ -46,10 +52,18 @@ export function SessionPage() {
   useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
 
   useEffect(() => {
+    // 리뷰 모드: API 호출 없이 전달받은 오답 목록 사용
+    if (isReviewMode) {
+      setQuestions(reviewQuestions!);
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       try {
-        const [{ words }, { sessionId }] = await Promise.all([
+        const [{ words }, verbsResponse, { sessionId }] = await Promise.all([
           getReviewWords(SESSION_QUESTION_COUNT),
+          getReviewVerbs(4).catch(() => ({ verbs: [] })),
           createSession(),
         ]);
 
@@ -58,8 +72,13 @@ export function SessionPage() {
           return;
         }
 
+        const verbPool = verbsResponse.verbs.map((v) => ({
+          verb: mapVerb(v),
+          forms: v.forms.map(mapVerbForm),
+        }));
+
         sessionIdRef.current = sessionId;
-        setQuestions(generateQuestions(words.map(mapWord), SESSION_QUESTION_COUNT));
+        setQuestions(generateQuestions(words.map(mapWord), SESSION_QUESTION_COUNT, verbPool));
       } catch {
         setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.');
       } finally {
@@ -89,7 +108,13 @@ export function SessionPage() {
       }
 
       navigate('/session/result', {
-        state: { total: questions.length, correct: correctCount, xpEarned },
+        state: {
+          total: questions.length,
+          correct: correctCount,
+          xpEarned,
+          // 리뷰 모드가 아닐 때만 wrongQuestions 전달 (중복 복습 방지)
+          wrongQuestions: isReviewMode ? undefined : wrongQuestionsRef.current,
+        },
       });
       return;
     }
@@ -108,11 +133,15 @@ export function SessionPage() {
       setSelectedOption(option);
       setAnswerState(isCorrect ? 'correct' : 'incorrect');
 
-      resultsRef.current.push({
-        wordId: current.word.id,
-        questionType: current.type,
-        correct: isCorrect,
-      });
+      resultsRef.current.push(
+        current.kind === 'noun'
+          ? { wordId: current.word.id, questionType: current.type, correct: isCorrect }
+          : { verbId: current.verb.id, questionType: 'verb_conjugation', correct: isCorrect }
+      );
+
+      if (!isCorrect) {
+        wrongQuestionsRef.current.push(current);
+      }
 
       if (isCorrect) {
         generateHapticFeedback({ type: 'success' });
@@ -170,6 +199,9 @@ export function SessionPage() {
         <button className={styles.closeButton} onClick={() => setShowQuitModal(true)} aria-label="세션 종료">
           ✕
         </button>
+        {isReviewMode && (
+          <span className={styles.reviewModeBadge}>복습 중</span>
+        )}
         <div className={styles.progressTrack}>
           <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
         </div>
@@ -268,6 +300,27 @@ export function SessionPage() {
   );
 }
 
+const TENSE_KO: Record<string, string> = {
+  'Präsens':     '현재형',
+  'Präteritum':  '과거형',
+  'Perfekt':     '현재완료',
+};
+
+/** ___ 를 강조된 빈칸 span으로 변환 */
+function renderSentenceWithBlank(sentence: string, filled?: string) {
+  const parts = sentence.split('___');
+  if (parts.length === 1) return <span>{sentence}</span>;
+  return (
+    <>
+      {parts[0]}
+      <span style={{ borderBottom: '2.5px solid currentColor', paddingBottom: 1, minWidth: 32, display: 'inline-block', textAlign: 'center', fontWeight: 700 }}>
+        {filled ?? ''}
+      </span>
+      {parts[1]}
+    </>
+  );
+}
+
 interface QuizCardProps {
   question: Question;
   answerState: AnswerState;
@@ -310,6 +363,10 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
       );
     }
   }, [answerState]);
+
+  if (question.kind === 'verb') {
+    return <VerbQuizCard question={question} answerState={answerState} selectedOption={selectedOption} onSelect={onSelect} onNext={onNext} cardRef={cardRef} />;
+  }
 
   return (
     <div className={styles.quizCardInner}>
@@ -369,6 +426,102 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext }: Q
                   {isCorrect
                     ? '정답이에요!'
                     : `정답: ${question.answer}${question.type === 'article' ? ` ${question.word.word}` : ''}`}
+                </span>
+              </div>
+              <motion.button
+                className={styles.nextButton}
+                onClick={onNext}
+                whileTap={{ scale: 0.96 }}
+              >
+                다음 →
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+interface VerbQuizCardProps {
+  question: VerbQuestion;
+  answerState: AnswerState;
+  selectedOption: string | null;
+  onSelect: (option: string) => void;
+  onNext: () => void;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function VerbQuizCard({ question, answerState, selectedOption, onSelect, onNext, cardRef }: VerbQuizCardProps) {
+  const isAnswered = answerState !== 'idle';
+  const isCorrect = answerState === 'correct';
+
+  return (
+    <div className={styles.quizCardInner}>
+      <div className={styles.wordCardWrapper}>
+        <div
+          ref={cardRef}
+          className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}
+        >
+          <AnimatePresence>
+            {isCorrect && (
+              <motion.span
+                className={styles.correctMark}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.08 }}
+              >
+                ✓
+              </motion.span>
+            )}
+          </AnimatePresence>
+          <span className={styles.wordText}>{question.verb.infinitive}</span>
+          <span className={styles.wordMeaning}>{question.verb.meaningKo}</span>
+        </div>
+      </div>
+
+      <div className={styles.quizArea}>
+        <p className={styles.questionLabel}>
+          <span className={styles.verbPronounBadge}>{question.verbForm.pronoun}</span>
+          {' '}— {TENSE_KO[question.verbForm.tense] ?? question.verbForm.tense}
+        </p>
+        <p className={styles.contextSentence}>
+          {renderSentenceWithBlank(
+            question.contextSentence,
+            isAnswered ? question.answer : undefined
+          )}
+        </p>
+        {question.verbForm.exampleSentenceKo && (
+          <p className={styles.contextSentenceKo}>{question.verbForm.exampleSentenceKo}</p>
+        )}
+
+        <div className={styles.pluralOptions}>
+          {question.options.map((option) => (
+            <OptionButton
+              key={option}
+              option={option}
+              selected={selectedOption === option}
+              answerState={answerState}
+              correctAnswer={question.answer}
+              isArticle={false}
+              onSelect={onSelect}
+            />
+          ))}
+        </div>
+
+        <AnimatePresence>
+          {isAnswered && (
+            <motion.div
+              className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+            >
+              <div className={styles.feedbackText}>
+                <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
+                <span>
+                  {isCorrect ? '정답이에요!' : `정답: ${question.answer}`}
                 </span>
               </div>
               <motion.button

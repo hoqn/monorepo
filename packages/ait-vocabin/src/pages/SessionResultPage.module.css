@@ -125,6 +125,18 @@
   gap: 8px;
 }
 
+.reviewButton {
+  width: 100%;
+  padding: 17px;
+  background-color: #EFF6FF;
+  color: #3182F6;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .retryButton {
   width: 100%;
   padding: 17px;
