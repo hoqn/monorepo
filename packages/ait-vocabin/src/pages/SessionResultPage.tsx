@@ -153,6 +153,19 @@ export function SessionResultPage() {
             틀린 {wrongQuestions.length}문제 복습하기
           </motion.button>
         )}
+        {/* 정확도 높을 때 레벨업 도전 CTA */}
+        {accuracy >= 80 && (
+          <motion.button
+            className={styles.levelupButton}
+            onClick={() => navigate('/session/levelup')}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            레벨업 도전하기 ›
+          </motion.button>
+        )}
         <motion.button
           className={styles.retryButton}
           onClick={() => navigate('/session')}

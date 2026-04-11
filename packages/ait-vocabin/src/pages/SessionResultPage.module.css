@@ -160,6 +160,18 @@
   cursor: pointer;
 }
 
+.levelupButton {
+  width: 100%;
+  padding: 17px;
+  background: linear-gradient(135deg, #EDE9FE, #DBEAFE);
+  color: #4F46E5;
+  border: 1.5px solid #C4B5FD;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shimmer {
     animation: none;

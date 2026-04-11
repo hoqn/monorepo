@@ -186,6 +186,24 @@ export function HomePage() {
           </motion.div>
         )}
 
+        {/* 패턴 도감 진입점 */}
+        <motion.div variants={itemVariants}>
+          <motion.div
+            className={styles.patternCard}
+            onClick={() => navigate('/patterns')}
+            whileTap={{ scale: 0.97 }}
+          >
+            <div className={styles.patternCardContent}>
+              <span className={styles.patternCardIcon}>📖</span>
+              <div>
+                <p className={styles.patternCardTitle}>독일어 패턴 도감</p>
+                <p className={styles.patternCardSub}>관사·복수형·동사 규칙 한눈에 보기</p>
+              </div>
+            </div>
+            <span className={styles.patternCardArrow}>›</span>
+          </motion.div>
+        </motion.div>
+
         {/* 리더보드 카드 */}
         <motion.div className={styles.leaderboardCard} variants={itemVariants}>
           <div className={styles.sectionHeader}>

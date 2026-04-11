@@ -13,11 +13,7 @@ import styles from './SessionPage.module.css';
 const MAX_LIVES = 5;
 const SESSION_QUESTION_COUNT = 12;
 const AUTO_ADVANCE_DELAY = 1400;
-const DIFFICULTY_CHIP: Record<string, string> = {
-  easy: '쉬움',
-  normal: '보통',
-  hard: '어려움',
-};
+
 
 type AnswerState = 'idle' | 'correct' | 'incorrect';
 
@@ -576,7 +572,7 @@ interface ProductionQuizCardProps {
   cardRef: React.RefObject<HTMLDivElement | null>;
 }
 
-function ProductionQuizCard({ question, answerState, selectedOption, onSelect, onNext, cardRef }: ProductionQuizCardProps) {
+function ProductionQuizCard({ question, answerState, selectedOption: _selectedOption, onSelect, onNext, cardRef }: ProductionQuizCardProps) {
   const [inputValue, setInputValue] = useState('');
   const isAnswered = answerState !== 'idle';
   const isCorrect = answerState === 'correct';
@@ -611,7 +607,7 @@ function ProductionQuizCard({ question, answerState, selectedOption, onSelect, o
   return (
     <div className={styles.quizCardInner}>
       <div className={styles.wordCardWrapper}>
-        <div ref={cardRef} className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}>
+        <div ref={cardRef as React.RefObject<HTMLDivElement>} className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}>
           <AnimatePresence>
             {isCorrect && (
               <motion.span className={styles.correctMark} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.08 }}>✓</motion.span>
@@ -705,7 +701,7 @@ function VerbQuizCard({ question, answerState, selectedOption, onSelect, onNext,
     <div className={styles.quizCardInner}>
       <div className={styles.wordCardWrapper}>
         <div
-          ref={cardRef}
+          ref={cardRef as React.RefObject<HTMLDivElement>}
           className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}
         >
           <AnimatePresence>

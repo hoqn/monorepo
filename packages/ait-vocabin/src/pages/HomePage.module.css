@@ -441,6 +441,47 @@
   flex-shrink: 0;
 }
 
+/* ── 패턴 도감 카드 ── */
+.patternCard {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.patternCardContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.patternCardIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.patternCardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+}
+
+.patternCardSub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.patternCardArrow {
+  font-size: 20px;
+  color: var(--color-text-tertiary);
+}
+
 /* ── 스마트 복습 CTA ── */
 .reviewCta {
   display: flex;
