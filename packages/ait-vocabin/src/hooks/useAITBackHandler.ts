@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { graniteEvent } from '@apps-in-toss/web-framework';
+import { isAIT } from '../lib/ait';
 
 /**
  * AIT 환경의 시스템 뒤로가기 버튼 이벤트를 처리합니다.
@@ -7,6 +8,9 @@ import { graniteEvent } from '@apps-in-toss/web-framework';
  */
 export function useAITBackHandler(handler: () => void) {
   useEffect(() => {
+    if (!isAIT) {
+      return;
+    }
     const cleanup = graniteEvent.addEventListener('backEvent', {
       onEvent: handler,
     });

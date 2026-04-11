@@ -72,8 +72,8 @@ export interface UserProfile {
 export interface UserStats {
   totalWords: number;
   sessionsToday: number;
-  reviewPending: number;
-  progressDistribution: { learning: number; mastered: number };
+  reviewPending?: number;
+  progressDistribution?: { learning: number; mastered: number };
 }
 
 export interface MeResponse {

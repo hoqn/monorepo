@@ -3,15 +3,23 @@ import { AnimatePresence, motion, useSpring, useTransform } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAIT } from '../lib/ait.ts';
-import { getLeaderboard, getMe, getTodayMissions, LeaderboardEntry, MeResponse, DailyMission, MissionType } from '../lib/api.ts';
+import {
+  getLeaderboard,
+  getMe,
+  getTodayMissions,
+  LeaderboardEntry,
+  MeResponse,
+  DailyMission,
+  MissionType,
+} from '../lib/api.ts';
 import styles from './HomePage.module.css';
 
 const SESSION_COUNT_KEY = 'vocabin_session_count';
 const SESSION_COUNTS = [6, 12, 24] as const;
-type SessionCount = typeof SESSION_COUNTS[number];
+type SessionCount = (typeof SESSION_COUNTS)[number];
 const SESSION_COUNT_LABELS: Record<SessionCount, { label: string; desc: string; time: string }> = {
-  6:  { label: '6문제',  desc: '가볍게',   time: '~3분' },
-  12: { label: '12문제', desc: '적당히',   time: '~6분' },
+  6: { label: '6문제', desc: '가볍게', time: '~3분' },
+  12: { label: '12문제', desc: '적당히', time: '~6분' },
   24: { label: '24문제', desc: '집중적으로', time: '~12분' },
 };
 
@@ -44,10 +52,14 @@ export function HomePage() {
   const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showSessionSheet, setShowSessionSheet] = useState(false);
   const [selectedCount, setSelectedCount] = useState<SessionCount>(
-    () => (parseInt(localStorage.getItem(SESSION_COUNT_KEY) ?? '12') as SessionCount) || 12
+    () => (parseInt(localStorage.getItem(SESSION_COUNT_KEY) ?? '12') as SessionCount) || 12,
   );
 
   useEffect(() => {
+    if (!isAIT) {
+      return;
+    }
+
     const cleanup = tdsEvent.addEventListener('navigationAccessoryEvent', {
       onEvent: ({ id }) => {
         if (id === 'profile') navigate('/profile');
@@ -69,8 +81,11 @@ export function HomePage() {
         setMe(meData);
         setLeaderboard(lbData.entries.slice(0, 4));
         setMissions(missionsData.missions);
-      } catch { /* 실패해도 빈 값으로 */ }
-      finally { setLoading(false); }
+      } catch {
+        /* 실패해도 빈 값으로 */
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -109,7 +124,16 @@ export function HomePage() {
         <header className={styles.header}>
           <span className={styles.logo}>VocaBin</span>
           <button className={styles.profileButton} onClick={() => navigate('/profile')} aria-label="프로필">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="8" r="4" />
               <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
             </svg>
@@ -117,12 +141,7 @@ export function HomePage() {
         </header>
       )}
 
-      <motion.div
-        className={styles.content}
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <motion.div className={styles.content} variants={containerVariants} initial="hidden" animate="visible">
         {/* 스트릭 + XP 칩 행 */}
         <motion.div className={styles.chipsRow} variants={itemVariants}>
           <StreakChip streak={streak} />
@@ -130,7 +149,7 @@ export function HomePage() {
         </motion.div>
 
         {/* 스마트 복습 CTA — 복습 대기 단어가 있을 때만 표시 */}
-        {(me?.stats.reviewPending ?? 0) > 0 && (
+        {(me?.stats?.reviewPending ?? 0) > 0 && (
           <motion.div variants={itemVariants}>
             <motion.div
               className={styles.reviewCta}
@@ -139,7 +158,7 @@ export function HomePage() {
             >
               <span className={styles.reviewCtaIcon}>📖</span>
               <span className={styles.reviewCtaText}>
-                복습 대기 <strong>{me?.stats.reviewPending}단어</strong> — 지금 복습하기
+                복습 대기 <strong>{me?.stats?.reviewPending}단어</strong> — 지금 복습하기
               </span>
               <span className={styles.reviewCtaArrow}>→</span>
             </motion.div>
@@ -156,14 +175,19 @@ export function HomePage() {
               setPressed(true);
               pressTimerRef.current = setTimeout(() => setPressed(false), 300);
             }}
-            onPointerUp={() => { setPressed(false); handleSessionPress(); }}
+            onPointerUp={() => {
+              setPressed(false);
+              handleSessionPress();
+            }}
             onPointerCancel={() => setPressed(false)}
           >
             <div className={styles.sessionCardBg} />
             <div className={styles.sessionCardContent}>
               <p className={styles.sessionCardLabel}>오늘의 채집</p>
               <p className={styles.sessionCardTitle}>채집 시작하기</p>
-              <p className={styles.sessionCardSub}>{SESSION_COUNT_LABELS[selectedCount].desc} · {SESSION_COUNT_LABELS[selectedCount].label}</p>
+              <p className={styles.sessionCardSub}>
+                {SESSION_COUNT_LABELS[selectedCount].desc} · {SESSION_COUNT_LABELS[selectedCount].label}
+              </p>
             </div>
             <div className={styles.sessionCardArrow}>→</div>
           </motion.div>
@@ -188,11 +212,7 @@ export function HomePage() {
 
         {/* 패턴 도감 진입점 */}
         <motion.div variants={itemVariants}>
-          <motion.div
-            className={styles.patternCard}
-            onClick={() => navigate('/patterns')}
-            whileTap={{ scale: 0.97 }}
-          >
+          <motion.div className={styles.patternCard} onClick={() => navigate('/patterns')} whileTap={{ scale: 0.97 }}>
             <div className={styles.patternCardContent}>
               <span className={styles.patternCardIcon}>📖</span>
               <div>
@@ -208,10 +228,7 @@ export function HomePage() {
         <motion.div className={styles.leaderboardCard} variants={itemVariants}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>이번 주 리더보드</span>
-            <button
-              className={styles.sectionMore}
-              onClick={() => navigate('/leaderboard')}
-            >
+            <button className={styles.sectionMore} onClick={() => navigate('/leaderboard')}>
               전체보기 →
             </button>
           </div>
@@ -234,12 +251,8 @@ export function HomePage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.25 + i * 0.07 }}
                 >
-                  <span className={styles.rank}>
-                    {item.rank <= 3 ? ['🥇', '🥈', '🥉'][item.rank - 1] : item.rank}
-                  </span>
-                  <span className={styles.leaderboardName}>
-                    {item.is_me ? '나' : (item.display_name ?? '익명')}
-                  </span>
+                  <span className={styles.rank}>{item.rank <= 3 ? ['🥇', '🥈', '🥉'][item.rank - 1] : item.rank}</span>
+                  <span className={styles.leaderboardName}>{item.is_me ? '나' : (item.display_name ?? '익명')}</span>
                   <span className={styles.leaderboardXp}>{item.xp_total.toLocaleString()} XP</span>
                 </motion.li>
               ))}
@@ -255,13 +268,17 @@ export function HomePage() {
               <span className={styles.progressDistTotal}>{totalWords.toLocaleString()}개</span>
             </div>
             <ProgressDistBar
-              learning={me?.stats.progressDistribution.learning ?? 0}
-              mastered={me?.stats.progressDistribution.mastered ?? 0}
+              learning={me?.stats?.progressDistribution?.learning ?? 0}
+              mastered={me?.stats?.progressDistribution?.mastered ?? 0}
               total={totalWords}
             />
             <div className={styles.progressDistLegend}>
-              <span className={styles.progressDistLegendLearning}>학습중 {me?.stats.progressDistribution.learning ?? 0}</span>
-              <span className={styles.progressDistLegendMastered}>숙련 {me?.stats.progressDistribution.mastered ?? 0}</span>
+              <span className={styles.progressDistLegendLearning}>
+                학습중 {me?.stats?.progressDistribution?.learning ?? 0}
+              </span>
+              <span className={styles.progressDistLegendMastered}>
+                숙련 {me?.stats?.progressDistribution?.mastered ?? 0}
+              </span>
             </div>
           </motion.div>
         )}
@@ -333,11 +350,7 @@ function SessionSetupSheet({ selectedCount, onSelect, onClose }: SessionSetupShe
           })}
         </div>
 
-        <motion.button
-          className={styles.startButton}
-          onClick={() => onSelect(localCount)}
-          whileTap={{ scale: 0.97 }}
-        >
+        <motion.button className={styles.startButton} onClick={() => onSelect(localCount)} whileTap={{ scale: 0.97 }}>
           시작하기
         </motion.button>
       </motion.div>
@@ -373,8 +386,8 @@ function ProgressDistBar({ learning, mastered, total }: { learning: number; mast
    MissionItem
 ───────────────────── */
 const MISSION_LABELS: Record<MissionType, (target: number) => string> = {
-  correct_count:  (t) => `정답 ${t}개 맞추기`,
-  combo_streak:   (t) => `콤보 ${t} 이상 달성`,
+  correct_count: (t) => `정답 ${t}개 맞추기`,
+  combo_streak: (t) => `콤보 ${t} 이상 달성`,
   question_count: (t) => `문제 ${t}개 풀기`,
 };
 
@@ -407,10 +420,7 @@ function MissionItem({ mission }: { mission: DailyMission }) {
 function StreakChip({ streak }: { streak: number }) {
   const isActive = streak > 0;
   return (
-    <motion.div
-      className={`${styles.chip} ${isActive ? styles.chipStreak : ''}`}
-      whileTap={{ scale: 0.94 }}
-    >
+    <motion.div className={`${styles.chip} ${isActive ? styles.chipStreak : ''}`} whileTap={{ scale: 0.94 }}>
       <motion.span
         className={styles.chipIcon}
         animate={isActive ? { scale: [1, 1.15, 1] } : {}}
@@ -433,7 +443,9 @@ function LevelChip({ level, xpInLevel, xpPercent }: { level: number; xpInLevel: 
     <div className={styles.chipLevel}>
       <div className={styles.chipLevelTop}>
         <span className={styles.levelBadge}>Lv.{level}</span>
-        <span className={styles.xpCount}>{xpInLevel} / {XP_PER_LEVEL} XP</span>
+        <span className={styles.xpCount}>
+          {xpInLevel} / {XP_PER_LEVEL} XP
+        </span>
       </div>
       <AnimatedXpBar percent={xpPercent} />
     </div>
