@@ -376,12 +376,37 @@ async function handleGetMe(user: { userId: string }): Promise<Response> {
     .eq('id', user.userId).single();
   if (error || !u) return json({ error: 'User not found' }, 404);
 
-  const { count: totalWords } = await supabase.from('user_word_progress').select('*', { count: 'exact', head: true }).eq('user_id', user.userId);
+  const now = new Date().toISOString();
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-  const { count: sessionsToday } = await supabase.from('sessions').select('*', { count: 'exact', head: true })
-    .eq('user_id', user.userId).gte('completed_at', todayStart.toISOString()).not('completed_at', 'is', null);
 
-  return json({ user: u, stats: { totalWords: totalWords ?? 0, sessionsToday: sessionsToday ?? 0 } });
+  const [
+    { count: totalWords },
+    { count: sessionsToday },
+    { count: reviewPending },
+    { data: progressRows },
+  ] = await Promise.all([
+    supabase.from('user_word_progress').select('*', { count: 'exact', head: true }).eq('user_id', user.userId),
+    supabase.from('sessions').select('*', { count: 'exact', head: true })
+      .eq('user_id', user.userId).gte('completed_at', todayStart.toISOString()).not('completed_at', 'is', null),
+    supabase.from('user_word_progress').select('*', { count: 'exact', head: true })
+      .eq('user_id', user.userId).lte('next_review_at', now),
+    supabase.from('user_word_progress').select('repetitions').eq('user_id', user.userId),
+  ]);
+
+  // 숙련도 분포: repetitions 기준
+  const rows = progressRows ?? [];
+  const learning = rows.filter((r: { repetitions: number }) => r.repetitions < 4).length;
+  const mastered = rows.filter((r: { repetitions: number }) => r.repetitions >= 4).length;
+
+  return json({
+    user: u,
+    stats: {
+      totalWords: totalWords ?? 0,
+      sessionsToday: sessionsToday ?? 0,
+      reviewPending: reviewPending ?? 0,
+      progressDistribution: { learning, mastered },
+    },
+  });
 }
 
 async function handlePatchMe(req: Request, user: { userId: string }): Promise<Response> {

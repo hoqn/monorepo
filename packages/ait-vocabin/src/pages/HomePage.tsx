@@ -129,6 +129,23 @@ export function HomePage() {
           <LevelChip level={level} xpInLevel={xpInLevel} xpPercent={xpPercent} />
         </motion.div>
 
+        {/* 스마트 복습 CTA — 복습 대기 단어가 있을 때만 표시 */}
+        {(me?.stats.reviewPending ?? 0) > 0 && (
+          <motion.div variants={itemVariants}>
+            <motion.div
+              className={styles.reviewCta}
+              onClick={() => navigate('/session', { state: { sessionCount: 6, reviewMode: true } })}
+              whileTap={{ scale: 0.97 }}
+            >
+              <span className={styles.reviewCtaIcon}>📖</span>
+              <span className={styles.reviewCtaText}>
+                복습 대기 <strong>{me?.stats.reviewPending}단어</strong> — 지금 복습하기
+              </span>
+              <span className={styles.reviewCtaArrow}>→</span>
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* 세션 CTA 카드 */}
         <motion.div variants={itemVariants}>
           <motion.div
@@ -212,11 +229,24 @@ export function HomePage() {
           )}
         </motion.div>
 
-        {/* 누적 학습 단어 */}
-        <motion.div className={styles.todayStats} variants={itemVariants}>
-          <span className={styles.todayStatsText}>수집한 단어</span>
-          <span className={styles.todayStatsCount}>{totalWords.toLocaleString()}개</span>
-        </motion.div>
+        {/* 숙련도 분포 바 */}
+        {totalWords > 0 && (
+          <motion.div className={styles.progressDistCard} variants={itemVariants}>
+            <div className={styles.progressDistHeader}>
+              <span className={styles.progressDistTitle}>단어 숙련도</span>
+              <span className={styles.progressDistTotal}>{totalWords.toLocaleString()}개</span>
+            </div>
+            <ProgressDistBar
+              learning={me?.stats.progressDistribution.learning ?? 0}
+              mastered={me?.stats.progressDistribution.mastered ?? 0}
+              total={totalWords}
+            />
+            <div className={styles.progressDistLegend}>
+              <span className={styles.progressDistLegendLearning}>학습중 {me?.stats.progressDistribution.learning ?? 0}</span>
+              <span className={styles.progressDistLegendMastered}>숙련 {me?.stats.progressDistribution.mastered ?? 0}</span>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
       <AnimatePresence>
         {showSessionSheet && (
@@ -294,6 +324,30 @@ function SessionSetupSheet({ selectedCount, onSelect, onClose }: SessionSetupShe
         </motion.button>
       </motion.div>
     </>
+  );
+}
+
+/* ─────────────────────
+   ProgressDistBar
+───────────────────── */
+function ProgressDistBar({ learning, mastered, total }: { learning: number; mastered: number; total: number }) {
+  const learningPct = total > 0 ? Math.round((learning / total) * 100) : 0;
+  const masteredPct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+  return (
+    <div className={styles.progressDistBar}>
+      <motion.div
+        className={styles.progressDistLearning}
+        initial={{ width: 0 }}
+        animate={{ width: `${learningPct}%` }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
+      />
+      <motion.div
+        className={styles.progressDistMastered}
+        initial={{ width: 0 }}
+        animate={{ width: `${masteredPct}%` }}
+        transition={{ duration: 0.7, ease: 'easeOut', delay: 0.3 }}
+      />
+    </div>
   );
 }
 

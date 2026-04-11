@@ -441,6 +441,110 @@
   flex-shrink: 0;
 }
 
+/* ── 스마트 복습 CTA ── */
+.reviewCta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+  border: 1.5px solid #FDE68A;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.reviewCtaIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.reviewCtaText {
+  flex: 1;
+  font-size: 13px;
+  color: #92400E;
+}
+
+.reviewCtaArrow {
+  font-size: 14px;
+  color: #B45309;
+  flex-shrink: 0;
+}
+
+/* ── 숙련도 분포 카드 ── */
+.progressDistCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progressDistHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progressDistTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.progressDistTotal {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.progressDistBar {
+  width: 100%;
+  height: 8px;
+  background-color: #F0F0F0;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.progressDistLearning {
+  height: 100%;
+  background-color: #F59E0B;
+  border-radius: 999px 0 0 999px;
+}
+
+.progressDistMastered {
+  height: 100%;
+  background-color: #22C55E;
+}
+
+.progressDistLegend {
+  display: flex;
+  gap: 12px;
+}
+
+.progressDistLegendLearning {
+  font-size: 11px;
+  font-weight: 600;
+  color: #D97706;
+}
+
+.progressDistLegendLearning::before {
+  content: '●';
+  margin-right: 4px;
+}
+
+.progressDistLegendMastered {
+  font-size: 11px;
+  font-weight: 600;
+  color: #16A34A;
+}
+
+.progressDistLegendMastered::before {
+  content: '●';
+  margin-right: 4px;
+}
+
 /* ── 세션 설정 바텀시트 ── */
 .backdrop {
   position: fixed;

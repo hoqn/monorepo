@@ -44,6 +44,8 @@ export function SessionPage() {
   const sessionIdRef = useRef<string | null>(null);
   const resultsRef = useRef<Array<{ wordId?: string; verbId?: string; questionType: 'article' | 'plural' | 'verb_conjugation'; correct: boolean }>>([]);
   const wrongQuestionsRef = useRef<Question[]>([]);
+  // wordId → repetitions 맵 (생산형 입력 모드 판단용)
+  const progressMapRef = useRef<Map<string, number>>(new Map());
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
@@ -72,11 +74,12 @@ export function SessionPage() {
     (async () => {
       try {
         const verbLimit = Math.max(1, Math.floor(sessionCount / 3));
-        const [{ words }, verbsResponse, { sessionId }] = await Promise.all([
+        const [wordsData, verbsResponse, { sessionId }] = await Promise.all([
           getReviewWords(sessionCount),
           getReviewVerbs(verbLimit).catch(() => ({ verbs: [] })),
           createSession(),
         ]);
+        const { words } = wordsData;
 
         if (words.length === 0) {
           setError('복습할 단어가 없어요. 잠시 후 다시 시도해주세요.');
@@ -87,6 +90,11 @@ export function SessionPage() {
           verb: mapVerb(v),
           forms: v.forms.map(mapVerbForm),
         }));
+
+        // progress 맵 구성 (wordId → repetitions)
+        for (const p of wordsData.progress) {
+          progressMapRef.current.set(p.word_id, p.repetitions);
+        }
 
         sessionIdRef.current = sessionId;
         setQuestions(generateQuestions(words.map(mapWord), sessionCount, verbPool));
@@ -289,6 +297,11 @@ export function SessionPage() {
               hintLevel={hintLevel}
               hintsRemaining={MAX_HINTS_PER_SESSION - totalHintsUsed}
               onUseHint={handleUseHint}
+              productionMode={
+                current.kind === 'noun' && current.type !== 'article'
+                  ? (progressMapRef.current.get(current.word.id) ?? 0) >= 3
+                  : false
+              }
             />
           </motion.div>
         </AnimatePresence>
@@ -351,9 +364,10 @@ interface QuizCardProps {
   hintLevel: number;
   hintsRemaining: number;
   onUseHint: () => void;
+  productionMode: boolean;
 }
 
-function QuizCard({ question, answerState, selectedOption, onSelect, onNext, hintLevel, hintsRemaining, onUseHint }: QuizCardProps) {
+function QuizCard({ question, answerState, selectedOption, onSelect, onNext, hintLevel, hintsRemaining, onUseHint, productionMode }: QuizCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isAnswered = answerState !== 'idle';
   const isCorrect = answerState === 'correct';
@@ -390,6 +404,11 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext, hin
 
   if (question.kind === 'verb') {
     return <VerbQuizCard question={question} answerState={answerState} selectedOption={selectedOption} onSelect={onSelect} onNext={onNext} cardRef={cardRef} hintLevel={hintLevel} hintsRemaining={hintsRemaining} onUseHint={onUseHint} />;
+  }
+
+  // 생산형 입력 모드 (복수형, repetitions >= 3)
+  if (productionMode && question.type === 'plural') {
+    return <ProductionQuizCard question={question} answerState={answerState} selectedOption={selectedOption} onSelect={onSelect} onNext={onNext} cardRef={cardRef} />;
   }
 
   return (
@@ -545,6 +564,125 @@ function QuizCard({ question, answerState, selectedOption, onSelect, onNext, hin
       </div>
     </div>
   );
+}
+
+// ── 생산형 입력 카드 (복수형 직접 입력) ────────────────────────────────────────
+interface ProductionQuizCardProps {
+  question: import('../types/word.ts').NounQuestion;
+  answerState: AnswerState;
+  selectedOption: string | null;
+  onSelect: (option: string) => void;
+  onNext: () => void;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function ProductionQuizCard({ question, answerState, selectedOption, onSelect, onNext, cardRef }: ProductionQuizCardProps) {
+  const [inputValue, setInputValue] = useState('');
+  const isAnswered = answerState !== 'idle';
+  const isCorrect = answerState === 'correct';
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isAnswered) {
+      setInputValue('');
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isAnswered, question]);
+
+  const handleSubmit = () => {
+    if (!inputValue.trim() || isAnswered) return;
+    const normalized = inputValue.trim();
+    // 오타 허용: 대소문자 무시 + Levenshtein distance 1 이하
+    const correct = question.answer;
+    const isMatch = normalized.toLowerCase() === correct.toLowerCase() || levenshtein(normalized, correct) <= 1;
+    onSelect(isMatch ? correct : normalized);
+  };
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || answerState === 'idle') return;
+    if (answerState === 'correct') {
+      el.animate([{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-14px) scale(1.03)' }, { transform: 'translateY(0) scale(1)' }], { duration: 480, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+    } else {
+      el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-10px)' }, { transform: 'translateX(10px)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(0)' }], { duration: 440, easing: 'ease-in-out' });
+    }
+  }, [answerState]);
+
+  return (
+    <div className={styles.quizCardInner}>
+      <div className={styles.wordCardWrapper}>
+        <div ref={cardRef} className={`${styles.wordCard} ${isAnswered ? styles[`wordCard_${answerState}`] : ''}`}>
+          <AnimatePresence>
+            {isCorrect && (
+              <motion.span className={styles.correctMark} initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 22, delay: 0.08 }}>✓</motion.span>
+            )}
+          </AnimatePresence>
+          <span className={styles.wordText}>{question.word.word}</span>
+          <span className={styles.wordMeaning}>{question.word.meaningKo}</span>
+          <span className={styles.productionBadge}>직접 입력</span>
+        </div>
+      </div>
+
+      <div className={styles.quizArea}>
+        <p className={styles.questionLabel}>복수형을 직접 입력하세요</p>
+
+        <div className={styles.productionInputRow}>
+          <input
+            ref={inputRef}
+            className={`${styles.productionInput} ${isAnswered ? (isCorrect ? styles.productionInputCorrect : styles.productionInputIncorrect) : ''}`}
+            value={isAnswered ? (isCorrect ? question.answer : inputValue) : inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
+            disabled={isAnswered}
+            placeholder="복수형 입력..."
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+          {!isAnswered && (
+            <motion.button
+              className={styles.productionSubmitButton}
+              onClick={handleSubmit}
+              disabled={!inputValue.trim()}
+              whileTap={{ scale: 0.95 }}
+            >
+              확인
+            </motion.button>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {isAnswered && (
+            <motion.div className={styles.feedbackArea} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}>
+              <div className={`${styles.feedbackRow} ${styles[`feedbackRow_${answerState}`]}`}>
+                <div className={styles.feedbackText}>
+                  <span className={styles.feedbackIcon}>{isCorrect ? '✓' : '✕'}</span>
+                  <span>{isCorrect ? '정답이에요!' : `정답: ${question.answer}`}</span>
+                </div>
+                {isCorrect && <motion.button className={styles.nextButton} onClick={onNext} whileTap={{ scale: 0.96 }}>다음 →</motion.button>}
+              </div>
+              {!isCorrect && question.word.exampleSentence && (
+                <motion.div className={styles.exampleCard} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.28, delay: 0.15 }}>
+                  <p className={styles.exampleSentence}>{question.word.exampleSentence}</p>
+                </motion.div>
+              )}
+              {!isCorrect && <motion.button className={styles.nextButtonFull} onClick={onNext} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} whileTap={{ scale: 0.97 }}>다음 →</motion.button>}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+/** 간단한 Levenshtein distance */
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+    dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  }
+  return dp[m][n];
 }
 
 interface VerbQuizCardProps {
