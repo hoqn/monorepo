@@ -2,7 +2,7 @@
   width: 100%;
   height: 100%;
   overflow-y: auto;
-  background: linear-gradient(to bottom, #fff 0px, #F2F4F6 80px);
+  background: linear-gradient(to bottom, #fff 0px, #f2f4f6 80px);
   display: flex;
   flex-direction: column;
 }
@@ -155,21 +155,21 @@
 .sessionCardBg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    125deg,
-    #2563eb 0%,
-    #4f46e5 35%,
-    #7c3aed 65%,
-    #4f46e5 100%
-  );
+  background: linear-gradient(125deg, #2563eb 0%, #4f46e5 35%, #7c3aed 65%, #4f46e5 100%);
   background-size: 250% 250%;
   animation: cardGradientFlow 6s ease infinite;
 }
 
 @keyframes cardGradientFlow {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .sessionCardBg::after {
@@ -323,8 +323,12 @@
 }
 
 @keyframes skeleton {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .emptyText {
@@ -355,4 +359,348 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
+}
+
+/* ── 데일리 미션 ── */
+.missionsCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px 14px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.missionsComplete {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: #eff6ff;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.missionsList {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.missionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.missionItemDone .missionCheck {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.missionItemDone .missionLabel {
+  text-decoration: line-through;
+  color: var(--color-text-secondary);
+}
+
+.missionCheck {
+  font-size: 14px;
+  color: var(--color-text-tertiary, #c2c8d0);
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+}
+
+.missionBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.missionLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.missionProgressTrack {
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.missionProgressFill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.missionCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* ── 패턴 도감 카드 ── */
+.patternCard {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.patternCardContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.patternCardIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.patternCardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+}
+
+.patternCardSub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.patternCardArrow {
+  font-size: 20px;
+  color: var(--color-text-tertiary);
+}
+
+/* ── 스마트 복습 CTA ── */
+.reviewCta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1.5px solid #fde68a;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.reviewCtaIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.reviewCtaText {
+  flex: 1;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.reviewCtaArrow {
+  font-size: 14px;
+  color: #b45309;
+  flex-shrink: 0;
+}
+
+/* ── 숙련도 분포 카드 ── */
+.progressDistCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progressDistHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progressDistTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.progressDistTotal {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.progressDistBar {
+  width: 100%;
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.progressDistLearning {
+  height: 100%;
+  background-color: #f59e0b;
+  border-radius: 999px 0 0 999px;
+}
+
+.progressDistMastered {
+  height: 100%;
+  background-color: #22c55e;
+}
+
+.progressDistLegend {
+  display: flex;
+  gap: 12px;
+}
+
+.progressDistLegendLearning {
+  font-size: 11px;
+  font-weight: 600;
+  color: #d97706;
+}
+
+.progressDistLegendLearning::before {
+  content: '●';
+  margin-right: 4px;
+}
+
+.progressDistLegendMastered {
+  font-size: 11px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.progressDistLegendMastered::before {
+  content: '●';
+  margin-right: 4px;
+}
+
+/* ── 세션 설정 바텀시트 ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.48);
+  z-index: 100;
+}
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-surface);
+  padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 100% 0;
+  height: 256px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sheetHandle {
+  width: 40px;
+  height: 4px;
+  background-color: #e5e7eb;
+  border-radius: 999px;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.sheetTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 4px 0 0;
+  align-self: flex-start;
+}
+
+.sheetDesc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 4px;
+  align-self: flex-start;
+}
+
+.sessionCountOptions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.sessionCountOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 8px;
+  background-color: #f5f6f8;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.sessionCountOptionSelected {
+  background-color: #eff6ff;
+  border-color: var(--color-primary);
+}
+
+.sessionCountLabel {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.sessionCountOptionSelected .sessionCountLabel {
+  color: var(--color-primary);
+}
+
+.sessionCountDesc {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.sessionCountTime {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.startButton {
+  width: 100%;
+  padding: 17px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
 }

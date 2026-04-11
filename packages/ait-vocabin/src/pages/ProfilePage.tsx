@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 
 import { ONBOARDING_DONE_KEY } from '../App.tsx';
@@ -87,6 +88,20 @@ export function ProfilePage() {
             <span className={styles.statLabel}>최장 스트릭</span>
           </div>
         </div>
+
+        {/* 패턴 도감 */}
+        <motion.div
+          className={styles.patternEntry}
+          onClick={() => navigate('/patterns')}
+          whileTap={{ scale: 0.97 }}
+        >
+          <span style={{ fontSize: 20 }}>📖</span>
+          <div style={{ flex: 1 }}>
+            <p className={styles.patternEntryTitle}>패턴 도감</p>
+            <p className={styles.patternEntrySub}>관사·복수형·동사 규칙 정리</p>
+          </div>
+          <span style={{ color: 'var(--color-text-tertiary)', fontSize: 20 }}>›</span>
+        </motion.div>
 
         {/* 배지 */}
         <span className={styles.sectionTitle}>배지</span>

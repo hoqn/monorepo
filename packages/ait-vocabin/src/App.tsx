@@ -7,8 +7,10 @@ import { OnboardingPage } from './pages/OnboardingPage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
 import { SessionResultPage } from './pages/SessionResultPage.tsx';
 import { SessionRecoveryPage } from './pages/SessionRecoveryPage.tsx';
+import { SessionLevelupPage } from './pages/SessionLevelupPage.tsx';
 import { LeaderboardPage } from './pages/LeaderboardPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
+import { PatternPage } from './pages/PatternPage.tsx';
 import { getToken, login } from './lib/api.ts';
 
 export const ONBOARDING_DONE_KEY = 'vocabin_onboarding_done';
@@ -21,7 +23,7 @@ function RootRedirect() {
 }
 
 function getTransition(pathname: string) {
-  if (pathname.startsWith('/session')) {
+  if (pathname.startsWith('/session') || pathname === '/patterns') {
     return {
       initial: { opacity: 0, y: 32 },
       animate: { opacity: 1, y: 0 },
@@ -58,8 +60,10 @@ function AnimatedRoutes() {
           <Route path="/session" element={<SessionPage />} />
           <Route path="/session/result" element={<SessionResultPage />} />
           <Route path="/session/recovery" element={<SessionRecoveryPage />} />
+          <Route path="/session/levelup" element={<SessionLevelupPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/patterns" element={<PatternPage />} />
           <Route path="*" element={<RootRedirect />} />
         </Routes>
       </motion.div>

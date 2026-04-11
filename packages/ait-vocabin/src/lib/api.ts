@@ -72,6 +72,8 @@ export interface UserProfile {
 export interface UserStats {
   totalWords: number;
   sessionsToday: number;
+  reviewPending?: number;
+  progressDistribution?: { learning: number; mastered: number };
 }
 
 export interface MeResponse {
@@ -142,11 +144,40 @@ export function getReviewWords(limit = 12): Promise<ReviewWordsResponse> {
   return request<ReviewWordsResponse>(`/words/review?limit=${limit}`);
 }
 
+// ── Verbs ─────────────────────────────────────────────────────────────────────
+
+export interface ApiVerb {
+  id: string;
+  infinitive: string;
+  meaning_ko: string;
+  ipa: string | null;
+  cefr_level: string;
+  category: string | null;
+  is_irregular: boolean;
+}
+
+export interface ApiVerbForm {
+  pronoun: string;
+  tense: string;
+  form: string;
+  example_sentence: string | null;
+  example_sentence_ko: string | null;
+}
+
+export interface ReviewVerbsResponse {
+  verbs: Array<ApiVerb & { forms: ApiVerbForm[] }>;
+}
+
+export function getReviewVerbs(limit = 4): Promise<ReviewVerbsResponse> {
+  return request<ReviewVerbsResponse>(`/verbs/review?limit=${limit}`);
+}
+
 // ── Sessions ──────────────────────────────────────────────────────────────────
 
 export interface SessionResult {
-  wordId: string;
-  questionType: 'article' | 'plural';
+  wordId?: string;
+  verbId?: string;
+  questionType: 'article' | 'plural' | 'verb_conjugation';
   correct: boolean;
 }
 
@@ -169,7 +200,7 @@ export function completeSession(sessionId: string, results: SessionResult[]): Pr
 
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
-import type { Word as FrontendWord } from '../types/word.ts';
+import type { Word as FrontendWord, Verb as FrontendVerb, VerbForm as FrontendVerbForm } from '../types/word.ts';
 import { sampleWords } from '../data/sample-words.ts';
 import { shuffle } from 'es-toolkit';
 
@@ -184,6 +215,48 @@ export function mapWord(w: Word): FrontendWord {
     cefrLevel: w.cefr_level as FrontendWord['cefrLevel'],
     category: w.category ?? '',
   };
+}
+
+export function mapVerb(v: ApiVerb): FrontendVerb {
+  return {
+    id: v.id,
+    infinitive: v.infinitive,
+    meaningKo: v.meaning_ko,
+    ipa: v.ipa ?? '',
+    cefrLevel: v.cefr_level as FrontendVerb['cefrLevel'],
+    category: v.category ?? '',
+    isIrregular: v.is_irregular,
+  };
+}
+
+export function mapVerbForm(f: ApiVerbForm): FrontendVerbForm {
+  return {
+    pronoun: f.pronoun,
+    tense: f.tense,
+    form: f.form,
+    exampleSentence: f.example_sentence,
+    exampleSentenceKo: f.example_sentence_ko,
+  };
+}
+
+// ── Missions ──────────────────────────────────────────────────────────────────
+
+export type MissionType = 'correct_count' | 'combo_streak' | 'question_count';
+
+export interface DailyMission {
+  id: string;
+  type: MissionType;
+  target: number;
+  progress: number;
+  completed_at: string | null;
+}
+
+export interface TodayMissionsResponse {
+  missions: DailyMission[];
+}
+
+export function getTodayMissions(): Promise<TodayMissionsResponse> {
+  return request<TodayMissionsResponse>('/missions/today');
 }
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────

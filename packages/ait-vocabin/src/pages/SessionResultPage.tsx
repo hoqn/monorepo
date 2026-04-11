@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import type { Question } from '../types/word.ts';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { playComplete, playPerfect } from '../lib/sound.ts';
@@ -39,8 +40,8 @@ export function SessionResultPage() {
   const location = useLocation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { total = 12, correct = 10, xpEarned: xpFromApi } =
-    (location.state as { total: number; correct: number; xpEarned?: number }) ?? {};
+  const { total = 12, correct = 10, xpEarned: xpFromApi, wrongQuestions } =
+    (location.state as { total: number; correct: number; xpEarned?: number; wrongQuestions?: Question[] }) ?? {};
   const xpEarned = xpFromApi ?? correct * XP_PER_CORRECT;
   const accuracy = Math.round((correct / total) * 100);
   const isPerfect = correct === total;
@@ -140,6 +141,31 @@ export function SessionResultPage() {
       </div>
 
       <div className={styles.footer}>
+        {wrongQuestions && wrongQuestions.length > 0 && (
+          <motion.button
+            className={styles.reviewButton}
+            onClick={() => navigate('/session', { state: { reviewQuestions: wrongQuestions } })}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            틀린 {wrongQuestions.length}문제 복습하기
+          </motion.button>
+        )}
+        {/* 정확도 높을 때 레벨업 도전 CTA */}
+        {accuracy >= 80 && (
+          <motion.button
+            className={styles.levelupButton}
+            onClick={() => navigate('/session/levelup')}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.95 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            레벨업 도전하기 ›
+          </motion.button>
+        )}
         <motion.button
           className={styles.retryButton}
           onClick={() => navigate('/session')}

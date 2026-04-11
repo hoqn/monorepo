@@ -37,6 +37,16 @@
   opacity: 0.6;
 }
 
+.reviewModeBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3182F6;
+  background: #EFF6FF;
+  padding: 3px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
 .progressTrack {
   flex: 1;
   height: 6px;
@@ -218,6 +228,32 @@
   margin: 0;
 }
 
+.verbPronounBadge {
+  display: inline-block;
+  background: #F0F4FF;
+  color: #3182F6;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.contextSentence {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin: 2px 0 0;
+  line-height: 1.5;
+}
+
+.contextSentenceKo {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 4px 0 0;
+}
+
 /* 관사 퀴즈: 2+1 레이아웃 */
 .articleOptions {
   display: grid;
@@ -334,6 +370,187 @@
   background-color: var(--color-text-primary);
   color: #fff;
   white-space: nowrap;
+}
+
+/* ── 피드백 영역 (문맥 카드 + 예문 포함) ── */
+.feedbackArea {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── 오답 문맥 카드 ── */
+.contextCard {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background-color: #FFFBEB;
+  border: 1.5px solid #FDE68A;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.contextCardIcon {
+  font-size: 16px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.contextCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.contextCardRule {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400E;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.contextCardExamples {
+  font-size: 12px;
+  color: #B45309;
+  margin: 0;
+}
+
+/* ── 예문 카드 ── */
+.exampleCard {
+  padding: 12px 14px;
+  background-color: #F8FAFF;
+  border: 1.5px solid #DBEAFE;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exampleSentence {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.exampleSentenceKo {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ── 생산형 입력 ── */
+.productionBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7C3AED;
+  background: #F5F3FF;
+  padding: 2px 8px;
+  border-radius: 99px;
+  align-self: center;
+}
+
+.productionInputRow {
+  display: flex;
+  gap: 8px;
+}
+
+.productionInput {
+  flex: 1;
+  padding: 14px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Fira Mono', monospace, inherit;
+  border: 2px solid #E5E7EB;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.productionInput:focus {
+  border-color: var(--color-primary);
+}
+
+.productionInputCorrect {
+  border-color: var(--color-correct);
+  background-color: #F0FDF4;
+  color: var(--color-correct);
+}
+
+.productionInputIncorrect {
+  border-color: var(--color-incorrect);
+  background-color: #FFF5F5;
+  color: var(--color-incorrect);
+}
+
+.productionSubmitButton {
+  padding: 14px 20px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.productionSubmitButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── 힌트 ── */
+.hintBox {
+  padding: 10px 14px;
+  background-color: #F0F7FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E40AF;
+  overflow: hidden;
+}
+
+.hintButton {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 4px 0;
+  opacity: 0.8;
+}
+
+.hintButton:active {
+  opacity: 0.5;
+}
+
+.hintRemaining {
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+}
+
+/* ── 오답 시 다음 버튼 (풀 와이드) ── */
+.nextButtonFull {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  background-color: var(--color-text-primary);
+  color: #fff;
 }
 
 /* ── 세션 완료 대기 오버레이 ── */

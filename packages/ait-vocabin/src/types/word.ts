@@ -24,12 +24,46 @@ export interface WordProgress {
   lastReviewedAt: string | null;
 }
 
-// 퀴즈 문항 유형
-export type QuestionType = 'article' | 'plural';
+// ── 동사 ──────────────────────────────────────────────────────────────────────
 
-export interface Question {
-  word: Word;
-  type: QuestionType;
-  options: string[];   // 선택지 (정답 포함)
-  answer: string;      // 정답
+export interface Verb {
+  id: string;
+  infinitive: string;
+  meaningKo: string;
+  ipa: string;
+  cefrLevel: CefrLevel;
+  category: string;
+  isIrregular: boolean;
 }
+
+export interface VerbForm {
+  pronoun: string;            // 'ich' | 'du' | 'er' | 'wir' | 'ihr' | 'sie'
+  tense: string;              // 'Präsens' | 'Präteritum' | 'Perfekt'
+  form: string;               // 실제 변화형 (예: 'geht')
+  exampleSentence: string | null;   // 'Er ___ zur Arbeit.' — ___ 가 빈칸
+  exampleSentenceKo: string | null; // '그는 직장에 간다.'
+}
+
+// ── 퀴즈 문항 ─────────────────────────────────────────────────────────────────
+
+export type NounQuestion = {
+  kind: 'noun';
+  word: Word;
+  type: 'article' | 'plural';
+  options: string[];
+  answer: string;
+};
+
+export type VerbQuestion = {
+  kind: 'verb';
+  verb: Verb;
+  verbForm: VerbForm;
+  contextSentence: string; // 빈칸 포함 예문
+  options: string[];
+  answer: string;
+};
+
+export type Question = NounQuestion | VerbQuestion;
+
+// 이전 코드 호환용 (QuestionType은 kind+type 조합으로 대체됨)
+export type QuestionType = 'article' | 'plural' | 'verb_conjugation';
