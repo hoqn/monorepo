@@ -1,4 +1,4 @@
-# packages/ait-vocabin 변경이 main에 반영될 때(머지/직접 푸시) 앱인토스 빌드·배포
+# packages/ait-vocabin 변경이 main에 반영될 때(머지/직접 푸시) 또는 Actions에서 수동 실행 시 앱인토스 빌드·배포
 name: ait-vocabin — Apps in Toss build & deploy
 
 on:
@@ -6,6 +6,13 @@ on:
     branches: [main]
     paths:
       - "packages/ait-vocabin/**"
+  workflow_dispatch:
+    inputs:
+      memo:
+        description: "출시 메모 (비우면 manual <actor> <short_sha>)"
+        required: false
+        type: string
+        default: ""
 
 concurrency:
   group: ait-vocabin-deploy-${{ github.ref }}
@@ -41,4 +48,15 @@ jobs:
         env:
           # Repository Settings → Secrets and variables → Actions 에서 설정
           APPS_IN_TOSS_API_KEY: ${{ secrets.APPS_IN_TOSS_API_KEY }}
-        run: pnpm exec ait deploy --api-key "$APPS_IN_TOSS_API_KEY" -m "ci ${{ github.sha }}"
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.memo }}" ]; then
+              MEMO="${{ github.event.inputs.memo }}"
+            else
+              MEMO="manual ${{ github.actor }} ${GITHUB_SHA:0:7}"
+            fi
+          else
+            MEMO="ci ${GITHUB_SHA:0:7}"
+          fi
+          pnpm exec ait deploy --api-key "$APPS_IN_TOSS_API_KEY" -m "$MEMO"
