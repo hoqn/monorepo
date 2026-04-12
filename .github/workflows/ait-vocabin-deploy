@@ -1,0 +1,44 @@
+# packages/ait-vocabin 변경이 main에 반영될 때(머지/직접 푸시) 앱인토스 빌드·배포
+name: ait-vocabin — Apps in Toss build & deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/ait-vocabin/**"
+
+concurrency:
+  group: ait-vocabin-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build .ait artifact
+        working-directory: packages/ait-vocabin
+        run: pnpm run build
+
+      - name: Deploy to Apps in Toss
+        working-directory: packages/ait-vocabin
+        env:
+          # Repository Settings → Secrets and variables → Actions 에서 설정
+          APPS_IN_TOSS_API_KEY: ${{ secrets.APPS_IN_TOSS_API_KEY }}
+        run: pnpm exec ait deploy --api-key "$APPS_IN_TOSS_API_KEY" -m "ci ${{ github.sha }}"
