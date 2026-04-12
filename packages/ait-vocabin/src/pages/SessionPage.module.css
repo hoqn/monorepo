@@ -9,11 +9,65 @@
 
 /* ── 헤더 ── */
 .header {
+  position: relative;
+  height: 56px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.headerNormal {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px 12px;
-  flex-shrink: 0;
+  padding: 0 20px;
+}
+
+/* ── 인라인 종료 확인 행 ── */
+.quitConfirmRow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  gap: 12px;
+}
+
+.quitConfirmLabel {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  flex: 1;
+  letter-spacing: -0.2px;
+}
+
+.quitConfirmActions {
+  display: flex;
+  gap: 8px;
+}
+
+.quitConfirmCancel {
+  padding: 9px 18px;
+  border: none;
+  background: #F0F2F5;
+  color: var(--color-text-primary);
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quitConfirmOk {
+  padding: 9px 18px;
+  border: none;
+  background: var(--color-incorrect);
+  color: #fff;
+  border-radius: 99px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .closeButton {
@@ -285,7 +339,7 @@
   font-weight: 700;
   color: var(--color-text-primary);
   cursor: pointer;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
   font-family: 'SF Mono', 'Fira Mono', monospace, inherit;
   /* min touch target */
@@ -631,38 +685,7 @@
   letter-spacing: 0.1px;
 }
 
-/* ── 오버레이 공통 ── */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.52);
-  z-index: 100;
-}
-
-.sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: var(--color-surface);
-  border-radius: 24px 24px 0 0;
-  padding: 12px 20px calc(28px + env(safe-area-inset-bottom, 0px));
-  z-index: 101;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.sheetHandle {
-  width: 40px;
-  height: 4px;
-  background-color: var(--color-progress-track);
-  border-radius: var(--radius-full);
-  margin-bottom: 8px;
-  flex-shrink: 0;
-}
-
+/* ── 다이얼로그 콘텐츠 스타일 ── */
 .sheetTitle {
   font-size: 20px;
   font-weight: 800;

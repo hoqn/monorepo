@@ -49,15 +49,17 @@ export function SessionPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
   const [comboCount, setComboCount] = useState(0);
-  const [showQuitModal, setShowQuitModal] = useState(false);
-  const [showGameOver, setShowGameOver] = useState(false);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [completing, setCompleting] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintLevel, setHintLevel] = useState(0);       // 현재 문제 힌트 단계 (0=미사용, 1, 2)
   const [totalHintsUsed, setTotalHintsUsed] = useState(0); // 세션 전체 힌트 사용 횟수
   const MAX_HINTS_PER_SESSION = 3;
 
-  useAITBackHandler(useCallback(() => setShowQuitModal(true), []));
+  useAITBackHandler(useCallback(() => {
+    if (showQuitConfirm) setShowQuitConfirm(false);
+    else setShowQuitConfirm(true);
+  }, [showQuitConfirm]));
 
   useEffect(() => {
     // 리뷰 모드: API 호출 없이 전달받은 오답 목록 사용
@@ -186,7 +188,7 @@ export function SessionPage() {
         if (newLives <= 0) {
           setTimeout(() => {
             playGameOver();
-            setShowGameOver(true);
+            navigate('/session/gameover', { state: { correctCount, totalCount: questions.length } });
           }, 900);
         }
         // 오답 시에는 자동 진행하지 않음 — 문맥 카드를 읽을 시간을 줌
@@ -218,20 +220,48 @@ export function SessionPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <button className={styles.closeButton} onClick={() => setShowQuitModal(true)} aria-label="세션 종료">
-          ✕
-        </button>
-        {isReviewMode && (
-          <span className={styles.reviewModeBadge}>복습 중</span>
-        )}
-        <div className={styles.progressTrack}>
-          <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
-        </div>
-        <div className={styles.hearts} aria-label={`남은 목숨: ${lives}`}>
-          {Array.from({ length: MAX_LIVES }).map((_, i) => (
-            <Heart key={i} isLost={i >= lives} />
-          ))}
-        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          {showQuitConfirm ? (
+            <motion.div
+              key="quit-confirm"
+              className={styles.quitConfirmRow}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -12 }}
+              transition={{ type: 'spring', stiffness: 600, damping: 32, mass: 0.6 }}
+            >
+              <span className={styles.quitConfirmLabel}>그만할까요?</span>
+              <div className={styles.quitConfirmActions}>
+                <button className={styles.quitConfirmCancel} onClick={() => setShowQuitConfirm(false)}>취소</button>
+                <button className={styles.quitConfirmOk} onClick={() => navigate('/home')}>그만하기</button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="header-normal"
+              className={styles.headerNormal}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              transition={{ type: 'spring', stiffness: 600, damping: 32, mass: 0.6 }}
+            >
+              <button className={styles.closeButton} onClick={() => setShowQuitConfirm(true)} aria-label="세션 종료">
+                ✕
+              </button>
+              {isReviewMode && (
+                <span className={styles.reviewModeBadge}>복습 중</span>
+              )}
+              <div className={styles.progressTrack}>
+                <div className={styles.progressFill} style={{ width: `${progress * 100}%` }} />
+              </div>
+              <div className={styles.hearts} aria-label={`남은 목숨: ${lives}`}>
+                {Array.from({ length: MAX_LIVES }).map((_, i) => (
+                  <Heart key={i} isLost={i >= lives} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       <div className={styles.questionCounter}>
@@ -302,26 +332,6 @@ export function SessionPage() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {showGameOver && (
-          <GameOverSheet
-            correctCount={correctCount}
-            totalCount={questions.length}
-            onContinue={() => navigate('/session/recovery', { state: { fromSession: true } })}
-            onQuit={() => navigate('/home')}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showQuitModal && (
-          <QuitSheet
-            onConfirm={() => navigate('/home')}
-            onCancel={() => setShowQuitModal(false)}
-          />
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {completing && <CompletingOverlay />}
@@ -878,8 +888,8 @@ function OptionButton({ option, selected, answerState, correctAnswer, isArticle,
       className={`${styles.optionButton} ${colorKey ? styles[`article_${colorKey}`] : ''} ${stateClass}`}
       onClick={() => onSelect(option)}
       disabled={isAnswered}
-      whileTap={!isAnswered ? { scale: 0.94 } : undefined}
-      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+      whileTap={!isAnswered ? { scale: 0.96, y: 2 } : undefined}
+      transition={{ type: 'spring', stiffness: 400, damping: 25, mass: 0.8 }}
     >
       {option}
     </motion.button>
@@ -899,80 +909,6 @@ function Heart({ isLost }: { isLost: boolean }) {
       ❤️
     </motion.span>
   );
-}
-
-interface GameOverSheetProps {
-  correctCount: number;
-  totalCount: number;
-  onContinue: () => void;
-  onQuit: () => void;
-}
-
-function GameOverSheet({ correctCount, totalCount, onContinue, onQuit }: GameOverSheetProps) {
-  return (
-    <>
-      <motion.div
-        className={styles.backdrop}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.28 }}
-      />
-      <motion.div
-        className={styles.sheet}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-      >
-        <div className={styles.sheetHandle} />
-        <div className={styles.gameOverHearts}>
-          {Array.from({ length: MAX_LIVES }).map((_, i) => (
-            <motion.span
-              key={i}
-              className={styles.gameOverHeart}
-              initial={{ scale: 1, opacity: 1 }}
-              animate={{ scale: [1, 1.4, 0], opacity: [1, 1, 0] }}
-              transition={{ delay: i * 0.1, duration: 0.35, ease: 'easeIn' }}
-            >
-              🤍
-            </motion.span>
-          ))}
-        </div>
-        <p className={styles.sheetTitle}>아쉬워요!</p>
-        <p className={styles.sheetDesc}>
-          {totalCount}문제 중 <strong>{correctCount}개</strong> 맞췄어요
-        </p>
-        <div className={styles.sheetButtons}>
-          <motion.button
-            className={styles.continueButton}
-            onClick={onContinue}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            계속하기
-          </motion.button>
-          <motion.button
-            className={styles.quitTextButton}
-            onClick={onQuit}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.85 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            포기하고 나가기
-          </motion.button>
-        </div>
-      </motion.div>
-    </>
-  );
-}
-
-interface QuitSheetProps {
-  onConfirm: () => void;
-  onCancel: () => void;
 }
 
 // 흩어진 위치/각도 → 0 스냅 → 다시 흩어지는 루프
@@ -1118,39 +1054,5 @@ function CompletingOverlay() {
         <p className={styles.completingSubText}>Einen Moment, bitte...</p>
       </motion.div>
     </motion.div>
-  );
-}
-
-function QuitSheet({ onConfirm, onCancel }: QuitSheetProps) {
-  return (
-    <>
-      <motion.div
-        className={styles.backdrop}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.24 }}
-        onClick={onCancel}
-      />
-      <motion.div
-        className={styles.sheet}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-      >
-        <div className={styles.sheetHandle} />
-        <p className={styles.sheetTitle}>정말 그만할까요?</p>
-        <p className={styles.sheetDesc}>진행 중인 세션이 저장되지 않아요.</p>
-        <div className={styles.sheetButtons}>
-          <motion.button className={styles.quitButton} onClick={onConfirm} whileTap={{ scale: 0.97 }}>
-            그만하기
-          </motion.button>
-          <motion.button className={styles.continueButton} onClick={onCancel} whileTap={{ scale: 0.97 }}>
-            계속하기
-          </motion.button>
-        </div>
-      </motion.div>
-    </>
   );
 }
