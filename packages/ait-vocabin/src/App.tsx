@@ -8,6 +8,7 @@ import { SessionPage } from './pages/SessionPage.tsx';
 import { SessionResultPage } from './pages/SessionResultPage.tsx';
 import { SessionRecoveryPage } from './pages/SessionRecoveryPage.tsx';
 import { SessionLevelupPage } from './pages/SessionLevelupPage.tsx';
+import { SessionGameOverPage } from './pages/SessionGameOverPage.tsx';
 import { LeaderboardPage } from './pages/LeaderboardPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
 import { PatternPage } from './pages/PatternPage.tsx';
@@ -60,6 +61,7 @@ function AnimatedRoutes() {
           <Route path="/session" element={<SessionPage />} />
           <Route path="/session/result" element={<SessionResultPage />} />
           <Route path="/session/recovery" element={<SessionRecoveryPage />} />
+          <Route path="/session/gameover" element={<SessionGameOverPage />} />
           <Route path="/session/levelup" element={<SessionLevelupPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />

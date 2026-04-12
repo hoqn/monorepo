@@ -15,12 +15,38 @@ const CATEGORY_LABELS: Record<Category, string> = {
 
 const ARTICLE_ICON: Record<string, string> = { der: '🔵', die: '🔴', das: '🟢' };
 
+type AnyPattern = ArticlePattern | PluralPattern | VerbPattern;
+
+function getPatternId(p: AnyPattern, i: number): string {
+  if ('id' in p) return p.id;
+  return `article-${i}`;
+}
+
+function getPatternDetail(p: AnyPattern): { title: string; rule: string; examples: string } {
+  if ('suffixes' in p) {
+    return {
+      title: p.suffixes.map((s) => `~${s}`).join(' / ') + ` → ${p.article}`,
+      rule: p.rule,
+      examples: p.examples,
+    };
+  }
+  return { title: p.name, rule: p.rule, examples: p.examples };
+}
+
 export function PatternPage() {
   const navigate = useNavigate();
   useAITBackHandler(useCallback(() => navigate(-1), [navigate]));
 
   const [activeCategory, setActiveCategory] = useState<Category>('article');
-  const [selectedPattern, setSelectedPattern] = useState<ArticlePattern | PluralPattern | VerbPattern | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggle = (id: string) => setExpandedId((prev) => (prev === id ? null : id));
+
+  // 카테고리 전환 시 확장 닫기
+  const handleCategoryChange = (cat: Category) => {
+    setActiveCategory(cat);
+    setExpandedId(null);
+  };
 
   const containerVariants = {
     hidden: {},
@@ -50,7 +76,7 @@ export function PatternPage() {
           <button
             key={cat}
             className={`${styles.categoryTab} ${activeCategory === cat ? styles.categoryTabActive : ''}`}
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => handleCategoryChange(cat)}
           >
             {CATEGORY_LABELS[cat]}
           </button>
@@ -68,32 +94,103 @@ export function PatternPage() {
             animate="visible"
             exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
           >
-            {activeCategory === 'article' && ARTICLE_PATTERNS.map((p, i) => (
-              <motion.div key={i} variants={itemVariants}>
-                <ArticlePatternCard pattern={p} onClick={() => setSelectedPattern(p)} />
-              </motion.div>
-            ))}
-            {activeCategory === 'plural' && PLURAL_PATTERNS.map((p) => (
-              <motion.div key={p.id} variants={itemVariants}>
-                <PluralPatternCard pattern={p} onClick={() => setSelectedPattern(p)} />
-              </motion.div>
-            ))}
-            {activeCategory === 'verb' && VERB_PATTERNS.map((p) => (
-              <motion.div key={p.id} variants={itemVariants}>
-                <VerbPatternCard pattern={p} onClick={() => setSelectedPattern(p)} />
-              </motion.div>
-            ))}
+            {activeCategory === 'article' && ARTICLE_PATTERNS.map((p, i) => {
+              const id = getPatternId(p, i);
+              return (
+                <motion.div key={id} variants={itemVariants}>
+                  <PatternItem
+                    id={id}
+                    pattern={p}
+                    expanded={expandedId === id}
+                    onToggle={toggle}
+                    renderCard={(onClick, expanded) => (
+                      <ArticlePatternCard pattern={p} onClick={onClick} expanded={expanded} />
+                    )}
+                  />
+                </motion.div>
+              );
+            })}
+            {activeCategory === 'plural' && PLURAL_PATTERNS.map((p) => {
+              const id = getPatternId(p, 0);
+              return (
+                <motion.div key={id} variants={itemVariants}>
+                  <PatternItem
+                    id={id}
+                    pattern={p}
+                    expanded={expandedId === id}
+                    onToggle={toggle}
+                    renderCard={(onClick, expanded) => (
+                      <PluralPatternCard pattern={p} onClick={onClick} expanded={expanded} />
+                    )}
+                  />
+                </motion.div>
+              );
+            })}
+            {activeCategory === 'verb' && VERB_PATTERNS.map((p) => {
+              const id = getPatternId(p, 0);
+              return (
+                <motion.div key={id} variants={itemVariants}>
+                  <PatternItem
+                    id={id}
+                    pattern={p}
+                    expanded={expandedId === id}
+                    onToggle={toggle}
+                    renderCard={(onClick, expanded) => (
+                      <VerbPatternCard pattern={p} onClick={onClick} expanded={expanded} />
+                    )}
+                  />
+                </motion.div>
+              );
+            })}
           </motion.div>
         </AnimatePresence>
       </div>
+    </div>
+  );
+}
 
-      {/* 상세 바텀시트 */}
-      <AnimatePresence>
-        {selectedPattern && (
-          <PatternDetailSheet
-            pattern={selectedPattern}
-            onClose={() => setSelectedPattern(null)}
-          />
+/* ── 패턴 아이템 (카드 + 인라인 확장) ── */
+interface PatternItemProps {
+  id: string;
+  pattern: AnyPattern;
+  expanded: boolean;
+  onToggle: (id: string) => void;
+  renderCard: (onClick: () => void, expanded: boolean) => React.ReactNode;
+}
+
+function PatternItem({ id, pattern, expanded, onToggle, renderCard }: PatternItemProps) {
+  const { title, rule, examples } = getPatternDetail(pattern);
+
+  return (
+    <div className={styles.patternItem}>
+      {renderCard(() => onToggle(id), expanded)}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            className={styles.patternDetail}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.8 }}
+          >
+            <div className={styles.patternDetailInner}>
+              <p className={styles.detailTitle}>{title}</p>
+
+              <div className={styles.detailSection}>
+                <span className={styles.detailSectionLabel}>규칙</span>
+                <p className={styles.detailRule}>{rule}</p>
+              </div>
+
+              <div className={styles.detailSection}>
+                <span className={styles.detailSectionLabel}>예시</span>
+                <div className={styles.detailExamples}>
+                  {examples.split(',').map((ex, i) => (
+                    <span key={i} className={styles.detailExampleChip}>{ex.trim()}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
@@ -101,9 +198,9 @@ export function PatternPage() {
 }
 
 /* ── 관사 패턴 카드 ── */
-function ArticlePatternCard({ pattern, onClick }: { pattern: ArticlePattern; onClick: () => void }) {
+function ArticlePatternCard({ pattern, onClick, expanded }: { pattern: ArticlePattern; onClick: () => void; expanded: boolean }) {
   return (
-    <motion.button className={styles.patternCard} onClick={onClick} whileTap={{ scale: 0.97 }}>
+    <motion.button className={`${styles.patternCard} ${expanded ? styles.patternCardExpanded : ''}`} onClick={onClick} whileTap={{ scale: 0.97 }}>
       <div className={styles.patternCardLeft}>
         <span className={styles.patternArticleIcon}>{ARTICLE_ICON[pattern.article]}</span>
         <div className={styles.patternCardBody}>
@@ -115,15 +212,19 @@ function ArticlePatternCard({ pattern, onClick }: { pattern: ArticlePattern; onC
           )</span>
         </div>
       </div>
-      <span className={styles.patternCardChevron}>›</span>
+      <motion.span
+        className={styles.patternCardChevron}
+        animate={{ rotate: expanded ? 90 : 0 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+      >›</motion.span>
     </motion.button>
   );
 }
 
 /* ── 복수형 패턴 카드 ── */
-function PluralPatternCard({ pattern, onClick }: { pattern: PluralPattern; onClick: () => void }) {
+function PluralPatternCard({ pattern, onClick, expanded }: { pattern: PluralPattern; onClick: () => void; expanded: boolean }) {
   return (
-    <motion.button className={styles.patternCard} onClick={onClick} whileTap={{ scale: 0.97 }}>
+    <motion.button className={`${styles.patternCard} ${expanded ? styles.patternCardExpanded : ''}`} onClick={onClick} whileTap={{ scale: 0.97 }}>
       <div className={styles.patternCardLeft}>
         <span className={styles.patternPluralIcon}>📝</span>
         <div className={styles.patternCardBody}>
@@ -131,15 +232,19 @@ function PluralPatternCard({ pattern, onClick }: { pattern: PluralPattern; onCli
           <span className={styles.patternCardDesc}>{pattern.examples.split(',')[0]}...</span>
         </div>
       </div>
-      <span className={styles.patternCardChevron}>›</span>
+      <motion.span
+        className={styles.patternCardChevron}
+        animate={{ rotate: expanded ? 90 : 0 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+      >›</motion.span>
     </motion.button>
   );
 }
 
 /* ── 동사 패턴 카드 ── */
-function VerbPatternCard({ pattern, onClick }: { pattern: VerbPattern; onClick: () => void }) {
+function VerbPatternCard({ pattern, onClick, expanded }: { pattern: VerbPattern; onClick: () => void; expanded: boolean }) {
   return (
-    <motion.button className={styles.patternCard} onClick={onClick} whileTap={{ scale: 0.97 }}>
+    <motion.button className={`${styles.patternCard} ${expanded ? styles.patternCardExpanded : ''}`} onClick={onClick} whileTap={{ scale: 0.97 }}>
       <div className={styles.patternCardLeft}>
         <span className={styles.patternVerbIcon}>🔤</span>
         <div className={styles.patternCardBody}>
@@ -147,72 +252,11 @@ function VerbPatternCard({ pattern, onClick }: { pattern: VerbPattern; onClick: 
           <span className={styles.patternCardDesc}>{pattern.examples.split(':')[0].trim()}...</span>
         </div>
       </div>
-      <span className={styles.patternCardChevron}>›</span>
+      <motion.span
+        className={styles.patternCardChevron}
+        animate={{ rotate: expanded ? 90 : 0 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+      >›</motion.span>
     </motion.button>
-  );
-}
-
-/* ── 상세 바텀시트 ── */
-type AnyPattern = ArticlePattern | PluralPattern | VerbPattern;
-
-function isArticlePattern(p: AnyPattern): p is ArticlePattern {
-  return 'suffixes' in p;
-}
-function isPluralPattern(p: AnyPattern): p is PluralPattern {
-  return 'id' in p && !('suffixes' in p) && !('rule' in p && 'examples' in p && 'name' in p && 'suffixes' in p);
-}
-
-function PatternDetailSheet({ pattern, onClose }: { pattern: AnyPattern; onClose: () => void }) {
-  let title = '';
-  let rule = '';
-  let examples = '';
-
-  if (isArticlePattern(pattern)) {
-    title = pattern.suffixes.map((s) => `~${s}`).join(' / ') + ` → ${pattern.article}`;
-    rule = pattern.rule;
-    examples = pattern.examples;
-  } else {
-    title = pattern.name;
-    rule = pattern.rule;
-    examples = pattern.examples;
-  }
-
-  return (
-    <>
-      <motion.div
-        className={styles.backdrop}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.24 }}
-        onClick={onClose}
-      />
-      <motion.div
-        className={styles.detailSheet}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-      >
-        <div className={styles.sheetHandle} />
-        <p className={styles.detailTitle}>{title}</p>
-
-        <div className={styles.detailSection}>
-          <span className={styles.detailSectionLabel}>규칙</span>
-          <p className={styles.detailRule}>{rule}</p>
-        </div>
-
-        <div className={styles.detailSection}>
-          <span className={styles.detailSectionLabel}>예시</span>
-          <div className={styles.detailExamples}>
-            {examples.split(',').map((ex, i) => (
-              <span key={i} className={styles.detailExampleChip}>{ex.trim()}</span>
-            ))}
-          </div>
-        </div>
-
-        <button className={styles.closeButton} onClick={onClose}>닫기</button>
-      </motion.div>
-    </>
   );
 }
