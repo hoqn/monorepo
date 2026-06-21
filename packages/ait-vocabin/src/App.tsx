@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { appLogin } from '@apps-in-toss/web-framework';
+import { isAIT } from './lib/ait.ts';
 import { HomePage } from './pages/HomePage.tsx';
 import { OnboardingPage } from './pages/OnboardingPage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
@@ -12,11 +13,8 @@ import { SessionGameOverPage } from './pages/SessionGameOverPage.tsx';
 import { LeaderboardPage } from './pages/LeaderboardPage.tsx';
 import { ProfilePage } from './pages/ProfilePage.tsx';
 import { PatternPage } from './pages/PatternPage.tsx';
-import { getToken, login } from './lib/api.ts';
 
 export const ONBOARDING_DONE_KEY = 'vocabin_onboarding_done';
-const IS_DEV = import.meta.env.DEV;
-const DEV_USER = import.meta.env.VITE_DEV_USER as string | undefined;
 
 function RootRedirect() {
   const onboardingDone = localStorage.getItem(ONBOARDING_DONE_KEY) === 'true';
@@ -74,30 +72,16 @@ function AnimatedRoutes() {
 }
 
 function App() {
-  const [authReady, setAuthReady] = useState(false);
+  const [ready, setReady] = useState(!isAIT);
 
   useEffect(() => {
-    if (getToken()) {
-      setAuthReady(true);
-      return;
-    }
-    (async () => {
-      try {
-        if (IS_DEV || DEV_USER) {
-          await login({ devUserId: DEV_USER || 'local' });
-        } else {
-          const { authorizationCode } = await appLogin();
-          await login({ authorizationCode });
-        }
-      } catch {
-        // silent 실패 — 온보딩 화면에서 다시 시도함
-      } finally {
-        setAuthReady(true);
-      }
-    })();
+    if (!isAIT) return;
+    // AIT 환경: appLogin()은 Toss 앱과의 WebView 핸드셰이크에 필요.
+    // auth code는 서버로 보내지 않고 버린다.
+    appLogin().catch(() => {}).finally(() => setReady(true));
   }, []);
 
-  if (!authReady) return null;
+  if (!ready) return null;
 
   return (
     <BrowserRouter>

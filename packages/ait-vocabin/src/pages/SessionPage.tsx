@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
-import { getReviewWords, getReviewVerbs, createSession, completeSession, mapWord, mapVerb, mapVerbForm } from '../lib/api.ts';
+import { getReviewWords, getReviewVerbs, mapWord, mapVerb, mapVerbForm } from '../lib/api.ts';
+import { recordSessionComplete } from '../lib/local-profile.ts';
 import { generateQuestions } from '../utils/quiz.ts';
 import { playCorrect, playIncorrect, playCombo, playGameOver } from '../lib/sound.ts';
 import { Question, VerbQuestion } from '../types/word.ts';
@@ -37,8 +38,6 @@ export function SessionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const sessionIdRef = useRef<string | null>(null);
-  const resultsRef = useRef<Array<{ wordId?: string; verbId?: string; questionType: 'article' | 'plural' | 'verb_conjugation'; correct: boolean }>>([]);
   const wrongQuestionsRef = useRef<Question[]>([]);
   // wordId → repetitions 맵 (생산형 입력 모드 판단용)
   const progressMapRef = useRef<Map<string, number>>(new Map());
@@ -50,7 +49,6 @@ export function SessionPage() {
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
   const [comboCount, setComboCount] = useState(0);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
-  const [completing, setCompleting] = useState(false);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hintLevel, setHintLevel] = useState(0);       // 현재 문제 힌트 단계 (0=미사용, 1, 2)
   const [totalHintsUsed, setTotalHintsUsed] = useState(0); // 세션 전체 힌트 사용 횟수
@@ -72,10 +70,9 @@ export function SessionPage() {
     (async () => {
       try {
         const verbLimit = Math.max(1, Math.floor(sessionCount / 3));
-        const [wordsData, verbsResponse, { sessionId }] = await Promise.all([
+        const [wordsData, verbsResponse] = await Promise.all([
           getReviewWords(sessionCount),
           getReviewVerbs(verbLimit).catch(() => ({ verbs: [] })),
-          createSession(),
         ]);
         const { words } = wordsData;
 
@@ -89,15 +86,9 @@ export function SessionPage() {
           forms: v.forms.map(mapVerbForm),
         }));
 
-        // progress 맵 구성 (wordId → repetitions)
-        for (const p of wordsData.progress) {
-          progressMapRef.current.set(p.word_id, p.repetitions);
-        }
-
-        sessionIdRef.current = sessionId;
         setQuestions(generateQuestions(words.map(mapWord), sessionCount, verbPool));
       } catch {
-        setError('단어를 불러오지 못했어요. 네트워크를 확인해주세요.');
+        setError('단어를 불러오지 못했어요.');
       } finally {
         setLoading(false);
       }
@@ -111,25 +102,16 @@ export function SessionPage() {
   const current: Question | undefined = questions[currentIndex];
   const progress = questions.length > 0 ? currentIndex / questions.length : 0;
 
-  const goNext = useCallback(async () => {
+  const goNext = useCallback(() => {
     if (currentIndex + 1 >= questions.length) {
-      setCompleting(true);
-      const sessionId = sessionIdRef.current;
-      let xpEarned = correctCount * 10;
-
-      if (sessionId) {
-        try {
-          const result = await completeSession(sessionId, resultsRef.current);
-          xpEarned = result.xpEarned;
-        } catch { /* ignore */ }
-      }
+      const xpEarned = correctCount * 10;
+      recordSessionComplete(xpEarned);
 
       navigate('/session/result', {
         state: {
           total: questions.length,
           correct: correctCount,
           xpEarned,
-          // 리뷰 모드가 아닐 때만 wrongQuestions 전달 (중복 복습 방지)
           wrongQuestions: isReviewMode ? undefined : wrongQuestionsRef.current,
         },
       });
@@ -157,12 +139,6 @@ export function SessionPage() {
       const isCorrect = option === current.answer;
       setSelectedOption(option);
       setAnswerState(isCorrect ? 'correct' : 'incorrect');
-
-      resultsRef.current.push(
-        current.kind === 'noun'
-          ? { wordId: current.word.id, questionType: current.type, correct: isCorrect }
-          : { verbId: current.verb.id, questionType: 'verb_conjugation', correct: isCorrect }
-      );
 
       if (!isCorrect) {
         wrongQuestionsRef.current.push(current);
@@ -333,9 +309,6 @@ export function SessionPage() {
         </AnimatePresence>
       </div>
 
-      <AnimatePresence>
-        {completing && <CompletingOverlay />}
-      </AnimatePresence>
     </div>
   );
 }

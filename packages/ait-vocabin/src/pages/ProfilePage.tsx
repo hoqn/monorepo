@@ -4,10 +4,9 @@ import { motion } from 'motion/react';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
 
 import { ONBOARDING_DONE_KEY } from '../App.tsx';
-import { getMe, MeResponse } from '../lib/api.ts';
+import { getProfile, type LocalProfile } from '../lib/local-profile.ts';
+import { sampleWords } from '../data/sample-words.ts';
 import styles from './ProfilePage.module.css';
-
-const IS_DEV_BUILD = !!import.meta.env.VITE_DEV_USER;
 
 const XP_PER_LEVEL = 500;
 
@@ -35,21 +34,18 @@ export function ProfilePage() {
   const navigate = useNavigate();
   useAITBackHandler(useCallback(() => navigate(-1), [navigate]));
 
-  const [data, setData] = useState<MeResponse | null>(null);
+  const [profile, setProfile] = useState<LocalProfile>(() => getProfile());
 
   useEffect(() => {
-    getMe().then(setData).catch(() => {});
+    setProfile(getProfile());
   }, []);
 
-  const user = data?.user;
-  const stats = data?.stats;
-
-  const totalXp = user?.total_xp ?? 0;
+  const totalXp = profile.totalXp;
   const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
 
   const resetOnboarding = () => {
     localStorage.removeItem(ONBOARDING_DONE_KEY);
-    localStorage.removeItem('vocabin_token');
+    localStorage.removeItem('vocabin_profile');
     navigate('/', { replace: true });
   };
 
@@ -65,7 +61,7 @@ export function ProfilePage() {
               <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
             </svg>
           </div>
-          <span className={styles.userName}>{user?.display_name ?? '사용자'}</span>
+          <span className={styles.userName}>{profile.displayName ?? '사용자'}</span>
           <span className={styles.levelBadge}>Lv.{level}</span>
         </div>
       </div>
@@ -74,17 +70,17 @@ export function ProfilePage() {
         {/* 통계 */}
         <div className={styles.statsRow}>
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{stats?.totalWords ?? 0}</span>
+            <span className={styles.statValue}>{sampleWords.length}</span>
             <span className={styles.statLabel}>수집 단어</span>
           </div>
           <div className={styles.statDivider} />
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{user?.current_streak ?? 0}</span>
+            <span className={styles.statValue}>{profile.currentStreak}</span>
             <span className={styles.statLabel}>현재 스트릭</span>
           </div>
           <div className={styles.statDivider} />
           <div className={styles.statItem}>
-            <span className={styles.statValue}>{user?.max_streak ?? 0}</span>
+            <span className={styles.statValue}>{profile.maxStreak}</span>
             <span className={styles.statLabel}>최장 스트릭</span>
           </div>
         </div>
@@ -122,26 +118,24 @@ export function ProfilePage() {
         <div className={styles.settingsCard}>
           <div className={styles.settingRow}>
             <span className={styles.settingLabel}>알림 시간</span>
-            <span className={styles.settingValue}>{formatNotifyTime(user?.notify_time ?? null)}</span>
+            <span className={styles.settingValue}>{formatNotifyTime(profile.notifyTime)}</span>
             <span className={styles.settingChevron}>›</span>
           </div>
           <div className={styles.settingRow}>
             <span className={styles.settingLabel}>하루 목표</span>
-            <span className={styles.settingValue}>{user?.daily_goal ?? 1} 세션</span>
+            <span className={styles.settingValue}>{profile.dailyGoal} 세션</span>
             <span className={styles.settingChevron}>›</span>
           </div>
           <div className={styles.settingRow}>
             <span className={styles.settingLabel}>학습 레벨</span>
-            <span className={styles.settingValue}>{user?.cefr_level ?? '—'}</span>
+            <span className={styles.settingValue}>{profile.cefrLevel}</span>
             <span className={styles.settingChevron}>›</span>
           </div>
         </div>
 
-        {IS_DEV_BUILD && (
-          <button className={styles.devResetButton} onClick={resetOnboarding}>
-            [DEV] 온보딩 초기화
-          </button>
-        )}
+        <button className={styles.devResetButton} onClick={resetOnboarding}>
+          초기화
+        </button>
       </div>
     </div>
   );
