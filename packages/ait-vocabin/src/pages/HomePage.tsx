@@ -119,7 +119,6 @@ export function HomePage() {
         {/* 세션 CTA 카드 */}
         <motion.div variants={itemVariants}>
           <motion.div
-            layoutId="session-card"
             className={styles.sessionCard}
             whileTap={{ scale: 0.95, y: 3 }}
             transition={{ type: 'spring', stiffness: 300, damping: 15, mass: 0.6 }}
@@ -129,7 +128,7 @@ export function HomePage() {
               setShowSessionSheet(true);
             }}
           >
-            <motion.div layoutId="session-card-bg" className={styles.sessionCardBg} />
+            <div className={styles.sessionCardBg} />
             <div className={styles.sessionCardContent}>
               <p className={styles.sessionCardLabel}>오늘의 채집</p>
               <p className={styles.sessionCardTitle}>채집 시작하기</p>
@@ -168,56 +167,56 @@ export function HomePage() {
               transition={{ duration: 0.22 }}
               onClick={() => setShowSessionSheet(false)}
             />
-            <div className={styles.sessionModalOverlay}>
-              <motion.div
-                layoutId="session-card"
-                className={styles.sessionModal}
-                transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-              >
-                <motion.div layoutId="session-card-bg" className={styles.sessionCardBg} />
-                <div className={styles.sessionModalInner}>
-                  <div className={styles.sessionCardRow}>
-                    <div className={styles.sessionCardContent}>
-                      <p className={styles.sessionCardLabel}>오늘의 채집</p>
-                      <p className={styles.sessionCardTitle}>문제 수 선택</p>
-                    </div>
-                    <button className={styles.sessionCardClose} onClick={() => setShowSessionSheet(false)}>
-                      ✕
-                    </button>
+            <motion.div
+              className={styles.darkSheet}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 340, damping: 36 }}
+            >
+              <div className={styles.darkSheetBg} />
+              <div className={styles.darkSheetInner}>
+                <div className={styles.sessionCardRow}>
+                  <div className={styles.sessionCardContent}>
+                    <p className={styles.sessionCardLabel}>오늘의 채집</p>
+                    <p className={styles.sessionCardTitle}>문제 수 선택</p>
                   </div>
-                  <div className={styles.darkSheetTiles}>
-                    {SESSION_COUNTS.map((count) => {
-                      const info = SESSION_COUNT_LABELS[count];
-                      const isSelected = localCount === count;
-                      return (
-                        <motion.button
-                          key={count}
-                          className={`${styles.darkSheetTile} ${isSelected ? styles.darkSheetTileSelected : ''}`}
-                          whileTap={{ scale: 0.94 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                          onClick={() => {
-                            generateHapticFeedback({ type: 'softMedium' });
-                            setLocalCount(count);
-                          }}
-                        >
-                          <span className={styles.darkSheetTileNum}>{count}</span>
-                          <span className={styles.darkSheetTileUnit}>문제</span>
-                          <span className={styles.darkSheetTileSub}>{info.time}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                  <motion.button
-                    className={styles.darkSheetStart}
-                    whileTap={{ scale: 0.97, y: 1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    onClick={() => handleSessionStart(localCount)}
-                  >
-                    시작하기
-                  </motion.button>
+                  <button className={styles.sessionCardClose} onClick={() => setShowSessionSheet(false)}>
+                    ✕
+                  </button>
                 </div>
-              </motion.div>
-            </div>
+                <div className={styles.darkSheetTiles}>
+                  {SESSION_COUNTS.map((count) => {
+                    const info = SESSION_COUNT_LABELS[count];
+                    const isSelected = localCount === count;
+                    return (
+                      <motion.button
+                        key={count}
+                        className={`${styles.darkSheetTile} ${isSelected ? styles.darkSheetTileSelected : ''}`}
+                        whileTap={{ scale: 0.94 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                        onClick={() => {
+                          generateHapticFeedback({ type: 'softMedium' });
+                          setLocalCount(count);
+                        }}
+                      >
+                        <span className={styles.darkSheetTileNum}>{count}</span>
+                        <span className={styles.darkSheetTileUnit}>문제</span>
+                        <span className={styles.darkSheetTileSub}>{info.time}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+                <motion.button
+                  className={styles.darkSheetStart}
+                  whileTap={{ scale: 0.97, y: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  onClick={() => handleSessionStart(localCount)}
+                >
+                  시작하기
+                </motion.button>
+              </div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
