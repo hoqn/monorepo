@@ -3,7 +3,7 @@ import { defineConfig } from '@apps-in-toss/web-framework/config';
 export default defineConfig({
   appName: 'lingo-lock-de', 
   brand: {
-    displayName: '독일어락',
+    displayName: '언어락 독일어',
     primaryColor: '#F7BB3D',
     icon: 'https://static.toss.im/appsintoss/30175/2bcbf001-0c08-49a3-9400-f44f3165558d.png',
   },
