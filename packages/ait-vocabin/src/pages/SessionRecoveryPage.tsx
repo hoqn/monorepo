@@ -2,22 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './SessionRecoveryPage.module.css';
 
-type Step = 'intro' | 'ad' | 'quiz' | 'complete';
+type Step = 'intro' | 'quiz' | 'complete';
 
 export function SessionRecoveryPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('intro');
 
   if (step === 'intro') {
-    return <RecoveryIntro onStart={() => setStep('ad')} onQuit={() => navigate('/home')} />;
-  }
-
-  if (step === 'ad') {
-    return <RecoveryAd onDone={() => setStep('quiz')} />;
+    return <RecoveryIntro onStart={() => setStep('quiz')} onQuit={() => navigate('/home')} />;
   }
 
   if (step === 'quiz') {
-    // 복습 퀴즈는 SessionPage와 동일한 구조 — 이후 공통 컴포넌트로 분리 예정
     return <RecoveryQuiz onComplete={() => setStep('complete')} />;
   }
 
@@ -36,20 +31,6 @@ function RecoveryIntro({ onStart, onQuit }: { onStart: () => void; onQuit: () =>
       <div className={styles.footer}>
         <button className={styles.primaryButton} onClick={onStart}>복습 시작하기</button>
         <button className={styles.ghostButton} onClick={onQuit}>그냥 끝내기</button>
-      </div>
-    </div>
-  );
-}
-
-// 풀스크린 광고
-function RecoveryAd({ onDone }: { onDone: () => void }) {
-  return (
-    <div className={styles.page}>
-      <div className={styles.content}>
-        <div className={styles.adFullscreen}>
-          <p className={styles.adText}>광고 영역</p>
-          <button className={styles.adSkip} onClick={onDone}>건너뛰기</button>
-        </div>
       </div>
     </div>
   );

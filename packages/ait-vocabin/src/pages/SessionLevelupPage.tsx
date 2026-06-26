@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { useAITBackHandler } from '../hooks/useAITBackHandler.ts';
-import { getMe, updateMe, getReviewWords, mapWord } from '../lib/api.ts';
+import { getReviewWords, mapWord } from '../lib/api.ts';
+import { getProfile, updateProfile } from '../lib/local-profile.ts';
 import { generateQuestions } from '../utils/quiz.ts';
 import { playCorrect, playIncorrect, playPerfect, playComplete } from '../lib/sound.ts';
 import { Question } from '../types/word.ts';
@@ -46,8 +47,8 @@ export function SessionLevelupPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { user } = await getMe();
-        const lvl = user.cefr_level as string;
+        const profile = getProfile();
+        const lvl = profile.cefrLevel;
         setCurrentLevel(lvl);
         const next = CEFR_NEXT[lvl];
         if (!next) {
@@ -56,7 +57,6 @@ export function SessionLevelupPage() {
         }
         setTargetLevel(next);
 
-        // 상위 레벨 단어로 문제 생성
         const { words } = await getReviewWords(QUESTION_COUNT);
         if (words.length === 0) {
           navigate(-1);
@@ -81,8 +81,7 @@ export function SessionLevelupPage() {
       const passed = correctCount >= PASS_COUNT || (answerState === 'correct' && correctCount + 1 >= PASS_COUNT);
       const finalCorrect = answerState === 'correct' ? correctCount + 1 : correctCount;
       if (finalCorrect >= PASS_COUNT) {
-        // 승급!
-        updateMe({ cefrLevel: targetLevel }).catch(() => {});
+        updateProfile({ cefrLevel: targetLevel });
         setPhase('pass');
         playPerfect();
       } else {

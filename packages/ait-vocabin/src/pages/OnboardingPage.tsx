@@ -1,19 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { generateHapticFeedback, appLogin } from '@apps-in-toss/web-framework';
+import { generateHapticFeedback } from '@apps-in-toss/web-framework';
 import { ONBOARDING_DONE_KEY } from '../App.tsx';
-import { login } from '../lib/api.ts';
+import { updateProfile } from '../lib/local-profile.ts';
 import styles from './OnboardingPage.module.css';
-
-const IS_DEV = import.meta.env.DEV;
-const DEV_USER = import.meta.env.VITE_DEV_USER as string | undefined;
-
-async function resolveAuthCode(): Promise<{ authorizationCode?: string; devUserId?: string }> {
-  if (IS_DEV || DEV_USER) return { devUserId: DEV_USER || 'local' };
-  const { authorizationCode } = await appLogin();
-  return { authorizationCode };
-}
 
 // 5문제 진단
 const DIAG_WORDS = [
@@ -56,7 +47,6 @@ export function OnboardingPage() {
   const [goal, setGoal] = useState<number | null>(null);
   const [notifyTime, setNotifyTime] = useState<string | null>(null);
   const [diagDone, setDiagDone] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const canProceed = () => {
     if (step === 1) return diagDone;
@@ -65,28 +55,22 @@ export function OnboardingPage() {
     return true;
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (step < 3) {
       generateHapticFeedback({ type: 'softMedium' });
       setDirection(1);
       setStep((s) => s + 1);
     } else {
-      await doComplete();
+      doComplete();
     }
   };
 
-  const doComplete = async () => {
-    setIsLoading(true);
-    try {
-      const authParams = await resolveAuthCode();
-      await login({
-        ...authParams,
-        cefrLevel: level === 'intermediate' ? 'A2' : 'A1',
-        dailyGoal: goal ?? 1,
-        notifyTime: notifyTime ?? undefined,
-      });
-    } catch { /* ignore */ }
-    finally { setIsLoading(false); }
+  const doComplete = () => {
+    updateProfile({
+      cefrLevel: level === 'intermediate' ? 'A2' : 'A1',
+      dailyGoal: goal ?? 1,
+      notifyTime: notifyTime ?? null,
+    });
     localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
     navigate('/home', { replace: true });
   };
@@ -154,16 +138,12 @@ export function OnboardingPage() {
         <motion.button
           className={styles.nextButton}
           onClick={handleNext}
-          disabled={!canProceed() || isLoading}
+          disabled={!canProceed()}
           whileTap={canProceed() ? { scale: 0.97 } : undefined}
         >
-          {isLoading
-            ? '잠깐만요...'
-            : step === 3
-              ? '시작하기 →'
-              : '다음'}
+          {step === 3 ? '시작하기 →' : '다음'}
         </motion.button>
-        {step === 3 && !isLoading && (
+        {step === 3 && (
           <motion.button
             className={styles.skipButton}
             initial={{ opacity: 0 }}

@@ -4,8 +4,8 @@ export default defineConfig({
   appName: 'lingo-lock-de', 
   brand: {
     displayName: '독일어락',
-    primaryColor: '#1E7AF2',
-    icon: 'https://static.toss.im/appsintoss/30175/9d598263-578c-4d41-a497-49940ac9238b.png',
+    primaryColor: '#F7BB3D',
+    icon: 'https://static.toss.im/appsintoss/30175/2bcbf001-0c08-49a3-9400-f44f3165558d.png',
   },
   navigationBar: {
     initialAccessoryButton: {
@@ -17,7 +17,7 @@ export default defineConfig({
     withHomeButton: true,
   },
   web: {
-    host: '192.168.35.170',
+    host: '172.30.1.85',
     port: 5173,
     commands: {
       dev: 'vite --host',

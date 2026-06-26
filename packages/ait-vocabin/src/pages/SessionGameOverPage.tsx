@@ -46,25 +46,16 @@ export function SessionGameOverPage() {
         </motion.p>
 
         <div className={styles.buttons}>
+          {/* TODO: recovery 퀴즈 구현 후 복구 — /session/recovery 라우트 미구현으로 임시 비활성화 */}
           <motion.button
-            className={styles.continueButton}
-            onClick={() => navigate('/session/recovery', { state: { fromSession: true } })}
+            className={styles.quitButton}
+            onClick={() => navigate('/home')}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.62 }}
             whileTap={{ scale: 0.97 }}
           >
-            계속하기
-          </motion.button>
-          <motion.button
-            className={styles.quitButton}
-            onClick={() => navigate('/home')}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.74 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            포기하고 나가기
+            홈으로 돌아가기
           </motion.button>
         </div>
       </div>

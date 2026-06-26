@@ -1,103 +1,15 @@
 /**
- * VocaBin API client
- * Wraps all backend calls; stores the JWT in localStorage.
+ * 모든 백엔드 연결을 제거하고 로컬 데이터만 사용하는 구현.
+ * 인터페이스는 기존 코드와 동일하게 유지해 호출 측을 최소한으로 수정.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
-const TOKEN_KEY = 'vocabin_token';
-const USE_SAMPLE_WORDS = import.meta.env.VITE_USE_SAMPLE_WORDS === 'true';
+import type { Word as FrontendWord, Verb as FrontendVerb, VerbForm as FrontendVerbForm } from '../types/word.ts';
+import { sampleWords } from '../data/sample-words.ts';
+import { sampleVerbs } from '../data/sample-verbs.ts';
+import { getProfile, updateProfile } from './local-profile.ts';
+import { shuffle } from 'es-toolkit';
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-function setToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-    ...(init.headers as Record<string, string>),
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`API ${init.method ?? 'GET'} ${path} failed (${res.status}): ${body}`);
-  }
-
-  return res.json() as Promise<T>;
-}
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-
-export interface LoginResult {
-  token: string;
-  isNewUser: boolean;
-}
-
-export async function login(params: {
-  authorizationCode?: string;
-  devUserId?: string;
-  cefrLevel?: 'A1' | 'A2' | 'B1' | 'B2';
-  dailyGoal?: number;
-  notifyTime?: string;
-}): Promise<LoginResult> {
-  const result = await request<LoginResult>('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  });
-  setToken(result.token);
-  return result;
-}
-
-// ── User ──────────────────────────────────────────────────────────────────────
-
-export interface UserProfile {
-  id: string;
-  cefr_level: string;
-  daily_goal: number;
-  notify_time: string | null;
-  display_name: string | null;
-  current_streak: number;
-  max_streak: number;
-  total_xp: number;
-  last_active_date: string | null;
-}
-
-export interface UserStats {
-  totalWords: number;
-  sessionsToday: number;
-  reviewPending?: number;
-  progressDistribution?: { learning: number; mastered: number };
-}
-
-export interface MeResponse {
-  user: UserProfile;
-  stats: UserStats;
-}
-
-export function getMe(): Promise<MeResponse> {
-  return request<MeResponse>('/users/me');
-}
-
-export function updateMe(params: {
-  cefrLevel?: string;
-  dailyGoal?: number;
-  notifyTime?: string;
-  displayName?: string;
-}): Promise<{ ok: boolean }> {
-  return request<{ ok: boolean }>('/users/me', {
-    method: 'PATCH',
-    body: JSON.stringify(params),
-  });
-}
-
-// ── Words ─────────────────────────────────────────────────────────────────────
+// ── 타입 (기존 코드 호환) ─────────────────────────────────────────────────────
 
 export interface Word {
   id: string;
@@ -123,29 +35,6 @@ export interface ReviewWordsResponse {
   progress: WordProgress[];
 }
 
-export function getReviewWords(limit = 12): Promise<ReviewWordsResponse> {
-  if (USE_SAMPLE_WORDS) {
-    const words: Word[] = shuffle(sampleWords)
-      .slice(0, limit)
-      .map((w) => ({
-        id: w.id,
-        word: w.word,
-        article: w.article,
-        plural: w.plural,
-        meaning_ko: w.meaningKo,
-        ipa: w.ipa,
-        cefr_level: w.cefrLevel,
-        category: w.category,
-      }));
-
-    return Promise.resolve({ words, progress: [] });
-  }
-
-  return request<ReviewWordsResponse>(`/words/review?limit=${limit}`);
-}
-
-// ── Verbs ─────────────────────────────────────────────────────────────────────
-
 export interface ApiVerb {
   id: string;
   infinitive: string;
@@ -168,11 +57,29 @@ export interface ReviewVerbsResponse {
   verbs: Array<ApiVerb & { forms: ApiVerbForm[] }>;
 }
 
-export function getReviewVerbs(limit = 4): Promise<ReviewVerbsResponse> {
-  return request<ReviewVerbsResponse>(`/verbs/review?limit=${limit}`);
+export interface UserProfile {
+  id: string;
+  cefr_level: string;
+  daily_goal: number;
+  notify_time: string | null;
+  display_name: string | null;
+  current_streak: number;
+  max_streak: number;
+  total_xp: number;
+  last_active_date: string | null;
 }
 
-// ── Sessions ──────────────────────────────────────────────────────────────────
+export interface UserStats {
+  totalWords: number;
+  sessionsToday: number;
+  reviewPending?: number;
+  progressDistribution?: { learning: number; mastered: number };
+}
+
+export interface MeResponse {
+  user: UserProfile;
+  stats: UserStats;
+}
 
 export interface SessionResult {
   wordId?: string;
@@ -187,22 +94,159 @@ export interface CompleteSessionResponse {
   total: number;
 }
 
-export async function createSession(): Promise<{ sessionId: string }> {
-  return request<{ sessionId: string }>('/sessions', { method: 'POST' });
+export interface LeaderboardEntry {
+  rank: number;
+  display_name: string | null;
+  xp_total: number;
+  is_me: boolean;
 }
 
-export function completeSession(sessionId: string, results: SessionResult[]): Promise<CompleteSessionResponse> {
-  return request<CompleteSessionResponse>(`/sessions/${sessionId}/complete`, {
-    method: 'POST',
-    body: JSON.stringify({ results }),
+export type MissionType = 'correct_count' | 'combo_streak' | 'question_count';
+
+export interface DailyMission {
+  id: string;
+  type: MissionType;
+  target: number;
+  progress: number;
+  completed_at: string | null;
+}
+
+export interface TodayMissionsResponse {
+  missions: DailyMission[];
+}
+
+export interface LoginResult {
+  token: string;
+  isNewUser: boolean;
+}
+
+// ── Auth (no-op) ───────────────────────────────────────────────────────────────
+
+export function getToken(): string | null {
+  return 'local';
+}
+
+export async function login(_params: {
+  authorizationCode?: string;
+  devUserId?: string;
+  cefrLevel?: 'A1' | 'A2' | 'B1' | 'B2';
+  dailyGoal?: number;
+  notifyTime?: string;
+}): Promise<LoginResult> {
+  return { token: 'local', isNewUser: false };
+}
+
+// ── User ──────────────────────────────────────────────────────────────────────
+
+export function getMe(): Promise<MeResponse> {
+  const p = getProfile();
+  return Promise.resolve({
+    user: {
+      id: 'local',
+      cefr_level: p.cefrLevel,
+      daily_goal: p.dailyGoal,
+      notify_time: p.notifyTime,
+      display_name: p.displayName,
+      current_streak: p.currentStreak,
+      max_streak: p.maxStreak,
+      total_xp: p.totalXp,
+      last_active_date: p.lastActiveDate,
+    },
+    stats: {
+      totalWords: sampleWords.length,
+      sessionsToday: p.sessionsToday,
+    },
   });
 }
 
-// ── Mappers ───────────────────────────────────────────────────────────────────
+export function updateMe(params: {
+  cefrLevel?: string;
+  dailyGoal?: number;
+  notifyTime?: string;
+  displayName?: string;
+}): Promise<{ ok: boolean }> {
+  const patch: Parameters<typeof updateProfile>[0] = {};
+  if (params.cefrLevel) patch.cefrLevel = params.cefrLevel as 'A1' | 'A2' | 'B1' | 'B2';
+  if (params.dailyGoal !== undefined) patch.dailyGoal = params.dailyGoal;
+  if (params.notifyTime !== undefined) patch.notifyTime = params.notifyTime;
+  if (params.displayName !== undefined) patch.displayName = params.displayName;
+  updateProfile(patch);
+  return Promise.resolve({ ok: true });
+}
 
-import type { Word as FrontendWord, Verb as FrontendVerb, VerbForm as FrontendVerbForm } from '../types/word.ts';
-import { sampleWords } from '../data/sample-words.ts';
-import { shuffle } from 'es-toolkit';
+// ── Words ─────────────────────────────────────────────────────────────────────
+
+export function getReviewWords(limit = 12): Promise<ReviewWordsResponse> {
+  const words: Word[] = shuffle(sampleWords)
+    .slice(0, limit)
+    .map((w) => ({
+      id: w.id,
+      word: w.word,
+      article: w.article,
+      plural: w.plural,
+      meaning_ko: w.meaningKo,
+      ipa: w.ipa,
+      cefr_level: w.cefrLevel,
+      category: w.category,
+    }));
+
+  return Promise.resolve({ words, progress: [] });
+}
+
+// ── Verbs ─────────────────────────────────────────────────────────────────────
+
+export function getReviewVerbs(limit = 4): Promise<ReviewVerbsResponse> {
+  const entries = shuffle(sampleVerbs).slice(0, limit);
+  const verbs = entries.map((e) => ({
+    id: e.verb.id,
+    infinitive: e.verb.infinitive,
+    meaning_ko: e.verb.meaningKo,
+    ipa: e.verb.ipa,
+    cefr_level: e.verb.cefrLevel,
+    category: e.verb.category,
+    is_irregular: e.verb.isIrregular,
+    forms: e.forms.map((f) => ({
+      pronoun: f.pronoun,
+      tense: f.tense,
+      form: f.form,
+      example_sentence: f.exampleSentence,
+      example_sentence_ko: f.exampleSentenceKo,
+    })),
+  }));
+  return Promise.resolve({ verbs });
+}
+
+// ── Sessions ──────────────────────────────────────────────────────────────────
+
+let _pendingResults: SessionResult[] = [];
+
+export async function createSession(): Promise<{ sessionId: string }> {
+  _pendingResults = [];
+  return { sessionId: `local-${Date.now()}` };
+}
+
+export function completeSession(
+  _sessionId: string,
+  results: SessionResult[],
+): Promise<CompleteSessionResponse> {
+  const correctCount = results.filter((r) => r.correct).length;
+  const xpEarned = correctCount * 10;
+  return Promise.resolve({ xpEarned, correctCount, total: results.length });
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+
+export function getLeaderboard(): Promise<{ entries: LeaderboardEntry[] }> {
+  return Promise.resolve({ entries: [] });
+}
+
+// ── Missions ──────────────────────────────────────────────────────────────────
+
+export function getTodayMissions(): Promise<TodayMissionsResponse> {
+  return Promise.resolve({ missions: [] });
+}
+
+// ── Mappers ───────────────────────────────────────────────────────────────────
 
 export function mapWord(w: Word): FrontendWord {
   return {
@@ -237,37 +281,4 @@ export function mapVerbForm(f: ApiVerbForm): FrontendVerbForm {
     exampleSentence: f.example_sentence,
     exampleSentenceKo: f.example_sentence_ko,
   };
-}
-
-// ── Missions ──────────────────────────────────────────────────────────────────
-
-export type MissionType = 'correct_count' | 'combo_streak' | 'question_count';
-
-export interface DailyMission {
-  id: string;
-  type: MissionType;
-  target: number;
-  progress: number;
-  completed_at: string | null;
-}
-
-export interface TodayMissionsResponse {
-  missions: DailyMission[];
-}
-
-export function getTodayMissions(): Promise<TodayMissionsResponse> {
-  return request<TodayMissionsResponse>('/missions/today');
-}
-
-// ── Leaderboard ───────────────────────────────────────────────────────────────
-
-export interface LeaderboardEntry {
-  rank: number;
-  display_name: string | null;
-  xp_total: number;
-  is_me: boolean;
-}
-
-export function getLeaderboard(): Promise<{ entries: LeaderboardEntry[] }> {
-  return request<{ entries: LeaderboardEntry[] }>('/leaderboard');
 }
