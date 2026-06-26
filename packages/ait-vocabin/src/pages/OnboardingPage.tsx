@@ -15,23 +15,23 @@ const DIAG_WORDS = [
   { word: 'Kind', meaning: '아이', answer: 'das' },
 ];
 
-const GOAL_OPTIONS = [
-  { count: 1, label: '세션/일', desc: '가볍게' },
-  { count: 2, label: '세션/일', desc: '꾸준히' },
-  { count: 3, label: '세션/일', desc: '집중적으로' },
-];
+// TODO: 하루 목표·알림 설정은 AIT 알림 API 연동 후 온보딩 step 2·3으로 부활 예정
+// const GOAL_OPTIONS = [
+//   { count: 1, label: '세션/일', desc: '가볍게' },
+//   { count: 2, label: '세션/일', desc: '꾸준히' },
+//   { count: 3, label: '세션/일', desc: '집중적으로' },
+// ];
+// const TIME_OPTIONS = [
+//   { id: 'dawn',      emoji: '🌙', label: '새벽',   range: '6시 이전' },
+//   { id: 'morning',   emoji: '☀️', label: '아침',   range: '7–9시' },
+//   { id: 'lunch',     emoji: '🥗', label: '점심',   range: '12–13시' },
+//   { id: 'afternoon', emoji: '🌤', label: '낮',     range: '15–17시' },
+//   { id: 'evening',   emoji: '🌇', label: '저녁',   range: '18–20시' },
+//   { id: 'night',     emoji: '🌃', label: '밤',     range: '21–23시' },
+// ];
 
-const TIME_OPTIONS = [
-  { id: 'dawn',      emoji: '🌙', label: '새벽',   range: '6시 이전' },
-  { id: 'morning',   emoji: '☀️', label: '아침',   range: '7–9시' },
-  { id: 'lunch',     emoji: '🥗', label: '점심',   range: '12–13시' },
-  { id: 'afternoon', emoji: '🌤', label: '낮',     range: '15–17시' },
-  { id: 'evening',   emoji: '🌇', label: '저녁',   range: '18–20시' },
-  { id: 'night',     emoji: '🌃', label: '밤',     range: '21–23시' },
-];
-
-// steps: 0=hook, 1=diag, 2=goal, 3=notify
-const LIGHT_STEPS = 3; // steps 1-3
+// steps: 0=hook, 1=diag
+const LIGHT_STEPS = 1; // step 1 only
 
 const slideVariants = (direction: 1 | -1) => ({
   enter: { x: direction * 60, opacity: 0 },
@@ -44,19 +44,15 @@ export function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [level, setLevel] = useState<'beginner' | 'intermediate' | null>(null);
-  const [goal, setGoal] = useState<number | null>(null);
-  const [notifyTime, setNotifyTime] = useState<string | null>(null);
   const [diagDone, setDiagDone] = useState(false);
 
   const canProceed = () => {
     if (step === 1) return diagDone;
-    if (step === 2) return goal !== null;
-    if (step === 3) return notifyTime !== null;
     return true;
   };
 
   const handleNext = () => {
-    if (step < 3) {
+    if (step < 1) {
       generateHapticFeedback({ type: 'softMedium' });
       setDirection(1);
       setStep((s) => s + 1);
@@ -68,8 +64,7 @@ export function OnboardingPage() {
   const doComplete = () => {
     updateProfile({
       cefrLevel: level === 'intermediate' ? 'A2' : 'A1',
-      dailyGoal: goal ?? 1,
-      notifyTime: notifyTime ?? null,
+      // dailyGoal, notifyTime은 설정 화면 구현 후 여기서 저장 예정
     });
     localStorage.setItem(ONBOARDING_DONE_KEY, 'true');
     navigate('/home', { replace: true });
@@ -127,8 +122,7 @@ export function OnboardingPage() {
                 onDiagComplete={(lv) => { setLevel(lv); setDiagDone(true); }}
               />
             )}
-            {step === 2 && <StepGoal goal={goal} onSelect={setGoal} />}
-            {step === 3 && <StepNotify notifyTime={notifyTime} onSelect={setNotifyTime} />}
+            {/* step 2: StepGoal, step 3: StepNotify — AIT 알림 API 연동 후 복구 예정 */}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -141,18 +135,9 @@ export function OnboardingPage() {
           disabled={!canProceed()}
           whileTap={canProceed() ? { scale: 0.97 } : undefined}
         >
-          {step === 3 ? '시작하기 →' : '다음'}
+          {step === 1 ? '시작하기 →' : '다음'}
         </motion.button>
-        {step === 3 && (
-          <motion.button
-            className={styles.skipButton}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={doComplete}
-          >
-            나중에 설정할게요
-          </motion.button>
-        )}
+        {/* 알림 설정 스킵 버튼 — StepNotify 복구 시 step === 3 조건으로 되살릴 것 */}
       </div>
     </div>
   );
@@ -331,62 +316,6 @@ function StepDiag({
   );
 }
 
-/* ────────────────────────────────────────────────
-   StepGoal — 하루 목표 선택 (from HPS-10)
-──────────────────────────────────────────────── */
-function StepGoal({ goal, onSelect }: { goal: number | null; onSelect: (v: number) => void }) {
-  return (
-    <div className={styles.content}>
-      <div className={styles.illustArea}>🎯</div>
-      <h2 className={styles.title}>하루 목표를{'\n'}설정해요</h2>
-      <p className={styles.desc}>언제든 바꿀 수 있어요.</p>
-      <div className={styles.goalOptions}>
-        {GOAL_OPTIONS.map((opt, i) => (
-          <motion.button
-            key={opt.count}
-            className={`${styles.goalCard} ${goal === opt.count ? styles.goalCardSelected : ''}`}
-            onClick={() => { generateHapticFeedback({ type: 'tickWeak' }); onSelect(opt.count); }}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07, type: 'spring', stiffness: 280, damping: 22 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className={styles.goalCount}>{opt.count}</span>
-            <span className={styles.goalLabel}>{opt.label}</span>
-            <span className={styles.goalDesc}>{opt.desc}</span>
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────────
-   StepNotify — 알림 시간 선택 (from HPS-10)
-──────────────────────────────────────────────── */
-function StepNotify({ notifyTime, onSelect }: { notifyTime: string | null; onSelect: (v: string) => void }) {
-  return (
-    <div className={styles.content}>
-      <div className={styles.illustArea}>🔔</div>
-      <h2 className={styles.title}>언제 알려드릴까요?</h2>
-      <p className={styles.desc}>채집 스트릭을 유지할 수 있도록{'\n'}알림을 보내드려요.</p>
-      <div className={styles.timeOptions}>
-        {TIME_OPTIONS.map((opt, i) => (
-          <motion.button
-            key={opt.id}
-            className={`${styles.timeCard} ${notifyTime === opt.id ? styles.timeCardSelected : ''}`}
-            onClick={() => { generateHapticFeedback({ type: 'tickWeak' }); onSelect(opt.id); }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 22 }}
-            whileTap={{ scale: 0.94 }}
-          >
-            <span className={styles.timeEmoji}>{opt.emoji}</span>
-            <span className={styles.timeLabel}>{opt.label}</span>
-            <span className={styles.timeRange}>{opt.range}</span>
-          </motion.button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// TODO: AIT 알림 API 연동 후 아래 두 컴포넌트를 온보딩 step 2·3으로 복구할 것
+// StepGoal — 하루 목표 선택 (GOAL_OPTIONS 참고)
+// StepNotify — 알림 시간 선택 (TIME_OPTIONS 참고)

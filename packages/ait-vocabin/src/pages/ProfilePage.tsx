@@ -21,14 +21,8 @@ const MOCK_BADGES = [
   { id: 'comeback', emoji: '💪', name: '재기', earned: false },
 ];
 
-function formatNotifyTime(t: string | null): string {
-  if (!t) return '없음';
-  const [h] = t.split(':').map(Number);
-  if (h < 6) return '새벽';
-  if (h < 12) return '아침';
-  if (h < 18) return '오후';
-  return '저녁';
-}
+// TODO: AIT 알림 API 연동 후 알림 시간 설정 행 복구 시 아래 함수도 함께 사용
+// function formatNotifyTime(t: string | null): string { ... }
 
 export function ProfilePage() {
   const navigate = useNavigate();
@@ -116,16 +110,7 @@ export function ProfilePage() {
         {/* 설정 */}
         <span className={styles.sectionTitle}>설정</span>
         <div className={styles.settingsCard}>
-          <div className={styles.settingRow}>
-            <span className={styles.settingLabel}>알림 시간</span>
-            <span className={styles.settingValue}>{formatNotifyTime(profile.notifyTime)}</span>
-            <span className={styles.settingChevron}>›</span>
-          </div>
-          <div className={styles.settingRow}>
-            <span className={styles.settingLabel}>하루 목표</span>
-            <span className={styles.settingValue}>{profile.dailyGoal} 세션</span>
-            <span className={styles.settingChevron}>›</span>
-          </div>
+          {/* TODO: 알림 시간·하루 목표 설정은 AIT 알림 API 연동 후 복구 예정 */}
           <div className={styles.settingRow}>
             <span className={styles.settingLabel}>학습 레벨</span>
             <span className={styles.settingValue}>{profile.cefrLevel}</span>
