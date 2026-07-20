@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "collectio companion",
+    "slug": "collectio-companion",
+    "scheme": "collectio-companion",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "kr.hoqn.collectiocompanion"
+    },
+    "android": {
+      "package": "kr.hoqn.collectiocompanion"
+    }
+  }
+}
