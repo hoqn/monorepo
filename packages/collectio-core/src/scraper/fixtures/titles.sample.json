@@ -1,0 +1,101 @@
+{
+  "_note": "Placeholder fixture data for local development only. These are made-up sample entries, not real collectio.co.kr catalog data. Replace by wiring collectio-scraper's real output once selectors.ts is filled in.",
+  "titles": [
+    {
+      "id": "sample-001",
+      "titleKo": "겨울의 초상",
+      "titleOriginal": "Portrait of Winter",
+      "posterUrl": "https://placehold.co/300x420?text=Portrait+of+Winter",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 A",
+      "releaseYear": 1987,
+      "genres": ["드라마", "예술영화"],
+      "runtimeMin": 104,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-002",
+      "titleKo": "강변의 시간",
+      "titleOriginal": "Time by the River",
+      "posterUrl": "https://placehold.co/300x420?text=Time+by+the+River",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 B",
+      "releaseYear": 1972,
+      "genres": ["드라마"],
+      "runtimeMin": 96,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-003",
+      "titleKo": "도시의 침묵",
+      "titleOriginal": "Silence of the City",
+      "posterUrl": "https://placehold.co/300x420?text=Silence+of+the+City",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 C",
+      "releaseYear": 1995,
+      "genres": ["느와르", "예술영화"],
+      "runtimeMin": 118,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-004",
+      "titleKo": "새벽의 정원",
+      "titleOriginal": "Garden at Dawn",
+      "posterUrl": "https://placehold.co/300x420?text=Garden+at+Dawn",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 A",
+      "releaseYear": 1963,
+      "genres": ["멜로", "예술영화"],
+      "runtimeMin": 89,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-005",
+      "titleKo": "먼 곳의 등대",
+      "titleOriginal": "The Distant Lighthouse",
+      "posterUrl": "https://placehold.co/300x420?text=The+Distant+Lighthouse",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 D",
+      "releaseYear": 2004,
+      "genres": ["드라마"],
+      "runtimeMin": 132,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-006",
+      "titleKo": "유리의 계절",
+      "titleOriginal": "Season of Glass",
+      "posterUrl": "https://placehold.co/300x420?text=Season+of+Glass",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 E",
+      "releaseYear": 1978,
+      "genres": ["예술영화"],
+      "runtimeMin": 101,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-007",
+      "titleKo": "종이 새",
+      "titleOriginal": "Paper Bird",
+      "posterUrl": "https://placehold.co/300x420?text=Paper+Bird",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 B",
+      "releaseYear": 1991,
+      "genres": ["드라마", "가족"],
+      "runtimeMin": 97,
+      "officialUrl": "https://collectio.co.kr/"
+    },
+    {
+      "id": "sample-008",
+      "titleKo": "마지막 필름",
+      "titleOriginal": "The Last Reel",
+      "posterUrl": "https://placehold.co/300x420?text=The+Last+Reel",
+      "synopsis": "예시용 시놉시스입니다. 실제 콜렉티오 카탈로그 데이터가 아닙니다.",
+      "director": "예시 감독 C",
+      "releaseYear": 1969,
+      "genres": ["다큐멘터리"],
+      "runtimeMin": 84,
+      "officialUrl": "https://collectio.co.kr/"
+    }
+  ]
+}

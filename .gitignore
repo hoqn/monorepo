@@ -131,3 +131,10 @@ dist
 ### Node Patch ###
 # Serverless Webpack directories
 .webpack/
+
+# Expo / React Native
+.expo/
+.expo-shared/
+
+# collectio-scraper: personal scraped catalog cache, not for redistribution
+packages/collectio-scraper/data/
