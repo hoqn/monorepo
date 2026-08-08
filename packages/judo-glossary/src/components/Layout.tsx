@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { to: '/', label: '홈', end: true },
   { to: '/glossary', label: '용어집' },
   { to: '/techniques', label: '기술 도감' },
+  { to: '/quiz', label: '퀴즈' },
 ];
 
 export default function Layout() {
