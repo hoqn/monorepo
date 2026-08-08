@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "judo-glossary",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hoqn/judo-glossary", "dev"],
+      "port": 5173
+    }
+  ]
+}

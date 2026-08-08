@@ -1,0 +1,54 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.head h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.head p {
+  font-size: 14px;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.chipActive {
+  background: var(--color-mat);
+  border-color: var(--color-mat);
+  color: #fff;
+}
+
+.categoryDesc {
+  font-size: 13.5px;
+  color: var(--color-mat-dark);
+  background: var(--color-mat-soft);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
