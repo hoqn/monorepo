@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { TECHNIQUES } from '../data/techniques';
 import { TECHNIQUE_CATEGORY_LABEL } from '../types/technique';
+import { buildEmbedUrl } from '../lib/youtube';
 import styles from './TechniqueDetailPage.module.css';
 
 export default function TechniqueDetailPage() {
@@ -24,13 +25,14 @@ export default function TechniqueDetailPage() {
       <div className={styles.videoWrap}>
         <iframe
           key={technique.id}
-          src={`https://www.youtube-nocookie.com/embed/${technique.videoId}`}
+          src={buildEmbedUrl(technique.videoId, { autoplay: true })}
           title={`${technique.japaneseName} / ${technique.romaji} 시연 영상`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className={styles.video}
         />
       </div>
+      <p className={styles.autoplayHint}>자동재생은 무음으로 시작돼요. 소리는 영상 좌하단 스피커 아이콘으로 켤 수 있어요.</p>
 
       <div className={styles.header}>
         <span className={styles.category}>{TECHNIQUE_CATEGORY_LABEL[technique.category]}</span>

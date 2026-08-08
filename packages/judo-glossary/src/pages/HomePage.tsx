@@ -27,6 +27,9 @@ export default function HomePage() {
           <Link to="/techniques" className={styles.ctaSecondary}>
             기술 도감 보러가기
           </Link>
+          <Link to="/quiz" className={styles.ctaSecondary}>
+            퀴즈로 실력 확인
+          </Link>
         </div>
         <div className={styles.heroStats}>
           <div>
