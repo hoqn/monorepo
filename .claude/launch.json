@@ -2,10 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "judo-glossary",
+      "name": "judo",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@hoqn/judo-glossary", "dev"],
+      "runtimeArgs": ["--filter", "@hoqn/judo", "dev"],
       "port": 5173
+    },
+    {
+      "name": "judo-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hoqn/judo", "preview", "--", "--port", "4173", "--strictPort"],
+      "port": 4173
     }
   ]
 }

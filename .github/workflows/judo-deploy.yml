@@ -1,0 +1,79 @@
+# packages/judo 변경이 main에 반영될 때(머지/직접 푸시) 또는 Actions에서
+# 수동 실행 시 GitHub Pages로 빌드·배포
+#
+# 이 저장소는 여러 서비스를 담는 모노레포이므로, GitHub Pages 사이트 루트를
+# judo 전용으로 쓰지 않고 /judo/ 서브패스에 배포한다.
+# 주의: GitHub Pages(Actions 배포)는 매 배포마다 사이트 전체를 통째로
+# 교체하므로, 이후 다른 서비스도 Pages에 배포하려면 이 워크플로를 참고해
+# 하나의 아티팩트 안에 서비스별 서브폴더를 함께 담도록 확장해야 한다.
+name: judo — GitHub Pages build & deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/judo/**"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: packages/judo
+        run: pnpm run build
+
+      - name: Assemble Pages site
+        run: |
+          set -euo pipefail
+          mkdir -p site/judo
+          cp -r packages/judo/dist/. site/judo/
+          cat > site/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="ko">
+            <head>
+              <meta charset="UTF-8" />
+              <meta http-equiv="refresh" content="0; url=./judo/" />
+              <title>hoqn/monorepo — GitHub Pages</title>
+            </head>
+            <body>
+              <p><a href="./judo/">유도 첫걸음 (judo)</a></p>
+            </body>
+          </html>
+          HTML
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
