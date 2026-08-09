@@ -1,9 +1,15 @@
 .header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  /* 페이지 전환 시 전체 화면을 한 장의 이미지로 크로스페이드하는 기본
+     루트 전환에 헤더가 같이 끼면 고정된 헤더가 순간 흔들려 보인다.
+     이름을 따로 줘서 루트 전환에서 빼고 헤더는 항상 그대로 있게 한다. */
+  view-transition-name: site-header;
 }
 
 .headerInner {
@@ -73,7 +79,9 @@
   max-width: var(--max-width);
   width: 100%;
   margin: 0 auto;
-  padding: 28px 20px 64px;
+  /* 헤더가 fixed로 빠지면서 문서 흐름에서 차지하던 자리가 없어졌으니,
+     그만큼을 위쪽 패딩으로 직접 확보해 콘텐츠가 헤더 밑에 깔리지 않게 한다. */
+  padding: 92px 20px 64px;
 }
 
 .footer {
@@ -107,5 +115,9 @@
   .navLink {
     padding: 7px 10px;
     font-size: 13px;
+  }
+
+  .main {
+    padding-top: 84px;
   }
 }

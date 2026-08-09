@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import TechniqueCard from '../components/TechniqueCard';
+import TransitionLink from '../components/TransitionLink';
 import { TECHNIQUES } from '../data/techniques';
 import { TERMS } from '../data/terms';
 import styles from './HomePage.module.css';
@@ -22,15 +22,15 @@ export default function HomePage() {
           공식 시연 영상과 함께, 한국어로 핵심만 정리했습니다.
         </p>
         <div className={styles.heroActions}>
-          <Link to="/glossary" className={styles.ctaPrimary}>
+          <TransitionLink to="/glossary" className={styles.ctaPrimary}>
             용어집 보러가기
-          </Link>
-          <Link to="/techniques" className={styles.ctaSecondary}>
+          </TransitionLink>
+          <TransitionLink to="/techniques" className={styles.ctaSecondary}>
             기술 도감 보러가기
-          </Link>
-          <Link to="/quiz" className={styles.ctaSecondary}>
+          </TransitionLink>
+          <TransitionLink to="/quiz" className={styles.ctaSecondary}>
             퀴즈로 실력 확인
-          </Link>
+          </TransitionLink>
         </div>
         <div className={styles.heroStats}>
           <div>
@@ -51,10 +51,10 @@ export default function HomePage() {
       <section className={styles.section}>
         <div className={styles.sectionHead}>
           <h2>먼저 알아두면 좋은 대표 기술</h2>
-          <Link to="/techniques" className={styles.sectionLink}>
+          <TransitionLink to="/techniques" className={styles.sectionLink}>
             전체 보기
             <ChevronRight size={14} />
-          </Link>
+          </TransitionLink>
         </div>
         <div className={styles.grid}>
           {CORE_TECHNIQUES.map((technique) => (

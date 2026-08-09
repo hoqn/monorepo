@@ -62,6 +62,14 @@ export default function VideoEmbed({ videoId, title }: VideoEmbedProps) {
               event.target.playVideo();
             }
           },
+          // 소리 켜기를 기억해둔 상태로 새 영상을 열면, 브라우저가 소리 있는
+          // 자동재생 자체를 막아버려 영상이 멈춰있는 경우가 있다. 그럴 땐
+          // 무음으로라도 자동재생되도록 즉시 폴백하고 버튼 상태도 맞춘다.
+          onAutoplayBlocked: (event) => {
+            event.target.mute();
+            event.target.playVideo();
+            setMuted(true);
+          },
         },
       });
       playerRef.current = player;
@@ -90,28 +98,30 @@ export default function VideoEmbed({ videoId, title }: VideoEmbedProps) {
   };
 
   return (
-    <div className={styles.videoWrap}>
-      <div ref={containerRef} title={title} className={styles.video} />
+    <div className={styles.wrap}>
+      <div className={styles.videoWrap}>
+        <div ref={containerRef} title={title} className={styles.video} />
+      </div>
       <div className={styles.controls}>
         <button
           type="button"
-          className={introSkip ? `${styles.controlButton} ${styles.controlButtonActive}` : styles.controlButton}
+          className={introSkip ? `${styles.chip} ${styles.chipActive}` : styles.chip}
           onClick={toggleIntroSkip}
           title="인트로(준비 동작) 건너뛰기"
           aria-label={introSkip ? '인트로 건너뛰기 켜짐' : '인트로 건너뛰기 꺼짐'}
           aria-pressed={introSkip}
         >
-          <SkipForward size={16} />
+          <SkipForward size={14} />
           인트로 건너뛰기
         </button>
         <button
           type="button"
-          className={muted ? styles.controlButton : `${styles.controlButton} ${styles.controlButtonActive}`}
+          className={muted ? styles.chip : `${styles.chip} ${styles.chipActive}`}
           onClick={toggleMute}
           aria-label={muted ? '소리 켜기' : '소리 끄기'}
           aria-pressed={!muted}
         >
-          {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
           소리
         </button>
       </div>
