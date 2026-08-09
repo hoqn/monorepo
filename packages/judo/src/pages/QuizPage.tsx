@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { TECHNIQUES } from '../data/techniques';
 import { TECHNIQUE_CATEGORY_LABEL, type Technique } from '../types/technique';
 import { shuffle } from '../lib/array';
-import { buildEmbedUrl } from '../lib/youtube';
+import { buildEmbedUrl, INTRO_SKIP_SECONDS } from '../lib/youtube';
 import styles from './QuizPage.module.css';
 
 interface Question {
@@ -71,7 +71,11 @@ export default function QuizPage() {
       <div className={styles.videoWrap}>
         <iframe
           key={question.correct.id}
-          src={buildEmbedUrl(question.correct.videoId, { autoplay: true })}
+          src={buildEmbedUrl(question.correct.videoId, {
+            autoplay: true,
+            hideControls: true,
+            startSeconds: INTRO_SKIP_SECONDS,
+          })}
           title="기술 시연 영상"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
