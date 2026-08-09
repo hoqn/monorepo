@@ -102,8 +102,8 @@
 }
 
 .chevron {
+  display: inline-flex;
   flex-shrink: 0;
-  font-size: 18px;
   color: var(--color-ink-soft);
   transition: transform 0.15s ease;
   margin-top: 6px;

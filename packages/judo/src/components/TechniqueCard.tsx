@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Play } from 'lucide-react';
 import type { Technique } from '../types/technique';
 import { TECHNIQUE_CATEGORY_LABEL } from '../types/technique';
 import styles from './TechniqueCard.module.css';
@@ -14,7 +15,7 @@ export default function TechniqueCard({ technique }: { technique: Technique }) {
           loading="lazy"
         />
         <span className={styles.playBadge} aria-hidden>
-          ▶
+          <Play size={12} fill="currentColor" />
         </span>
         {technique.isCore && <span className={styles.coreBadge}>필수</span>}
       </div>

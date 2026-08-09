@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import TechniqueCard from '../components/TechniqueCard';
 import { TECHNIQUES } from '../data/techniques';
 import { TERMS } from '../data/terms';
@@ -51,7 +52,8 @@ export default function HomePage() {
         <div className={styles.sectionHead}>
           <h2>먼저 알아두면 좋은 대표 기술</h2>
           <Link to="/techniques" className={styles.sectionLink}>
-            전체 보기 →
+            전체 보기
+            <ChevronRight size={14} />
           </Link>
         </div>
         <div className={styles.grid}>

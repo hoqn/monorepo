@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
+import { CheckCircle2, ChevronRight, XCircle } from 'lucide-react';
 import { TECHNIQUES } from '../data/techniques';
 import { TECHNIQUE_CATEGORY_LABEL, type Technique } from '../types/technique';
 import { shuffle } from '../lib/array';
-import { buildEmbedUrl, INTRO_SKIP_SECONDS } from '../lib/youtube';
+import VideoEmbed from '../components/VideoEmbed';
 import styles from './QuizPage.module.css';
 
 interface Question {
@@ -68,20 +69,7 @@ export default function QuizPage() {
         </div>
       </div>
 
-      <div className={styles.videoWrap}>
-        <iframe
-          key={question.correct.id}
-          src={buildEmbedUrl(question.correct.videoId, {
-            autoplay: true,
-            hideControls: true,
-            startSeconds: INTRO_SKIP_SECONDS,
-          })}
-          title="기술 시연 영상"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className={styles.video}
-        />
-      </div>
+      <VideoEmbed videoId={question.correct.videoId} title="기술 시연 영상" />
 
       <p className={styles.prompt}>이 영상 속 기술의 이름은 무엇일까요?</p>
 
@@ -108,14 +96,22 @@ export default function QuizPage() {
 
       {answered && (
         <div className={styles.feedback}>
-          <p className={styles.feedbackTitle}>{isCorrect ? '정답이에요! 🎉' : '아쉬워요, 다시 확인해볼까요?'}</p>
+          <p className={styles.feedbackTitle}>
+            {isCorrect ? (
+              <CheckCircle2 size={20} className={styles.feedbackIconCorrect} />
+            ) : (
+              <XCircle size={20} className={styles.feedbackIconWrong} />
+            )}
+            {isCorrect ? '정답이에요!' : '아쉬워요, 다시 확인해볼까요?'}
+          </p>
           <p className={styles.feedbackName}>
             {question.correct.koreanName} · {question.correct.japaneseName} · {question.correct.romaji}
           </p>
           <p className={styles.feedbackCategory}>{TECHNIQUE_CATEGORY_LABEL[question.correct.category]}</p>
           <p className={styles.feedbackDesc}>{question.correct.description}</p>
           <button className={styles.next} onClick={handleNext}>
-            다음 문제 →
+            다음 문제
+            <ChevronRight size={16} />
           </button>
         </div>
       )}
