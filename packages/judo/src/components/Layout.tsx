@@ -4,6 +4,7 @@ import styles from './Layout.module.css';
 
 const NAV_ITEMS = [
   { to: '/', label: '홈', end: true },
+  { to: '/basics', label: '기본기' },
   { to: '/glossary', label: '용어집' },
   { to: '/techniques', label: '기술 도감' },
   { to: '/quiz', label: '퀴즈' },

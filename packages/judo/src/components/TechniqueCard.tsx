@@ -23,7 +23,7 @@ export default function TechniqueCard({ technique }: { technique: Technique }) {
       </div>
       <div className={styles.body}>
         <p className={styles.category}>{TECHNIQUE_CATEGORY_LABEL[technique.category]}</p>
-        <h3 className={styles.name}>{technique.koreanName ?? technique.romaji}</h3>
+        <h3 className={styles.name}>{technique.koreanName}</h3>
         <p className={styles.sub}>
           {technique.japaneseName} · {technique.romaji}
         </p>

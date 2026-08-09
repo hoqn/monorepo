@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
+import BasicsPage from './pages/BasicsPage';
 import GlossaryPage from './pages/GlossaryPage';
 import TechniquesPage from './pages/TechniquesPage';
 import TechniqueDetailPage from './pages/TechniqueDetailPage';
@@ -14,6 +15,7 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/basics" element={<BasicsPage />} />
           <Route path="/glossary" element={<GlossaryPage />} />
           <Route path="/techniques" element={<TechniquesPage />} />
           <Route path="/techniques/:id" element={<TechniqueDetailPage />} />
