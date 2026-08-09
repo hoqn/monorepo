@@ -1,7 +1,8 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TECHNIQUES } from '../data/techniques';
 import { TECHNIQUE_CATEGORY_LABEL } from '../types/technique';
-import { buildEmbedUrl, INTRO_SKIP_SECONDS } from '../lib/youtube';
+import VideoEmbed from '../components/VideoEmbed';
 import styles from './TechniqueDetailPage.module.css';
 
 export default function TechniqueDetailPage() {
@@ -19,24 +20,11 @@ export default function TechniqueDetailPage() {
   return (
     <div className={styles.page}>
       <Link to="/techniques" className={styles.back}>
-        ← 기술 도감으로
+        <ChevronLeft size={16} />
+        기술 도감으로
       </Link>
 
-      <div className={styles.videoWrap}>
-        <iframe
-          key={technique.id}
-          src={buildEmbedUrl(technique.videoId, {
-            autoplay: true,
-            hideControls: true,
-            startSeconds: INTRO_SKIP_SECONDS,
-          })}
-          title={`${technique.japaneseName} / ${technique.romaji} 시연 영상`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className={styles.video}
-        />
-      </div>
-      <p className={styles.autoplayHint}>영상은 무음으로 자동재생돼요.</p>
+      <VideoEmbed videoId={technique.videoId} title={`${technique.japaneseName} / ${technique.romaji} 시연 영상`} />
 
       <div className={styles.header}>
         <span className={styles.category}>{TECHNIQUE_CATEGORY_LABEL[technique.category]}</span>
@@ -50,11 +38,17 @@ export default function TechniqueDetailPage() {
 
       <div className={styles.nav}>
         <Link to={`/techniques/${prev.id}`} className={styles.navItem}>
-          <span className={styles.navLabel}>← 이전 기술</span>
+          <span className={styles.navLabel}>
+            <ChevronLeft size={14} />
+            이전 기술
+          </span>
           <span className={styles.navName}>{prev.koreanName ?? prev.romaji}</span>
         </Link>
         <Link to={`/techniques/${next.id}`} className={`${styles.navItem} ${styles.navItemRight}`}>
-          <span className={styles.navLabel}>다음 기술 →</span>
+          <span className={styles.navLabel}>
+            다음 기술
+            <ChevronRight size={14} />
+          </span>
           <span className={styles.navName}>{next.koreanName ?? next.romaji}</span>
         </Link>
       </div>

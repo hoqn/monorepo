@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { TERMS } from '../data/terms';
 import { TERM_CATEGORY_LABEL, type TermCategory } from '../types/glossary';
 import styles from './GlossaryPage.module.css';
@@ -77,7 +78,7 @@ export default function GlossaryPage() {
                   )}
                 </div>
                 <span className={styles.chevron} data-open={isOpen}>
-                  ⌄
+                  <ChevronDown size={18} />
                 </span>
               </button>
               <p className={styles.shortDef}>{term.shortDefinition}</p>
