@@ -47,6 +47,11 @@ export default function VideoEmbed({ videoId, title }: VideoEmbedProps) {
             } else {
               event.target.unMute();
             }
+            // playerVars.start만 믿으면 방금 로드돼 아직 버퍼링이 안 된 상태라
+            // 자동재생과 경합해 씹히는 경우가 있어, seekTo로 한 번 더 확정한다.
+            if (startSeconds > 0) {
+              event.target.seekTo(startSeconds, true);
+            }
             event.target.playVideo();
           },
           onStateChange: (event) => {
