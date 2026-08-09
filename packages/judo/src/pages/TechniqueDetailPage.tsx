@@ -1,8 +1,10 @@
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TECHNIQUES } from '../data/techniques';
 import { TECHNIQUE_CATEGORY_LABEL } from '../types/technique';
 import VideoEmbed from '../components/VideoEmbed';
+import TransitionLink from '../components/TransitionLink';
+import { techniqueMediaTransitionName } from '../lib/view-transition-names';
 import styles from './TechniqueDetailPage.module.css';
 
 export default function TechniqueDetailPage() {
@@ -19,12 +21,14 @@ export default function TechniqueDetailPage() {
 
   return (
     <div className={styles.page}>
-      <Link to="/techniques" className={styles.back}>
+      <TransitionLink to="/techniques" className={styles.back}>
         <ChevronLeft size={16} />
         기술 도감으로
-      </Link>
+      </TransitionLink>
 
-      <VideoEmbed videoId={technique.videoId} title={`${technique.japaneseName} / ${technique.romaji} 시연 영상`} />
+      <div style={{ viewTransitionName: techniqueMediaTransitionName(technique.id) }}>
+        <VideoEmbed videoId={technique.videoId} title={`${technique.japaneseName} / ${technique.romaji} 시연 영상`} />
+      </div>
 
       <div className={styles.header}>
         <span className={styles.category}>{TECHNIQUE_CATEGORY_LABEL[technique.category]}</span>
@@ -37,20 +41,20 @@ export default function TechniqueDetailPage() {
       <p className={styles.description}>{technique.description}</p>
 
       <div className={styles.nav}>
-        <Link to={`/techniques/${prev.id}`} className={styles.navItem}>
+        <TransitionLink to={`/techniques/${prev.id}`} className={styles.navItem}>
           <span className={styles.navLabel}>
             <ChevronLeft size={14} />
             이전 기술
           </span>
           <span className={styles.navName}>{prev.koreanName ?? prev.romaji}</span>
-        </Link>
-        <Link to={`/techniques/${next.id}`} className={`${styles.navItem} ${styles.navItemRight}`}>
+        </TransitionLink>
+        <TransitionLink to={`/techniques/${next.id}`} className={`${styles.navItem} ${styles.navItemRight}`}>
           <span className={styles.navLabel}>
             다음 기술
             <ChevronRight size={14} />
           </span>
           <span className={styles.navName}>{next.koreanName ?? next.romaji}</span>
-        </Link>
+        </TransitionLink>
       </div>
     </div>
   );

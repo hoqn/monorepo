@@ -70,3 +70,15 @@ img {
   display: flex;
   flex-direction: column;
 }
+
+/* 페이지 전환 시 브라우저 네이티브 View Transitions API가 살짝 더
+   빠르고 자연스럽게 느껴지도록 기본 크로스페이드 속도만 조정한다.
+   미지원 브라우저에서는 그냥 즉시 전환되며, 별도 JS 번들이 늘지 않는다. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+}
+
+::view-transition-group(*) {
+  animation-duration: 0.22s;
+}

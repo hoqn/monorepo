@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import TransitionNavLink from './TransitionNavLink';
 import styles from './Layout.module.css';
 
 const NAV_ITEMS = [
@@ -13,20 +14,20 @@ export default function Layout() {
     <>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <NavLink to="/" className={styles.brand}>
+          <TransitionNavLink to="/" className={styles.brand}>
             <span className={styles.brandMark}>柔</span>
             유도 첫걸음
-          </NavLink>
+          </TransitionNavLink>
           <nav className={styles.nav}>
             {NAV_ITEMS.map((item) => (
-              <NavLink
+              <TransitionNavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) => (isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink)}
               >
                 {item.label}
-              </NavLink>
+              </TransitionNavLink>
             ))}
           </nav>
         </div>
