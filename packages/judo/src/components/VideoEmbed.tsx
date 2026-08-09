@@ -102,14 +102,17 @@ export default function VideoEmbed({ videoId, title }: VideoEmbedProps) {
           aria-pressed={introSkip}
         >
           <SkipForward size={16} />
+          인트로 건너뛰기
         </button>
         <button
           type="button"
-          className={styles.controlButton}
+          className={muted ? styles.controlButton : `${styles.controlButton} ${styles.controlButtonActive}`}
           onClick={toggleMute}
           aria-label={muted ? '소리 켜기' : '소리 끄기'}
+          aria-pressed={!muted}
         >
           {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+          소리
         </button>
       </div>
     </div>
