@@ -46,8 +46,42 @@ export const TECHNIQUES: Technique[] = [
     videoId: 'cnHRhSy8yi4',
     description: '상대의 다리 사이로 팔을 넣고 몸을 낮춰 상대를 어깨 위에 목마 태우듯 걸친 뒤, 그대로 돌려 앞으로 떨어뜨리는 기술입니다.',
   },
+  {
+    id: 'seoi-otoshi',
+    koreanName: '업어떨어뜨리기',
+    japaneseName: '背負落',
+    romaji: 'Seoi-otoshi',
+    englishName: 'Shoulder drop',
+    category: 'te-waza',
+    videoId: 'vu1TMVNnq34',
+    description:
+      '업어치기처럼 상대를 등에 업되, 들어 올려 던지는 대신 한쪽 다리를 뒤로 뻗어 그 다리 너머로 떨어뜨리는 기술입니다. 상대를 완전히 들어 올릴 힘이 부족할 때 쓰기 좋습니다.',
+  },
+  {
+    id: 'uki-otoshi',
+    koreanName: '띄어치기',
+    japaneseName: '浮落',
+    romaji: 'Uki-otoshi',
+    englishName: 'Floating drop',
+    category: 'te-waza',
+    videoId: '6H5tmncOY4Q',
+    description:
+      '몸을 부딪치거나 다리를 걸지 않고, 오직 손의 당김과 상대의 무너진 중심만으로 앞으로 떨어뜨리는 기술입니다. 힘이 아니라 균형을 무너뜨리는 원리를 보여주는 대표적인 기술입니다.',
+  },
 
   // 허리기술 (Koshi-waza)
+  {
+    id: 'uki-goshi',
+    koreanName: '허리띄기',
+    japaneseName: '浮腰',
+    romaji: 'Uki-goshi',
+    englishName: 'Floating hip throw',
+    category: 'koshi-waza',
+    videoId: 'bPKwtB4lyOQ',
+    description:
+      '허리를 상대의 몸에 가볍게 붙여 축으로 삼고, 상대를 완전히 들어 올리지 않은 채 허리 위로 돌려 넘기는 기술입니다. 강도관에서 허리기술을 처음 배울 때 가장 먼저 익히는 기본기입니다.',
+    isCore: true,
+  },
   {
     id: 'o-goshi',
     koreanName: '허리껴치기',
@@ -90,6 +124,28 @@ export const TECHNIQUES: Technique[] = [
     description: '허리로 상대를 들어 올린 상태에서, 자신의 다리로 상대의 다리를 빗자루로 쓸듯 크게 후려 넘기는 기술입니다.',
     isCore: true,
   },
+  {
+    id: 'sode-tsurikomi-goshi',
+    koreanName: '소매들어허리채기',
+    japaneseName: '袖釣込腰',
+    romaji: 'Sode-tsurikomi-goshi',
+    englishName: 'Sleeve lift-pull hip throw',
+    category: 'koshi-waza',
+    videoId: 'QsmAxpmYLOI',
+    description:
+      '깃 대신 상대의 양쪽 소매를 잡고, 한쪽 팔을 높이 들어 올려 상대의 상체를 띄운 상태로 허리에 실어 던지는 기술입니다. 시합에서도 자주 나오는 변형 허리기술입니다.',
+  },
+  {
+    id: 'hane-goshi',
+    koreanName: '허리튀기',
+    japaneseName: '跳腰',
+    romaji: 'Hane-goshi',
+    englishName: 'Hip spring',
+    category: 'koshi-waza',
+    videoId: 'M9_7De6A1kk',
+    description:
+      '허리를 넣으면서 한쪽 다리를 구부려 상대의 다리와 허리를 함께 튕겨 올리듯 들어 던지는 기술입니다. 허리후리기와 비슷해 보이지만 다리를 쓸어내지 않고 튕겨 올린다는 점이 다릅니다.',
+  },
 
   // 발기술 (Ashi-waza)
   {
@@ -111,6 +167,18 @@ export const TECHNIQUES: Technique[] = [
     category: 'ashi-waza',
     videoId: 'JPJx9-oAVns',
     description: '발바닥을 상대의 무릎 옆에 대어 축을 만들고, 손으로 당기는 힘과 맞춰 상대를 그 축 너머로 회전시켜 넘어뜨리는 기술입니다.',
+  },
+  {
+    id: 'sasae-tsurikomi-ashi',
+    koreanName: '발목받치기',
+    japaneseName: '支釣込足',
+    romaji: 'Sasae-tsurikomi-ashi',
+    englishName: 'Propping drawing ankle throw',
+    category: 'ashi-waza',
+    videoId: '699i--pvYmE',
+    description:
+      '발바닥을 상대의 발목 앞에 받쳐 축을 만들고, 손으로 끌어올리듯 당겨 그 축 너머로 앞으로 넘어뜨리는 기술입니다. 무릎대돌리기와 원리는 같고 받치는 위치가 무릎이 아니라 발목이라는 점이 다릅니다.',
+    isCore: true,
   },
   {
     id: 'o-soto-gari',
@@ -143,6 +211,29 @@ export const TECHNIQUES: Technique[] = [
     category: 'ashi-waza',
     videoId: 'jeQ541ScLB4',
     description: '상대의 뒤꿈치 뒤쪽을 자신의 발바닥으로 짧고 빠르게 걸어 뒤로 넘어뜨리는 기술입니다.',
+  },
+  {
+    id: 'ko-uchi-gari',
+    koreanName: '안뒤축후리기',
+    japaneseName: '小内刈',
+    romaji: 'Ko-uchi-gari',
+    englishName: 'Minor inner reap',
+    category: 'ashi-waza',
+    videoId: '3Jb3tZvr9Ng',
+    description:
+      '자신의 발바닥으로 상대의 안쪽 발뒤꿈치를 짧게 걷어내 뒤로 무너뜨리는 기술입니다. 안다리후리기와 짝을 이뤄, 둘을 번갈아 걸며 상대를 흔드는 연계로 자주 쓰입니다.',
+    isCore: true,
+  },
+  {
+    id: 'okuri-ashi-harai',
+    koreanName: '모두걸기',
+    japaneseName: '送足払',
+    romaji: 'Okuri-ashi-harai',
+    englishName: 'Sliding foot sweep',
+    category: 'ashi-waza',
+    videoId: 'nw1ZdRjrdRI',
+    description:
+      '상대가 옆으로 발을 모으며 움직이는 순간, 두 발이 모이는 타이밍에 맞춰 발바닥으로 양발을 한꺼번에 쓸어 넘기는 기술입니다. 힘보다 타이밍이 전부인 기술입니다.',
   },
   {
     id: 'uchi-mata',
@@ -178,6 +269,17 @@ export const TECHNIQUES: Technique[] = [
     videoId: 'Fgi9b8DJ5sQ',
     description: '상대의 몸통을 뒤에서 끌어안아 들어 올린 뒤, 자신도 함께 뒤로 몸을 젖히며 상대를 등 뒤로 떨어뜨리는 기술입니다.',
   },
+  {
+    id: 'sumi-gaeshi',
+    koreanName: '안오금띄기',
+    japaneseName: '隅返',
+    romaji: 'Sumi-gaeshi',
+    englishName: 'Corner reversal',
+    category: 'ma-sutemi-waza',
+    videoId: '5VhduA5xkbA',
+    description:
+      '상대를 앞으로 끌어당기며 자신은 뒤로 누우면서, 발등을 상대의 오금(무릎 뒤 오목한 곳)에 걸어 비스듬히 뒤로 넘겨 던지는 기술입니다.',
+  },
 
   // 누워메치기 · 옆구르기 (Yoko-sutemi-waza)
   {
@@ -212,6 +314,19 @@ export const TECHNIQUES: Technique[] = [
     videoId: 'NDaQuJOFBYk',
     description: '상대의 목과 한쪽 팔을 함께 감싸 안고, 승려의 가사(袈裟)를 두른 모습처럼 몸을 상대 옆구리에 밀착시켜 누르는 가장 기본적인 누르기 기술입니다.',
     isCore: true,
+    escapeVideoId: '5_TS0YHdxcQ',
+  },
+  {
+    id: 'kuzure-kesa-gatame',
+    koreanName: '고쳐곁누르기',
+    japaneseName: '崩袈裟固',
+    romaji: 'Kuzure-kesa-gatame',
+    englishName: 'Modified scarf hold',
+    category: 'osaekomi-waza',
+    videoId: 'Q2fb9jaoUFQ',
+    description:
+      '곁누르기에서 상대의 목을 감던 팔을 대신 겨드랑이 아래로 넣어 어깨를 눌러 고정하는 변형입니다. 목을 감지 않아 더 안정적이라 실전에서 오히려 더 자주 쓰입니다.',
+    escapeVideoId: '-zFQ6h4yKT4',
   },
   {
     id: 'kata-gatame',
@@ -222,6 +337,7 @@ export const TECHNIQUES: Technique[] = [
     category: 'osaekomi-waza',
     videoId: 'zQR3IOXxO_Q',
     description: '상대의 한쪽 팔을 자신의 목과 어깨 사이에 끼워 고정하고, 그 팔의 어깨 관절 자체를 눌러 움직임을 봉쇄하는 기술입니다.',
+    escapeVideoId: '7hP1-W2yovk',
   },
   {
     id: 'kami-shiho-gatame',
@@ -232,6 +348,7 @@ export const TECHNIQUES: Technique[] = [
     category: 'osaekomi-waza',
     videoId: 'HFuMjOv0WN8',
     description: '상대의 머리 쪽에서 몸 전체로 상반신을 덮듯이 올라타, 양팔로 허리띠 부근을 감싸 잡고 누르는 기술입니다.',
+    escapeVideoId: 'seGsXy9I4G8',
   },
   {
     id: 'yoko-shiho-gatame',
@@ -242,6 +359,7 @@ export const TECHNIQUES: Technique[] = [
     category: 'osaekomi-waza',
     videoId: 'TT7XJVSEQxA',
     description: '상대의 옆에서 몸을 가로질러 엎드리듯 올라타, 한 손은 목 아래로 다른 손은 다리 사이로 넣어 옷깃과 허리띠를 잡고 누르는 기술입니다.',
+    escapeVideoId: 'yK_GSamSPko',
   },
   {
     id: 'tate-shiho-gatame',
@@ -252,6 +370,7 @@ export const TECHNIQUES: Technique[] = [
     category: 'osaekomi-waza',
     videoId: '55-rFmBx53g',
     description: '상대의 몸통 위에 세로 방향으로 올라타 앉듯이 자세를 잡고, 양다리로 상대의 옆구리를 조이며 누르는 기술입니다.',
+    escapeVideoId: 'JMJBjnst_DA',
   },
 
   // 조르기 (Shime-waza)
@@ -286,6 +405,115 @@ export const TECHNIQUES: Technique[] = [
     category: 'shime-waza',
     videoId: 'EiqyoVcIAi8',
     description: '상대의 등 뒤에서 한 손은 반대쪽 옷깃 깊숙이, 다른 손은 같은 쪽 옷깃을 잡고 양손을 교대로 당겨 조르는 기술입니다.',
+  },
+
+  // 꺾기 (Kansetsu-waza)
+  // 부상 위험이 커서 입문자가 혼자 따라 하면 안 되는 기술군이다. 눈으로 익히고
+  // 무엇이 위험한지 아는 용도로만 싣는다.
+  {
+    id: 'ude-garami',
+    koreanName: '팔얽어비틀기',
+    japaneseName: '腕緘',
+    romaji: 'Ude-garami',
+    englishName: 'Entangled armlock',
+    category: 'kansetsu-waza',
+    videoId: 'AIlTvZb4RlE',
+    description:
+      '상대의 팔을 ㄱ자로 꺾은 상태에서 자신의 양팔로 상대의 손목과 팔을 얽어 감고, 그대로 비틀어 어깨와 팔꿈치를 압박하는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-juji-gatame',
+    koreanName: '팔가로누워꺾기',
+    japaneseName: '腕挫十字固',
+    romaji: 'Ude-hishigi-juji-gatame',
+    englishName: 'Cross armlock',
+    category: 'kansetsu-waza',
+    videoId: 'OWgSOlCuMXw',
+    description:
+      '상대의 팔 하나를 두 다리 사이에 끼워 몸과 십자(十) 모양이 되게 눕고, 팔꿈치를 무릎 위에 얹은 채 허리를 들어 관절을 펴는 기술입니다. 꺾기 중 시합에서 가장 많이 나옵니다.',
+    isCore: true,
+  },
+  {
+    id: 'ude-hishigi-ude-gatame',
+    koreanName: '어깨대팔꿈치꺾기',
+    japaneseName: '腕挫腕固',
+    romaji: 'Ude-hishigi-ude-gatame',
+    englishName: 'Arm armlock',
+    category: 'kansetsu-waza',
+    videoId: 'SBf0aTma1VI',
+    description: '상대의 뻗은 팔을 양손으로 붙잡아 자신의 어깨에 얹고, 팔꿈치를 지렛대처럼 눌러 펴는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-hiza-gatame',
+    koreanName: '무릎대팔꺾기',
+    japaneseName: '腕挫膝固',
+    romaji: 'Ude-hishigi-hiza-gatame',
+    englishName: 'Knee armlock',
+    category: 'kansetsu-waza',
+    videoId: 'H2HtAJdiJcE',
+    description: '상대의 팔을 겨드랑이에 낀 채 자신의 무릎을 팔꿈치 바깥쪽에 대고 눌러 관절을 꺾는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-waki-gatame',
+    koreanName: '겨드랑이대팔꺾기',
+    japaneseName: '腕挫腋固',
+    romaji: 'Ude-hishigi-waki-gatame',
+    englishName: 'Armpit armlock',
+    category: 'kansetsu-waza',
+    videoId: '8F5p1zuJRG0',
+    description: '상대의 팔을 자신의 겨드랑이에 단단히 끼워 고정한 뒤, 몸을 낮추며 팔꿈치를 눌러 펴는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-hara-gatame',
+    koreanName: '배대팔꺾기',
+    japaneseName: '腕挫腹固',
+    romaji: 'Ude-hishigi-hara-gatame',
+    englishName: 'Stomach armlock',
+    category: 'kansetsu-waza',
+    videoId: 'ZzEycg8R_9M',
+    description: '상대의 팔을 자신의 배에 대고 눌러 팔꿈치 관절을 펴는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-ashi-gatame',
+    koreanName: '다리대팔꺾기',
+    japaneseName: '腕挫脚固',
+    romaji: 'Ude-hishigi-ashi-gatame',
+    englishName: 'Leg armlock',
+    category: 'kansetsu-waza',
+    videoId: 'ClY7g_pX-4s',
+    description: '다리로 상대의 팔을 눌러 팔꿈치 관절을 꺾는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-te-gatame',
+    koreanName: '손대팔꺾기',
+    japaneseName: '腕挫手固',
+    romaji: 'Ude-hishigi-te-gatame',
+    englishName: 'Hand armlock',
+    category: 'kansetsu-waza',
+    videoId: '6DnvhY0tQVM',
+    description: '손으로 상대의 팔을 붙잡아 고정하고 팔꿈치를 눌러 펴는 기술입니다.',
+  },
+  {
+    id: 'ude-hishigi-sankaku-gatame',
+    koreanName: '삼각팔꺾기',
+    japaneseName: '腕挫三角固',
+    romaji: 'Ude-hishigi-sankaku-gatame',
+    englishName: 'Triangular armlock',
+    category: 'kansetsu-waza',
+    videoId: 'WefAmW4azhk',
+    description: '두 다리로 상대의 목과 한쪽 팔을 삼각형으로 감아 고정한 상태에서, 끼인 팔의 팔꿈치를 꺾는 기술입니다.',
+  },
+  {
+    id: 'ashi-garami',
+    koreanName: '다리얽어비틀기',
+    japaneseName: '足緘',
+    romaji: 'Ashi-garami',
+    englishName: 'Entangled leg lock',
+    category: 'kansetsu-waza',
+    videoId: 'BWWb0GoAtZw',
+    description:
+      '자신의 다리로 상대의 다리를 얽어 무릎 관절을 비트는 기술입니다. 무릎 부상 위험이 매우 커서 현재 시합에서는 금지돼 있고, 형(形)에만 남아 있습니다.',
+    isForbidden: true,
   },
 ];
 

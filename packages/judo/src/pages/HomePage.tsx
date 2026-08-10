@@ -3,9 +3,11 @@ import TechniqueCard from '../components/TechniqueCard';
 import TransitionLink from '../components/TransitionLink';
 import { TECHNIQUES } from '../data/techniques';
 import { TERMS } from '../data/terms';
+import { TECHNIQUE_CATEGORY_LABEL } from '../types/technique';
 import styles from './HomePage.module.css';
 
 const CORE_TECHNIQUES = TECHNIQUES.filter((t) => t.isCore).slice(0, 6);
+const CATEGORY_COUNT = Object.keys(TECHNIQUE_CATEGORY_LABEL).length;
 
 export default function HomePage() {
   return (
@@ -22,7 +24,10 @@ export default function HomePage() {
           공식 시연 영상과 함께, 한국어로 핵심만 정리했습니다.
         </p>
         <div className={styles.heroActions}>
-          <TransitionLink to="/glossary" className={styles.ctaPrimary}>
+          <TransitionLink to="/basics" className={styles.ctaPrimary}>
+            기본기부터 시작하기
+          </TransitionLink>
+          <TransitionLink to="/glossary" className={styles.ctaSecondary}>
             용어집 보러가기
           </TransitionLink>
           <TransitionLink to="/techniques" className={styles.ctaSecondary}>
@@ -42,7 +47,7 @@ export default function HomePage() {
             <span>대표 기술</span>
           </div>
           <div>
-            <strong>7</strong>
+            <strong>{CATEGORY_COUNT}</strong>
             <span>기술 분류</span>
           </div>
         </div>
@@ -67,16 +72,19 @@ export default function HomePage() {
         <h2>이렇게 시작해보세요</h2>
         <ol className={styles.guideList}>
           <li>
-            <strong>① 용어집에서 기본기부터.</strong> 도복·낙법·잡기 같은 기초 용어와 한판·절반 같은 경기 용어를 먼저
-            훑어보세요.
+            <strong>① 기본기에서 낙법부터.</strong> 도장에서도 던지기보다 낙법을 먼저 배웁니다. 예법과 기본 움직임까지
+            영상으로 확인해보세요.
           </li>
           <li>
-            <strong>② 기술 도감에서 영상으로 확인.</strong> 손기술·허리기술·발기술 등 분류별로 정리된 공식 시연
+            <strong>② 용어집으로 말부터 익히기.</strong> 도복·잡기 같은 기초 용어와 한판·절반 같은 경기 용어를
+            훑어보면 수업 중 들리는 말이 달라집니다.
+          </li>
+          <li>
+            <strong>③ 기술 도감에서 영상으로 확인.</strong> 손기술·허리기술·발기술 등 분류별로 정리된 공식 시연
             영상을 반복해서 눈에 익히세요.
           </li>
           <li>
-            <strong>③ 도장 수업과 함께 복습.</strong> 실제 수련 중 들은 용어를 검색해 다시 확인하면 훨씬 오래
-            기억됩니다.
+            <strong>④ 퀴즈로 복습.</strong> 영상만 보고 기술 이름을 맞혀보면 얼마나 눈에 익었는지 바로 확인됩니다.
           </li>
         </ol>
       </section>
