@@ -1,0 +1,89 @@
+# packages/judo 또는 packages/judo-log 변경이 main에 반영될 때(머지/직접 푸시)
+# 또는 Actions에서 수동 실행 시 GitHub Pages로 빌드·배포
+#
+# 이 저장소는 여러 서비스를 담는 모노레포이고, GitHub Pages(Actions 배포)는 매 배포마다
+# 사이트 전체를 통째로 교체한다. 서비스마다 워크플로를 따로 두면 나중에 배포된 쪽이
+# 앞서 배포된 쪽을 지워버리므로, 사이트 전체를 이 워크플로 하나에서 조립한다.
+# 서비스를 추가할 때는 SERVICES 목록에 한 줄 더하고 빌드 스텝을 늘리면 된다.
+name: GitHub Pages build & deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/judo/**"
+      - "packages/judo-log/**"
+      - ".github/workflows/pages-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 어느 서비스가 바뀌었든 사이트 전체를 다시 조립해야 하므로 전부 빌드한다.
+      - name: Build judo
+        working-directory: packages/judo
+        run: pnpm run build
+
+      - name: Build judo-log
+        working-directory: packages/judo-log
+        run: pnpm run build
+
+      - name: Assemble Pages site
+        run: |
+          set -euo pipefail
+          mkdir -p site/judo site/judo-log
+          cp -r packages/judo/dist/. site/judo/
+          cp -r packages/judo-log/dist/. site/judo-log/
+          cat > site/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="ko">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <title>hoqn/monorepo — GitHub Pages</title>
+            </head>
+            <body>
+              <ul>
+                <li><a href="./judo/">유도 첫걸음 (judo)</a> — 용어·기술 사전</li>
+                <li><a href="./judo-log/">유도 복습 (judo-log)</a> — 기록·정리·간격 반복 복습</li>
+              </ul>
+            </body>
+          </html>
+          HTML
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
