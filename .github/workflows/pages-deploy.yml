@@ -52,9 +52,13 @@ jobs:
         working-directory: packages/judo
         run: pnpm run build
 
+      # judo-log의 base는 환경변수로 받는다. Vercel 등 도메인 루트에 올리는 배포처는
+      # 기본값 '/'를 쓰고, Pages 서브패스 배포인 여기서만 경로를 넣어준다.
       - name: Build judo-log
         working-directory: packages/judo-log
         run: pnpm run build
+        env:
+          BASE_PATH: /monorepo/judo-log/
 
       - name: Assemble Pages site
         run: |
