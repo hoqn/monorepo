@@ -131,3 +131,6 @@ dist
 ### Node Patch ###
 # Serverless Webpack directories
 .webpack/
+
+# Vercel CLI 작업 디렉터리 (빌드 산출물 + 로컬 프로젝트 링크)
+.vercel

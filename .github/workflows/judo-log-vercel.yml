@@ -1,0 +1,89 @@
+# packages/judo-log 변경이 main에 반영될 때 또는 Actions에서 수동 실행 시 Vercel로 배포
+#
+# 저장소에 필요한 시크릿 (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN       계정 설정 → Tokens 에서 발급
+#   VERCEL_ORG_ID      Vercel 프로젝트의 Settings → General (Team/Account ID)
+#   VERCEL_PROJECT_ID  같은 화면의 Project ID
+#
+# 빌드를 Vercel에 맡기지 않고 러너에서 직접 끝낸 뒤 완성된 정적 산출물만 올린다.
+# 이 저장소는 pnpm 워크스페이스라 패키지 하나만 떼어 설치·빌드하려면 루트 락파일이
+# 필요한데, 그 조립을 Vercel 쪽 설정에 의존하지 않고 여기서 확정하는 편이 덜 깨진다.
+# (Vercel Git 연동을 대신 쓸 경우의 설정은 packages/judo-log/vercel.json에 있다.
+#  둘을 동시에 켜면 한 커밋에 배포가 두 번 나가므로 하나만 쓸 것.)
+name: judo-log — Vercel deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/judo-log/**"
+      - ".github/workflows/judo-log-vercel.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: judo-log-vercel
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: judo-log-production
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # BASE_PATH를 주지 않으므로 base는 '/' — Vercel은 도메인 루트로 서빙한다.
+      - name: Build
+        run: pnpm --filter @hoqn/judo-log build
+
+      # Build Output API v3. 정적 사이트라 static 폴더와 config.json이면 충분하다.
+      - name: Assemble Vercel build output
+        run: |
+          set -euo pipefail
+          rm -rf .vercel/output
+          mkdir -p .vercel/output/static
+          cp -r packages/judo-log/dist/. .vercel/output/static/
+          # 아래 헤더는 packages/judo-log/vercel.json과 같은 값이다. 한쪽만 고치지 말 것.
+          cat > .vercel/output/config.json <<'JSON'
+          {
+            "version": 3,
+            "routes": [
+              {
+                "src": "/sw.js",
+                "headers": { "Cache-Control": "public, max-age=0, must-revalidate" },
+                "continue": true
+              },
+              {
+                "src": "/assets/(.*)",
+                "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+                "continue": true
+              }
+            ]
+          }
+          JSON
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          set -euo pipefail
+          url=$(npx --yes vercel@latest deploy --prebuilt --prod --yes \
+            --token="${{ secrets.VERCEL_TOKEN }}")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "배포됨: $url" >> "$GITHUB_STEP_SUMMARY"
