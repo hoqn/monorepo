@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@hoqn/judo", "preview", "--", "--port", "4173", "--strictPort"],
       "port": 4173
+    },
+    {
+      "name": "judo-3d-lab",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@hoqn/judo-3d-lab", "dev", "--", "--port", "5175", "--strictPort"],
+      "port": 5175
     }
   ]
 }
