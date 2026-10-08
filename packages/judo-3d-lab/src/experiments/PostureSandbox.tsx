@@ -188,7 +188,7 @@ export function PostureSandbox() {
         >
           {Object.entries(PRESETS).map(([id, pr]) => (
             <ToggleButton key={id} value={id} label={pr.label}>
-              {pr.label}
+              {pr.label.split(' (')[0]}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>

@@ -1,5 +1,10 @@
 import { Card } from '@astryxdesign/core/Card';
-import { Divider } from '@astryxdesign/core/Divider';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from '@astryxdesign/core/DropdownMenu';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -30,36 +35,26 @@ import { cssVar, GI_COLOR, useResolvedColors } from '../ui/tokens';
 const SPEEDS = ['0.1', '0.25', '0.5', '1'] as const;
 type Speed = (typeof SPEEDS)[number];
 
-/** 표시 토글. 자주 켜고 끄므로 3D 바로 위 툴바에 묶음별로 항상 보이게 둔다 */
-const TOGGLE_GROUPS = [
-  {
-    label: '사람',
-    items: [
-      ['tori', '토리'],
-      ['uke', '우케'],
-      ['xray', '반투명'],
-    ],
-  },
-  {
-    label: '균형 분석',
-    items: [
-      ['com', '질량중심'],
-      ['support', '기저면'],
-      ['xcom', 'XCoM'],
-      ['trail', '궤적'],
-      ['segments', '분절'],
-      ['pair', '두 사람 합성'],
-    ],
-  },
-  {
-    label: '접촉',
-    items: [
-      ['contacts', '겹침 보정'],
-      ['contactMarks', '접촉점'],
-    ],
-  },
+/**
+ * 표시 토글. 자주 켜고 끄는 것만 툴바에 버튼으로 두고, 깊이 분석할 때 쓰는 것은 "분석 옵션" 메뉴 하나에 모은다.
+ * 모두 같은 무게로 늘어놓으면 툴바가 어수선해져 무엇부터 봐야 할지 흐려진다.
+ */
+const PRIMARY_TOGGLES = [
+  ['tori', '토리'],
+  ['uke', '우케'],
+  ['xray', '반투명'],
+  ['com', '질량중심'],
+  ['contactMarks', '접촉점'],
 ] as const;
-type ToggleKey = (typeof TOGGLE_GROUPS)[number]['items'][number][0];
+const ADVANCED_TOGGLES = [
+  ['support', '기저면', '두 발이 바닥에 닿은 영역'],
+  ['xcom', 'XCoM', '속도를 반영한 동적 균형 지점'],
+  ['trail', '질량중심 궤적', '기술 전체 동안 질량중심이 지나간 길'],
+  ['segments', '분절별 질량중심', '머리·몸통·팔다리 각각의 질량중심'],
+  ['pair', '두 사람 합성 질량중심', '잡기로 묶인 두 사람을 한 덩어리로 본 질량중심'],
+  ['contacts', '겹침 보정', '두 사람이 서로 파고들지 않게 밀어냄'],
+] as const;
+type ToggleKey = (typeof PRIMARY_TOGGLES)[number][0] | (typeof ADVANCED_TOGGLES)[number][0];
 const DEFAULT_ON: ToggleKey[] = ['tori', 'uke', 'com', 'support', 'xcom', 'trail', 'contacts', 'contactMarks'];
 
 function initialTime(): number {
@@ -116,22 +111,53 @@ export function TechniqueViewer() {
     setT(v);
   };
 
+  const primaryKeys = new Set<string>(PRIMARY_TOGGLES.map(([k]) => k));
+  const advancedOn = ADVANCED_TOGGLES.filter(([k]) => show(k)).length;
+
+  // 한 줄 툴바: 기술(탭) | 자주 쓰는 표시 토글 · 분석 옵션 · 시점. 좁으면 줄바꿈
   const controls = (
-    <Stack gap={2}>
-      {/* 1행: 기술(탭) · 시점. 좁으면 줄바꿈되고, 탭은 가로로 스크롤된다 */}
-      <Stack direction="horizontal" gap={3} align="center" justify="between" wrap="wrap">
-        <TabList
-          value={tech.id}
-          onChange={(id) => {
-            setTech(TECHNIQUES.find((x) => x.id === id)!);
-            setT(0);
-            setPlaying(false);
-          }}
+    <Stack direction="horizontal" gap={3} align="center" justify="between" wrap="wrap">
+      <TabList
+        value={tech.id}
+        onChange={(id) => {
+          setTech(TECHNIQUES.find((x) => x.id === id)!);
+          setT(0);
+          setPlaying(false);
+        }}
+      >
+        {TECHNIQUES.map((x) => (
+          <Tab key={x.id} value={x.id} label={x.koreanName} />
+        ))}
+      </TabList>
+      <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+        <ToggleButtonGroup
+          label="표시"
+          type="multiple"
+          size="sm"
+          value={shown.filter((k) => primaryKeys.has(k))}
+          onChange={(v) => setShown([...shown.filter((k) => !primaryKeys.has(k)), ...(v as string[])])}
         >
-          {TECHNIQUES.map((x) => (
-            <Tab key={x.id} value={x.id} label={x.koreanName} />
+          {PRIMARY_TOGGLES.map(([key, label]) => (
+            <ToggleButton key={key} value={key} label={label}>
+              {label}
+            </ToggleButton>
           ))}
-        </TabList>
+        </ToggleButtonGroup>
+        <DropdownMenu
+          button={{ label: `분석 옵션 ${advancedOn}/${ADVANCED_TOGGLES.length}`, size: 'sm', variant: 'ghost' }}
+          alignment="end"
+          menuMaxHeight={480}
+        >
+          {ADVANCED_TOGGLES.map(([key, label, description]) => (
+            <DropdownMenuCheckboxItem
+              key={key}
+              label={label}
+              description={description}
+              value={show(key)}
+              onChange={(on) => setShown(on ? [...shown, key] : shown.filter((k) => k !== key))}
+            />
+          ))}
+        </DropdownMenu>
         <SegmentedControl
           label="카메라 시점"
           size="sm"
@@ -146,30 +172,6 @@ export function TechniqueViewer() {
           ))}
         </SegmentedControl>
       </Stack>
-      {/* 2행: 표시 토글. 묶음 사이에 세로 구분선, 좁으면 가로 스크롤 */}
-      <Stack direction="horizontal" gap={2} align="center" isScrollable>
-        {TOGGLE_GROUPS.map((g, i) => (
-          <Stack key={g.label} direction="horizontal" gap={2} align="center">
-            {i > 0 && <Divider orientation="vertical" />}
-            <ToggleButtonGroup
-              label={g.label}
-              type="multiple"
-              size="sm"
-              value={shown.filter((k) => g.items.some(([key]) => key === k))}
-              onChange={(v) => {
-                const inGroup = new Set<string>(g.items.map(([key]) => key));
-                setShown([...shown.filter((k) => !inGroup.has(k)), ...(v as string[])]);
-              }}
-            >
-              {g.items.map(([key, label]) => (
-                <ToggleButton key={key} value={key} label={label}>
-                  {label}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          </Stack>
-        ))}
-      </Stack>
     </Stack>
   );
 
@@ -182,11 +184,6 @@ export function TechniqueViewer() {
           icon={playing ? <Pause size={16} /> : <Play size={16} />}
           onClick={() => setPlaying((p) => !p)}
         />
-        <SegmentedControl label="재생 속도" size="sm" value={speed} onChange={(v) => setSpeed(v as Speed)}>
-          {SPEEDS.map((s) => (
-            <SegmentedControlItem key={s} value={s} label={`${s}×`} />
-          ))}
-        </SegmentedControl>
         <SegmentedControl
           label="단계로 이동"
           size="sm"
@@ -203,6 +200,14 @@ export function TechniqueViewer() {
         <Text type="supporting" hasTabularNumbers>
           {shownT.toFixed(2)}s / {duration.toFixed(1)}s
         </Text>
+        {/* 재생 속도는 자주 바꾸지 않으므로 작은 메뉴로 */}
+        <DropdownMenu button={{ label: `속도 ${speed}×`, size: 'sm', variant: 'ghost' }}>
+          <DropdownMenuRadioGroup label="재생 속도" value={speed} onChange={(v) => setSpeed(v as Speed)}>
+            {SPEEDS.map((s) => (
+              <DropdownMenuRadioItem key={s} value={s} label={`${s}×`} />
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenu>
       </Stack>
       <Slider
         label="시간"

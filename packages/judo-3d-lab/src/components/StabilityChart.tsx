@@ -75,7 +75,14 @@ export function StabilityChart({ samples, phases, duration, t, colors, onSeek }:
         style={{ width: '100%', height: H, display: 'block', cursor: 'pointer', touchAction: 'none' }}
       >
         {phases.map((p, i) => (
-          <rect key={p.name} x={x(p.start)} y={PAD.t} width={x(p.end) - x(p.start)} height={H - PAD.t - PAD.b} fill={i % 2 ? cssVar('band') : 'transparent'} />
+          <rect
+            key={p.name}
+            x={x(p.start)}
+            y={PAD.t}
+            width={x(p.end) - x(p.start)}
+            height={H - PAD.t - PAD.b}
+            fill={i % 2 ? cssVar('band') : 'transparent'}
+          />
         ))}
         <rect x={PAD.l} y={y(0)} width={W - PAD.l - PAD.r} height={y(MIN) - y(0)} fill={danger} fillOpacity={0.07} />
         <line x1={PAD.l} x2={W - PAD.r} y1={y(0)} y2={y(0)} stroke={danger} strokeWidth={1} strokeDasharray="4 3" />
@@ -94,14 +101,18 @@ export function StabilityChart({ samples, phases, duration, t, colors, onSeek }:
         <path d={path('ukeMargin')} fill="none" stroke={colors.uke} strokeWidth={2.2} />
         <line x1={x(t)} x2={x(t)} y1={PAD.t - 4} y2={H - PAD.b + 2} stroke={cssVar('reference')} strokeWidth={1.5} />
         {phases.map((p) => (
-          <text key={p.name} x={(x(p.start) + x(p.end)) / 2} y={H - 4} textAnchor="middle" style={{ ...TICK_STYLE, fontWeight: 600 }}>
+          <text
+            key={p.name}
+            x={(x(p.start) + x(p.end)) / 2}
+            y={H - 4}
+            textAnchor="middle"
+            style={{ ...TICK_STYLE, fontWeight: 600 }}
+          >
             {p.label.split(' · ')[0]}
           </text>
         ))}
       </svg>
-      <Text type="supporting">
-        동적 안정 여유(cm): XCoM이 기저면 안쪽으로 얼마나 들어와 있는지. 0 아래면 무너진 상태이고, 선이 끊긴 구간은 지면 접촉이 없는 때입니다.
-      </Text>
+      <Text type="supporting">동적 안정 여유(cm) · 0 아래면 무너진 상태</Text>
     </Stack>
   );
 }
