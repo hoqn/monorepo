@@ -47,7 +47,10 @@ src/
     index.ts           기술 목록
     analyze.ts         시점별 질량중심·속도·균형 계산
   scene/               three.js(react-three-fiber) 렌더링: 도복 입은 절차적 마네킹, 질량중심·기저면 오버레이
+  components/          기저면 지도·안정성 그래프(SVG), 균형 카드
+  ui/tokens.ts         화면에서 쓰는 의미별 색(Astryx 토큰)과, 3D 재질용으로 토큰을 실제 색으로 바꾸는 훅
   experiments/         탭별 화면
+  astryx-themes.ts     `astryx theme add neutral --import`가 생성 (직접 수정 금지)
 ```
 
 핵심 설계는 **데이터 출처와 분석의 분리**입니다. 수작업 키프레임이든 영상 추정이든, 앞으로 쓸 모션캡처든
@@ -60,6 +63,17 @@ src/
 - **정적 안정 여유**: CoM 바닥 투영점이 기저면 경계 안쪽으로 얼마나 들어와 있는지(m). 음수면 기저면 밖입니다.
 - **동적 안정 여유(XCoM)**: `CoM + v/ω0` (ω0 = √(g/l)). 속도를 반영해 "발을 옮기지 않고 버틸 수 있는가"를 판정합니다.
   쿠즈시는 상대가 움직이는 중에 균형을 무너뜨리는 것이므로, 정적 지표보다 이쪽이 체감에 가깝습니다.
+
+### UI · 디자인 시스템
+
+화면은 [Astryx](https://www.npmjs.com/package/@astryxdesign/core) 컴포넌트와 neutral 테마로 만듭니다. 규칙은 `.claude/CLAUDE.md`에 있습니다.
+
+- 앱 틀은 `AppShell` + `TopNav`, 각 실험은 `Layout`(헤더 툴바 / 3D / 오른쪽 패널 / 타임라인)으로 짭니다. 직접 쓴 CSS 파일은 없습니다.
+- 색은 모두 토큰입니다. 토리·우케는 차트 계열 색(`--color-data-categorical-orange`·`-purple`)으로, 3D 마커·그래프·지도·카드에서 같은 색입니다.
+  three.js 재질은 CSS 변수를 읽지 못하므로 `useResolvedColors`로 계산된 색을 넘깁니다. 도복 색(흰색·파란색)만 3D 재질 고유 색입니다.
+- 라이트·다크 모드는 OS 설정을 따릅니다. Astryx 내장 문구는 `ko-KR` 카탈로그로 한국어로 나옵니다.
+- 반응형: 폭 1024px 이하에서는 오른쪽 패널이 `BottomSheet`로 바뀌고, 768px 이하에서는 상단 탭이 모바일 메뉴로 접힙니다.
+- Astryx는 `--import` 테마 흐름을 쓰려고 canary 버전(`0.6.6-canary.cc5573c`)에 고정했습니다. 정식판에 들어오면 올려야 합니다.
 
 ### 마네킹과 접촉
 

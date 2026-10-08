@@ -2,6 +2,7 @@ import { CameraControls, Grid } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useEffect, useState, type ReactNode } from 'react';
 import { PerspectiveCamera } from 'three';
+import { useResolvedColors } from '../ui/tokens';
 
 export type ViewPreset = 'side' | 'front' | 'back' | 'top' | 'free';
 
@@ -32,6 +33,7 @@ export function Stage({ children, view, viewNonce = 0 }: Props) {
   // 마운트된 뒤에 첫 시점을 적용한다.
   const [controls, setControls] = useState<CameraControls | null>(null);
   const [placed, setPlaced] = useState(false);
+  const { stage } = useResolvedColors(['stage']);
 
   useEffect(() => {
     if (view === 'free' || !controls) return;
@@ -44,7 +46,7 @@ export function Stage({ children, view, viewNonce = 0 }: Props) {
 
   return (
     <Canvas shadows camera={{ position: VIEWS.side.slice(0, 3) as [number, number, number], fov: 40, near: 0.05, far: 100 }}>
-      <color attach="background" args={['#eef0f2']} />
+      <color attach="background" args={[stage]} />
       <hemisphereLight args={['#ffffff', '#b7b1a3', 1.1]} />
       <directionalLight
         position={[2.5, 5, 2]}

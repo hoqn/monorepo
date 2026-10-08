@@ -1,4 +1,5 @@
 import type { ActorDef, PoseSpec } from '../body/rig';
+import { GI_COLOR } from '../ui/tokens';
 
 /**
  * 모든 기술이 공유하는 출발 상태.
@@ -11,8 +12,8 @@ import type { ActorDef, PoseSpec } from '../body/rig';
  * 토리의 왼쪽 = +X, 우케의 오른쪽 = +X. 모두 오른쪽 기술 기준.
  */
 
-export const TORI: ActorDef = { id: 'tori', name: '토리 (던지는 사람)', height: 1.75, mass: 75, color: '#f3f1ea' };
-export const UKE: ActorDef = { id: 'uke', name: '우케 (받는 사람)', height: 1.75, mass: 75, color: '#2f63b5' };
+export const TORI: ActorDef = { id: 'tori', name: '토리 (던지는 사람)', height: 1.75, mass: 75, color: GI_COLOR.tori };
+export const UKE: ActorDef = { id: 'uke', name: '우케 (받는 사람)', height: 1.75, mass: 75, color: GI_COLOR.uke };
 
 /** 오른쪽 맞잡기: 오른손은 상대 왼깃, 왼손은 상대 오른소매 */
 export const RIGHT_GRIP = { R: { grip: 'lapelL' }, L: { grip: 'sleeveR' } } as const satisfies PoseSpec['hands'];

@@ -10,14 +10,19 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@astryxdesign/core": "0.6.6-canary.cc5573c",
+    "@astryxdesign/theme-neutral": "0.6.6-canary.cc5573c",
     "@mediapipe/tasks-vision": "^0.10.35",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
+    "@stylexjs/stylex": "^0.19.0",
+    "lucide-react": "^1.30.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "@astryxdesign/cli": "0.6.6-canary.cc5573c",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@types/three": "^0.180.0",

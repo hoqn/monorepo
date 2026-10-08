@@ -1,28 +1,56 @@
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { FileInput } from '@astryxdesign/core/FileInput';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
+import { Selector } from '@astryxdesign/core/Selector';
+import { Slider } from '@astryxdesign/core/Slider';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
 import wasmLoaderPath from '@mediapipe/tasks-vision/vision_wasm_internal.js?url';
 import wasmBinaryPath from '@mediapipe/tasks-vision/vision_wasm_internal.wasm?url';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Vector3 } from 'three';
 import { computeCom } from '../body/anthropometry';
-import { analyzeBalance, BALANCE_STATE_LABEL } from '../body/balance';
+import { analyzeBalance } from '../body/balance';
 import { estimateLateralOffsets, SKELETON_EDGES, worldLandmarksToBody, type Landmark } from '../body/fromMediapipe';
 import type { BodyPoints } from '../body/points';
 import { BalanceMap } from '../components/BalanceMap';
+import { BalanceReadout, formatMargin } from '../components/BalanceReadout';
 import { BalanceOverlay } from '../scene/BalanceOverlay';
 import { Figure } from '../scene/Figure';
 import { Stage, type ViewPreset } from '../scene/Stage';
+import { cssVar, GI_COLOR, useResolvedColors } from '../ui/tokens';
 
 const MODELS = {
-  lite: { label: 'Lite (빠름, ~6MB)', url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task' },
-  full: { label: 'Full (균형, ~9MB)', url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task' },
-  heavy: { label: 'Heavy (정확, ~30MB)', url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task' },
+  lite: {
+    label: 'Lite (빠름, ~6MB)',
+    url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
+  },
+  full: {
+    label: 'Full (균형, ~9MB)',
+    url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task',
+  },
+  heavy: {
+    label: 'Heavy (정확, ~30MB)',
+    url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task',
+  },
 } as const;
 type ModelId = keyof typeof MODELS;
 
-const PERSON_COLORS = [
-  { gi: '#f3f1ea', analysis: '#e8590c' },
-  { gi: '#2f63b5', analysis: '#7048e8' },
-];
+/** 첫 번째·두 번째로 감지된 사람의 도복 색과 분석 색(토큰) */
+const PERSON = [
+  { gi: GI_COLOR.tori, token: 'tori' },
+  { gi: GI_COLOR.uke, token: 'uke' },
+] as const;
 
 interface DetectedFrame {
   time: number;
@@ -30,7 +58,12 @@ interface DetectedFrame {
   bodies: BodyPoints[];
 }
 
-type Status = { kind: 'idle' } | { kind: 'loading'; message: string } | { kind: 'running'; progress: number } | { kind: 'done' } | { kind: 'error'; message: string };
+type Status =
+  | { kind: 'idle' }
+  | { kind: 'loading'; message: string }
+  | { kind: 'running'; progress: number }
+  | { kind: 'done' }
+  | { kind: 'error'; message: string };
 
 const landmarkerCache = new Map<string, Promise<PoseLandmarker>>();
 
@@ -41,7 +74,14 @@ function getLandmarker(model: ModelId, mode: 'IMAGE' | 'VIDEO'): Promise<PoseLan
     const create = (delegate: 'GPU' | 'CPU') =>
       PoseLandmarker.createFromOptions(
         { wasmLoaderPath, wasmBinaryPath },
-        { baseOptions: { modelAssetPath: MODELS[model].url, delegate }, runningMode: mode, numPoses: 2, minPoseDetectionConfidence: 0.4, minPosePresenceConfidence: 0.4, minTrackingConfidence: 0.4 },
+        {
+          baseOptions: { modelAssetPath: MODELS[model].url, delegate },
+          runningMode: mode,
+          numPoses: 2,
+          minPoseDetectionConfidence: 0.4,
+          minPosePresenceConfidence: 0.4,
+          minTrackingConfidence: 0.4,
+        },
       );
     p = create('GPU').catch(() => create('CPU'));
     p.catch(() => landmarkerCache.delete(key));
@@ -65,6 +105,8 @@ export function VideoPose() {
   // MediaPipe 좌표에서 사람은 카메라(+Z)를 바라보므로 'back' 프리셋(+Z에서 보는 시점)이 카메라 시점이다
   const [view, setView] = useState<ViewPreset>('back');
   const [mass, setMass] = useState(70);
+  const [picked, setPicked] = useState<File | null>(null);
+  const resolved = useResolvedColors(['tori', 'uke'] as const);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -72,8 +114,12 @@ export function VideoPose() {
 
   useEffect(() => () => void (file && URL.revokeObjectURL(file.url)), [file]);
 
-  const onFile = (f: File | undefined) => {
-    if (!f) return;
+  const onFile = (f: File | null) => {
+    setPicked(f);
+    if (!f) {
+      setFile(null);
+      return;
+    }
     cancelRef.current = true;
     setFrames([]);
     setIndex(0);
@@ -159,7 +205,7 @@ export function VideoPose() {
     const ox = (canvas.width - natW * scale) / 2;
     const oy = (canvas.height - natH * scale) / 2;
     frame.image.forEach((lms, pi) => {
-      ctx.strokeStyle = PERSON_COLORS[pi % 2]!.analysis;
+      ctx.strokeStyle = resolved[PERSON[pi % 2]!.token];
       ctx.lineWidth = 3 * devicePixelRatio;
       for (const [a, b] of SKELETON_EDGES) {
         ctx.beginPath();
@@ -168,157 +214,181 @@ export function VideoPose() {
         ctx.stroke();
       }
     });
-  }, [frame, file]);
+  }, [frame, file, resolved]);
 
   useEffect(() => {
     const v = videoRef.current;
     if (frame && v && file?.kind === 'video' && Math.abs(v.currentTime - frame.time) > 0.01) v.currentTime = frame.time;
   }, [frame, file]);
 
+  const isBusy = status.kind === 'loading' || status.kind === 'running';
+  // 미디어 위에 2D 골격 캔버스를 겹친다. 둘 다 같은 상자를 꽉 채우고 object-fit: contain으로 맞춘다
+  const fill = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' } as const;
+
   return (
-    <div className="video-pose">
-      <section className="video-pose__media">
-        <header className="tech-head">
-          <p className="eyebrow">실험 3</p>
-          <h2>영상 → 3D 자세 추출</h2>
-          <p className="muted">
-            Google MediaPipe Pose Landmarker로 사진·영상에서 3D 관절 좌표를 추정하고, 실험 1·2와 같은 무게중심 분석을 돌립니다. 모든 처리는
-            브라우저 안에서만 이루어지며 파일은 업로드되지 않습니다.
-          </p>
-        </header>
+    <Layout
+      start={
+        <LayoutPanel width={460} hasDivider label="입력">
+          <Stack gap={4}>
+            <Stack gap={1}>
+              <Text type="supporting">실험 3</Text>
+              <Heading level={2}>영상 → 3D 자세 추출</Heading>
+              <Text color="secondary">
+                Google MediaPipe Pose Landmarker로 사진·영상에서 3D 관절 좌표를 추정하고, 실험 1·2와 같은 무게중심
+                분석을 돌립니다. 모든 처리는 브라우저 안에서만 이루어지며 파일은 업로드되지 않습니다.
+              </Text>
+            </Stack>
 
-        <div className="controls-row">
-          <label className="file-btn">
-            사진/영상 선택
-            <input type="file" accept="video/*,image/*" onChange={(e) => onFile(e.target.files?.[0])} hidden />
-          </label>
-          <select value={model} onChange={(e) => setModel(e.target.value as ModelId)} aria-label="모델">
-            {Object.entries(MODELS).map(([id, m]) => (
-              <option key={id} value={id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          {file?.kind === 'video' && (
-            <select value={fps} onChange={(e) => setFps(Number(e.target.value))} aria-label="샘플링 FPS">
-              {[5, 10, 15, 30].map((f) => (
-                <option key={f} value={f}>
-                  {f} fps
-                </option>
-              ))}
-            </select>
-          )}
-          <button className="primary" disabled={!file || status.kind === 'loading' || status.kind === 'running'} onClick={run}>
-            분석
-          </button>
-        </div>
+            <FileInput
+              label="사진 또는 영상"
+              description="한 사람 또는 두 사람이 전신으로 나오는 사진이나 짧은 영상(10초 이내 권장)"
+              accept="video/*,image/*"
+              value={picked}
+              onChange={(f) => onFile(Array.isArray(f) ? (f[0] ?? null) : f)}
+            />
+            <Grid columns={file?.kind === 'video' ? 2 : 1} gap={2}>
+              <Selector
+                label="모델"
+                value={model}
+                onChange={(v) => setModel(v as ModelId)}
+                options={Object.entries(MODELS).map(([value, m]) => ({ value, label: m.label }))}
+              />
+              {file?.kind === 'video' && (
+                <Selector
+                  label="샘플링"
+                  value={String(fps)}
+                  onChange={(v) => setFps(Number(v))}
+                  options={[5, 10, 15, 30].map((f) => ({ value: String(f), label: `${f} fps` }))}
+                />
+              )}
+            </Grid>
+            <Button label="분석" variant="primary" isDisabled={!file} isLoading={isBusy} onClick={run} width="100%" />
+            <StatusLine status={status} />
 
-        <StatusLine status={status} />
+            {file && (
+              <Card padding={0}>
+                <Stack height={file.kind === 'video' ? 260 : 300} style={{ position: 'relative' }}>
+                  {file.kind === 'video' && (
+                    <video ref={videoRef} src={file.url} muted playsInline preload="auto" style={fill} />
+                  )}
+                  {file.kind === 'image' && <img ref={imgRef} src={file.url} alt={file.name} style={fill} />}
+                  <canvas ref={overlayRef} style={{ ...fill, pointerEvents: 'none' }} />
+                </Stack>
+              </Card>
+            )}
 
-        <div className="media-frame">
-          {!file && <p className="placeholder">한 사람 또는 두 사람이 전신으로 나오는 사진·짧은 영상(10초 이내 권장)을 선택하세요.</p>}
-          {file?.kind === 'video' && <video ref={videoRef} src={file.url} muted playsInline preload="auto" />}
-          {file?.kind === 'image' && <img ref={imgRef} src={file.url} alt={file.name} />}
-          <canvas ref={overlayRef} />
-        </div>
+            {frames.length > 1 && (
+              <Slider
+                label="프레임"
+                min={0}
+                max={frames.length - 1}
+                value={index}
+                onChange={(v: number) => setIndex(v)}
+                valueDisplay="text"
+                formatValue={(v) => `${v + 1} / ${frames.length}`}
+                width="100%"
+              />
+            )}
+            {frames.length > 0 && <Text type="supporting">감지된 사람 {frame?.bodies.length ?? 0}명</Text>}
 
-        {frames.length > 1 && (
-          <input
-            className="scrubber"
-            type="range"
-            min={0}
-            max={frames.length - 1}
-            value={index}
-            onChange={(e) => setIndex(Number(e.target.value))}
-            aria-label="프레임"
+            {analysis.length > 0 && (
+              <Grid columns={2} gap={2}>
+                {analysis.map((a, i) => (
+                  <BalanceReadout
+                    key={i}
+                    label={`사람 ${i + 1}`}
+                    color={cssVar(PERSON[i % 2]!.token)}
+                    state={a.balance.state}
+                    rows={[
+                      ['정적 여유', formatMargin(a.balance.margin)],
+                      ['CoM 높이', `${(a.com.com.y * 100).toFixed(0)}cm`],
+                    ]}
+                  />
+                ))}
+              </Grid>
+            )}
+            {analysis.length > 0 && (
+              <BalanceMap
+                entries={analysis.map((a, i) => ({
+                  id: String(i),
+                  label: `사람 ${i + 1}`,
+                  color: cssVar(PERSON[i % 2]!.token),
+                  balance: a.balance,
+                }))}
+              />
+            )}
+            <NumberInput
+              label="체중(kg)"
+              description="질량중심 위치는 체중과 무관하고, 분절 비율만 사용합니다."
+              value={mass}
+              onChange={(v) => setMass(v || 70)}
+            />
+
+            <Collapsible trigger={<Text type="label">이 실험의 한계 (중요)</Text>} defaultIsOpen={false}>
+              <Stack gap={1}>
+                {LIMITS.map((l) => (
+                  <Text key={l} as="p" color="secondary">
+                    · {l}
+                  </Text>
+                ))}
+              </Stack>
+            </Collapsible>
+          </Stack>
+        </LayoutPanel>
+      }
+      header={
+        <LayoutHeader hasDivider>
+          <Toolbar
+            label="시점"
+            endContent={
+              <SegmentedControl label="카메라 시점" value={view} onChange={(v) => setView(v as ViewPreset)}>
+                <SegmentedControlItem value="back" label="카메라 쪽" />
+                <SegmentedControlItem value="side" label="측면" />
+                <SegmentedControlItem value="top" label="위" />
+              </SegmentedControl>
+            }
           />
-        )}
-        {frames.length > 0 && (
-          <p className="muted small">
-            프레임 {index + 1}/{frames.length} · 감지된 사람 {frame?.bodies.length ?? 0}명
-          </p>
-        )}
-
-        <details className="limits">
-          <summary>이 실험의 한계 (중요)</summary>
-          <ul>
-            <li>카메라 한 대로 깊이를 "추측"하므로 앞뒤 방향 오차가 큽니다. 무게중심의 앞뒤 위치는 특히 믿기 어렵습니다.</li>
-            <li>MediaPipe는 사람마다 자기 골반을 원점으로 좌표를 주기 때문에, 두 사람의 앞뒤 거리 관계가 사라집니다(좌우만 2D로 추정해 벌려 놓음).</li>
-            <li>유도처럼 두 사람이 엉켜 가려지는 장면에서는 관절이 뒤바뀌거나 사라지기 쉽습니다.</li>
-            <li>바닥 높이를 모르므로 가장 낮은 발을 매트에 붙입니다. 공중 동작에서는 높이가 틀립니다.</li>
-          </ul>
-        </details>
-      </section>
-
-      <section className="video-pose__3d">
-        <div className="viewer__stage">
+        </LayoutHeader>
+      }
+      content={
+        <LayoutContent padding={0} isScrollable={false}>
           <Stage view={view}>
             {analysis.map((a, i) => (
               <group key={i}>
-                <Figure points={a.points} color={PERSON_COLORS[i % 2]!.gi} xray />
-                <BalanceOverlay com={a.com} balance={a.balance} color={PERSON_COLORS[i % 2]!.analysis} showXcom={false} />
+                <Figure points={a.points} color={PERSON[i % 2]!.gi} xray />
+                <BalanceOverlay
+                  com={a.com}
+                  balance={a.balance}
+                  color={resolved[PERSON[i % 2]!.token]}
+                  showXcom={false}
+                />
               </group>
             ))}
           </Stage>
-          <div className="view-switch" role="group" aria-label="카메라 시점">
-            {(
-              [
-                ['back', '카메라 쪽'],
-                ['side', '측면'],
-                ['top', '위'],
-              ] as const
-            ).map(([v, label]) => (
-              <button key={v} className={view === v ? 'is-active' : ''} onClick={() => setView(v)}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="readouts">
-          {analysis.map((a, i) => (
-            <div key={i} className="readout" style={{ '--actor': PERSON_COLORS[i % 2]!.analysis } as React.CSSProperties}>
-              <div className="readout__head">
-                <span className="dot" />
-                <b>사람 {i + 1}</b>
-                <span className={`state state--${a.balance.state}`}>{BALANCE_STATE_LABEL[a.balance.state]}</span>
-              </div>
-              <dl>
-                <dt>정적 여유</dt>
-                <dd>{Number.isFinite(a.balance.margin) ? `${(a.balance.margin * 100).toFixed(1)}cm` : '—'}</dd>
-                <dt>CoM 높이</dt>
-                <dd>{(a.com.com.y * 100).toFixed(0)}cm</dd>
-              </dl>
-            </div>
-          ))}
-        </div>
-        {analysis.length > 0 && (
-          <BalanceMap entries={analysis.map((a, i) => ({ id: String(i), label: `사람 ${i + 1}`, color: PERSON_COLORS[i % 2]!.analysis, balance: a.balance }))} />
-        )}
-        <label className="mass">
-          체중(kg) <input type="number" min={30} max={150} value={mass} onChange={(e) => setMass(Number(e.target.value) || 70)} />
-          <span className="muted small">질량중심 위치는 체중과 무관하고, 비율만 사용합니다.</span>
-        </label>
-      </section>
-    </div>
+        </LayoutContent>
+      }
+    />
   );
 }
+
+const LIMITS = [
+  '카메라 한 대로 깊이를 "추측"하므로 앞뒤 방향 오차가 큽니다. 무게중심의 앞뒤 위치는 특히 믿기 어렵습니다.',
+  'MediaPipe는 사람마다 자기 골반을 원점으로 좌표를 주기 때문에, 두 사람의 앞뒤 거리 관계가 사라집니다(좌우만 2D로 추정해 벌려 놓음).',
+  '유도처럼 두 사람이 엉켜 가려지는 장면에서는 관절이 뒤바뀌거나 사라지기 쉽습니다.',
+  '바닥 높이를 모르므로 가장 낮은 발을 매트에 붙입니다. 공중 동작에서는 높이가 틀립니다.',
+];
 
 function StatusLine({ status }: { status: Status }) {
   switch (status.kind) {
     case 'idle':
       return null;
     case 'loading':
-      return <p className="status">{status.message}</p>;
+      return <ProgressBar label={status.message} isIndeterminate />;
     case 'running':
-      return (
-        <p className="status">
-          분석 중… {Math.round(status.progress * 100)}%
-          <progress value={status.progress} max={1} />
-        </p>
-      );
+      return <ProgressBar label="분석 중" value={status.progress * 100} hasValueLabel />;
     case 'done':
-      return <p className="status status--ok">완료</p>;
+      return <Banner status="success" title="분석 완료" collapsible={false} />;
     case 'error':
-      return <p className="status status--error">오류: {status.message}</p>;
+      return <Banner status="error" title="분석하지 못했습니다" description={status.message} collapsible={false} />;
   }
 }
