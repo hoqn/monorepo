@@ -74,12 +74,30 @@ export const OSOTO_GARI: TechniqueAnimation = {
       },
     },
     {
+      // 경유점: 후리는 다리가 우케 오른다리 "바깥"을 지나 앞으로 나가도록 (직선 보간이면 두 다리 사이를 관통한다)
+      t: 1.55,
+      tori: {
+        root: { pos: [0.34, 0.87, 0.06], yaw: -8, pitch: 11.5, roll: -5 },
+        torso: { flex: 9, side: 0, twist: -5 },
+        head: { flex: 12.5, twist: 0 },
+        feet: { L: { at: [0.36, 0.07, 0.17] }, R: { at: [0.42, 0.15, 0.22] } },
+        hands: RIGHT_GRIP,
+      },
+      uke: {
+        root: { pos: [0.09, 0.87, 0.41], yaw: 180, pitch: -12, roll: 7 },
+        torso: { flex: -7.6, side: 3.7, twist: 0 },
+        head: { flex: -3.3, twist: 0 },
+        feet: { R: { at: [0.13, 0.07, 0.25] }, L: { at: [-0.145, 0.09, 0.39] } },
+        hands: RIGHT_GRIP,
+      },
+    },
+    {
       t: 1.75,
       tori: {
         root: { pos: [0.37, 0.87, 0.07], yaw: -8, pitch: 15, roll: -6 },
         torso: { flex: 10, side: 0, twist: -5 },
         head: { flex: 15, twist: 0 },
-        feet: { L: { at: [0.36, 0.07, 0.17] }, R: { at: [0.2, 0.35, 0.55] } },
+        feet: { L: { at: [0.36, 0.07, 0.17] }, R: { at: [0.34, 0.22, 0.62] } },
         hands: RIGHT_GRIP,
       },
       uke: {
@@ -91,19 +109,37 @@ export const OSOTO_GARI: TechniqueAnimation = {
       },
     },
     {
+      // 경유점: 후릴 때 다리를 편 채 시계추처럼 아래를 지나간다 (직선 보간이면 무릎이 접혀 우케 엉덩이로 파고든다)
+      t: 1.92,
+      tori: {
+        root: { pos: [0.37, 0.87, 0.09], yaw: -8, pitch: 26, roll: -6 },
+        torso: { flex: 12.8, side: 0, twist: -5 },
+        head: { flex: 18, twist: 0 },
+        feet: { L: { at: [0.36, 0.07, 0.17] }, R: { at: [0.34, 0.12, 0.22] } },
+        hands: RIGHT_GRIP,
+      },
+      uke: {
+        root: { pos: [0.11, 0.81, 0.46], yaw: 180, pitch: -25, roll: 9 },
+        torso: { flex: -7.7, side: 3.7, twist: 0 },
+        head: { flex: 5, twist: 0 },
+        feet: { R: { at: [0.15, 0.2, 0.16] }, L: { at: [-0.12, 0.17, 0.35] } },
+        hands: RIGHT_GRIP,
+      },
+    },
+    {
       t: 2.1,
       tori: {
         root: { pos: [0.37, 0.86, 0.1], yaw: -8, pitch: 35, roll: -6 },
         torso: { flex: 15, side: 0, twist: -5 },
         head: { flex: 20, twist: 0 },
-        feet: { L: { at: [0.36, 0.07, 0.17] }, R: { at: [0.22, 0.7, -0.25] } },
+        feet: { L: { at: [0.36, 0.07, 0.17] }, R: { at: [0.24, 0.6, -0.6] } },
         hands: RIGHT_GRIP,
       },
       uke: {
         root: { pos: [0.13, 0.72, 0.5], yaw: 180, pitch: -38, roll: 10 },
         torso: { flex: -5, side: 3, twist: 0 },
         head: { flex: 20, twist: 0 },
-        feet: { R: { at: [0.16, 0.45, 0.05] }, L: { at: [-0.1, 0.22, 0.32] } },
+        feet: { R: { at: [0.12, 0.4, 0.2] }, L: { at: [-0.1, 0.22, 0.32] } },
         hands: RIGHT_GRIP,
       },
     },

@@ -18,6 +18,8 @@ export interface Phase {
   description: string;
   /** 이 단계에서 눈여겨볼 포인트 */
   cues: string[];
+  /** 겹침을 풀 때 동작을 주도하는 쪽(덜 밀리는 쪽). 생략하면 토리 */
+  contactLead?: 'tori' | 'uke';
 }
 
 export interface TechniqueAnimation {

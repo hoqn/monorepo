@@ -126,6 +126,8 @@ class BodySolver {
   constructor(
     readonly p: BodyPoints,
     groundY: number,
+    /** 동작을 주도하는 쪽이면 작게: 겹침이 생기면 상대가 더 많이 밀려난다 */
+    private readonly yieldScale = 1,
   ) {
     for (const s of ['L', 'R'] as const) {
       const grounded = [p[`heel${s}`], p[`toe${s}`]].some((v) => v.y - groundY <= CONTACT_HEIGHT);
@@ -137,8 +139,8 @@ class BodySolver {
   }
 
   invMass(n: PointName): number {
-    if (TORSO_SET.has(n)) return this.torsoInvMass;
-    return this.pinned.has(n) ? 0 : 1;
+    if (TORSO_SET.has(n)) return this.torsoInvMass * this.yieldScale;
+    return this.pinned.has(n) ? 0 : this.yieldScale;
   }
 
   /** 점 n을 delta만큼 옮긴다. 몸통 점이면 몸통 전체를 옮긴다 */
@@ -191,9 +193,23 @@ const TOUCH = 0.025;
  * a, b의 점을 제자리에서 고쳐 겹침을 푼다.
  * 반환값의 contacts는 보정 후 실제로 맞닿은 지점들이다.
  */
-export function resolveContacts(a: BodyPoints, b: BodyPoints, groundY = 0): ContactResult {
-  const sa = new BodySolver(a, groundY);
-  const sb = new BodySolver(b, groundY);
+export interface ContactOptions {
+  groundY?: number;
+  /**
+   * 동작을 주도하는 쪽. 기술에서는 대개 던지는 사람(토리)이다.
+   * 후리기처럼 일부러 다리를 상대 다리에 부딪히는 순간, 깊게 겹친 곳을 "가까운 쪽으로" 풀면
+   * 주도하는 다리가 엉뚱하게 바깥으로 빠진다. 주도하는 쪽을 무겁게 두면 상대(우케)가 밀려나
+   * "후려서 쓸어 낸다"는 실제 인과에 맞게 풀린다.
+   */
+  lead?: 'a' | 'b';
+}
+
+/** 주도하는 쪽이 밀리는 비율 (상대 대비) */
+const LEAD_YIELD = 0.2;
+
+export function resolveContacts(a: BodyPoints, b: BodyPoints, { groundY = 0, lead }: ContactOptions = {}): ContactResult {
+  const sa = new BodySolver(a, groundY, lead === 'a' ? LEAD_YIELD : 1);
+  const sb = new BodySolver(b, groundY, lead === 'b' ? LEAD_YIELD : 1);
   const followerBase = FOLLOWERS.map(([parent]) => [a[parent].clone(), b[parent].clone()] as const);
 
   let maxPenetrationBefore = 0;

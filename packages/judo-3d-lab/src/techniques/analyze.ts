@@ -3,7 +3,7 @@ import { combinedCom, computeCom, type ComResult } from '../body/anthropometry';
 import { analyzeBalance, type BalanceResult } from '../body/balance';
 import { resolveContacts, type ContactResult } from '../body/contact';
 import { resolvePair, type ResolvedBody } from '../body/rig';
-import { duration, sampleTechnique, type TechniqueAnimation } from './timeline';
+import { duration, phaseAt, sampleTechnique, type TechniqueAnimation } from './timeline';
 
 export interface ActorFrame {
   body: ResolvedBody;
@@ -32,7 +32,8 @@ const VELOCITY_DT = 1 / 60;
 function resolveAt(tech: TechniqueAnimation, t: number, opts: AnalyzeOptions) {
   const { tori, uke } = sampleTechnique(tech, t);
   const bodies = resolvePair([tech.actors.tori, tech.actors.uke], [tori, uke]);
-  const contact = opts.contacts === false ? null : resolveContacts(bodies[0].points, bodies[1].points);
+  const lead = (phaseAt(tech, t)?.contactLead ?? 'tori') === 'tori' ? 'a' : 'b';
+  const contact = opts.contacts === false ? null : resolveContacts(bodies[0].points, bodies[1].points, { lead });
   return [bodies[0], bodies[1], contact] as const;
 }
 
