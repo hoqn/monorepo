@@ -1,22 +1,18 @@
 import { Banner } from '@astryxdesign/core/Banner';
-import { BottomSheet } from '@astryxdesign/core/BottomSheet';
-import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useMediaQuery } from '@astryxdesign/core/hooks';
-import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
-import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
 import { useMemo, useState } from 'react';
 import { computeCom } from '../body/anthropometry';
 import { analyzeBalance } from '../body/balance';
 import { resolveSolo, type ActorDef, type PoseSpec } from '../body/rig';
 import { BalanceMap } from '../components/BalanceMap';
 import { BalanceReadout, formatMargin } from '../components/BalanceReadout';
+import { Workspace } from '../components/Workspace';
 import { BalanceOverlay } from '../scene/BalanceOverlay';
 import { Figure } from '../scene/Figure';
 import { Stage, VIEW_LABEL, type ViewPreset } from '../scene/Stage';
@@ -152,19 +148,12 @@ function toPose(p: Params): PoseSpec {
   };
 }
 
-/**
- * 반응형 계약
- *   >1024  가운데 3D | 오른쪽 조절 패널 360
- *   <=1024 조절 패널이 BottomSheet로 (useMediaQuery), 툴바의 "자세 조절" 버튼으로 연다
- */
 export function PostureSandbox() {
   const [params, setParams] = useState<Params>(PRESETS.shizentai!.p);
   const [preset, setPreset] = useState<string | null>('shizentai');
   const [view, setView] = useState<ViewPreset>('side');
   const [viewNonce, setViewNonce] = useState(0);
   const [xray, setXray] = useState(true);
-  const [isSheetOpen, setSheetOpen] = useState(false);
-  const isNarrow = useMediaQuery('(max-width: 1024px)');
   const { tori: comColor } = useResolvedColors(['tori'] as const);
 
   const result = useMemo(() => {
@@ -181,40 +170,50 @@ export function PostureSandbox() {
 
   const worstReach = Math.max(...Object.values(result.body.reachError));
 
+  // 프리셋·시점·반투명은 바로바로 바꿔 보므로 위 툴바에 항상 둔다
+  const controls = (
+    <Stack direction="horizontal" gap={3} align="center" justify="between" wrap="wrap">
+      <Stack direction="horizontal" gap={2} align="center" isScrollable>
+        <ToggleButtonGroup
+          label="자세 프리셋"
+          type="single"
+          size="sm"
+          value={preset}
+          onChange={(v) => {
+            const id = v as string | null;
+            if (!id) return;
+            setPreset(id);
+            setParams(PRESETS[id]!.p);
+          }}
+        >
+          {Object.entries(PRESETS).map(([id, pr]) => (
+            <ToggleButton key={id} value={id} label={pr.label}>
+              {pr.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <ToggleButton size="sm" label="반투명 몸 + 분절별 질량중심" isPressed={xray} onPressedChange={setXray}>
+          반투명
+        </ToggleButton>
+      </Stack>
+      <SegmentedControl
+        label="카메라 시점"
+        size="sm"
+        value={view}
+        onChange={(v) => {
+          setView(v as ViewPreset);
+          setViewNonce((n) => n + 1);
+        }}
+      >
+        {(['side', 'front', 'top'] as const).map((v) => (
+          <SegmentedControlItem key={v} value={v} label={v === 'front' ? '뒤' : VIEW_LABEL[v]} />
+        ))}
+      </SegmentedControl>
+    </Stack>
+  );
+
   const panel = (
     <Stack gap={4}>
-      <Stack gap={1}>
-        <Text type="supporting">실험 2</Text>
-        <Heading level={2}>자세와 무게중심</Heading>
-        <Text color="secondary">
-          슬라이더로 자세를 바꾸면 분절 질량 분포(de Leva 1996)로 계산한 질량중심과 기저면이 즉시 갱신됩니다. 발은
-          바닥에 고정되고 무릎·팔꿈치는 IK로 따라옵니다.
-        </Text>
-      </Stack>
-
-      <Stack gap={2}>
-        <Text type="label">자세 프리셋</Text>
-        <Stack direction="horizontal" gap={1.5} wrap="wrap">
-          {Object.entries(PRESETS).map(([id, pr]) => (
-            <Button
-              key={id}
-              size="sm"
-              label={pr.label}
-              variant={preset === id ? 'primary' : 'secondary'}
-              onClick={() => {
-                setPreset(id);
-                setParams(pr.p);
-              }}
-            />
-          ))}
-        </Stack>
-        {preset && (
-          <Card variant="muted">
-            <Text>{PRESETS[preset]!.note}</Text>
-          </Card>
-        )}
-      </Stack>
-
       <BalanceReadout
         label="균형"
         color={cssVar('tori')}
@@ -227,6 +226,11 @@ export function PostureSandbox() {
           ],
         ]}
       />
+      {preset && (
+        <Card variant="muted">
+          <Text>{PRESETS[preset]!.note}</Text>
+        </Card>
+      )}
       {worstReach > 0.005 && (
         <Banner
           status="warning"
@@ -235,12 +239,6 @@ export function PostureSandbox() {
           collapsible={false}
         />
       )}
-
-      <BalanceMap
-        entries={[{ id: 'me', label: '나', color: cssVar('tori'), balance: result.balance }]}
-        extent={1.0}
-        center={{ x: 0, y: 0 }}
-      />
 
       <Stack gap={3}>
         <Text type="label">자세 조절</Text>
@@ -258,66 +256,42 @@ export function PostureSandbox() {
             width="100%"
           />
         ))}
-        <Switch label="반투명 몸 + 분절별 질량중심" value={xray} onChange={setXray} />
+      </Stack>
+
+      <BalanceMap
+        entries={[{ id: 'me', label: '나', color: cssVar('tori'), balance: result.balance }]}
+        extent={1.0}
+        center={{ x: 0, y: 0 }}
+      />
+
+      <Stack gap={1}>
+        <Text type="supporting">실험 2</Text>
+        <Heading level={2}>자세와 무게중심</Heading>
+        <Text color="secondary">
+          슬라이더로 자세를 바꾸면 분절 질량 분포(de Leva 1996)로 계산한 질량중심과 기저면이 즉시 갱신됩니다. 발은
+          바닥에 고정되고 무릎·팔꿈치는 IK로 따라옵니다.
+        </Text>
       </Stack>
     </Stack>
   );
 
-  // BottomSheet는 Layout의 content 슬롯과 섞이지 않게 Layout 바깥 형제로 둔다
   return (
-    <>
-      <Layout
-        header={
-          <LayoutHeader hasDivider>
-            <Toolbar
-              label="시점"
-              endContent={
-                <>
-                  <SegmentedControl
-                    label="카메라 시점"
-                    value={view}
-                    onChange={(v) => {
-                      setView(v as ViewPreset);
-                      setViewNonce((n) => n + 1);
-                    }}
-                  >
-                    {(['side', 'front', 'top'] as const).map((v) => (
-                      <SegmentedControlItem key={v} value={v} label={v === 'front' ? '뒤' : VIEW_LABEL[v]} />
-                    ))}
-                  </SegmentedControl>
-                  {isNarrow && <Button label="자세 조절" variant="primary" onClick={() => setSheetOpen(true)} />}
-                </>
-              }
-            />
-          </LayoutHeader>
-        }
-        content={
-          <LayoutContent padding={0} isScrollable={false}>
-            <Stage view={view} viewNonce={viewNonce}>
-              <Figure points={result.body.points} color={ACTOR.color} xray={xray} />
-              <BalanceOverlay
-                com={result.com}
-                balance={result.balance}
-                color={comColor}
-                showSegments={xray}
-                showXcom={false}
-              />
-            </Stage>
-          </LayoutContent>
-        }
-        end={
-          isNarrow ? undefined : (
-            <LayoutPanel width={360} hasDivider label="자세 조절">
-              {panel}
-            </LayoutPanel>
-          )
-        }
-      />
-      {isNarrow && (
-        <BottomSheet label="자세 조절" isOpen={isSheetOpen} onOpenChange={setSheetOpen}>
-          {panel}
-        </BottomSheet>
-      )}
-    </>
+    <Workspace
+      controls={controls}
+      stage={
+        <Stage view={view} viewNonce={viewNonce}>
+          <Figure points={result.body.points} color={ACTOR.color} xray={xray} />
+          <BalanceOverlay
+            com={result.com}
+            balance={result.balance}
+            color={comColor}
+            showSegments={xray}
+            showXcom={false}
+          />
+        </Stage>
+      }
+      panel={panel}
+      panelLabel="자세 조절"
+    />
   );
 }

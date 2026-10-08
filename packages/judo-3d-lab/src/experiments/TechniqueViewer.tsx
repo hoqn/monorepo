@@ -1,19 +1,15 @@
-import { BottomSheet } from '@astryxdesign/core/BottomSheet';
-import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { CheckboxList, CheckboxListItem } from '@astryxdesign/core/CheckboxList';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { Layout, LayoutContent, LayoutFooter, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
-import { Toolbar } from '@astryxdesign/core/Toolbar';
+import { ToggleButton, ToggleButtonGroup } from '@astryxdesign/core/ToggleButton';
 import { Line } from '@react-three/drei';
 import { Pause, Play } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -22,6 +18,7 @@ import type { Contact } from '../body/contact';
 import { BalanceMap } from '../components/BalanceMap';
 import { BalanceReadout, formatMargin } from '../components/BalanceReadout';
 import { StabilityChart } from '../components/StabilityChart';
+import { Workspace } from '../components/Workspace';
 import { BalanceOverlay, ComTrail } from '../scene/BalanceOverlay';
 import { Figure } from '../scene/Figure';
 import { Stage, VIEW_LABEL, type ViewPreset } from '../scene/Stage';
@@ -33,25 +30,36 @@ import { cssVar, GI_COLOR, useResolvedColors } from '../ui/tokens';
 const SPEEDS = ['0.1', '0.25', '0.5', '1'] as const;
 type Speed = (typeof SPEEDS)[number];
 
-const VIEW_OPTIONS = (Object.keys(VIEW_LABEL) as (keyof typeof VIEW_LABEL)[]).map((v) => ({
-  value: v,
-  label: VIEW_LABEL[v],
-}));
-
-const TOGGLES = [
-  ['tori', '토리'],
-  ['uke', '우케'],
-  ['xray', '반투명 몸'],
-  ['com', '질량중심'],
-  ['support', '기저면'],
-  ['xcom', 'XCoM'],
-  ['trail', '질량중심 궤적'],
-  ['segments', '분절별 질량중심'],
-  ['pair', '두 사람 합성 질량중심'],
-  ['contacts', '겹침 보정'],
-  ['contactMarks', '접촉 지점'],
+/** 표시 토글. 자주 켜고 끄므로 3D 바로 위 툴바에 묶음별로 항상 보이게 둔다 */
+const TOGGLE_GROUPS = [
+  {
+    label: '사람',
+    items: [
+      ['tori', '토리'],
+      ['uke', '우케'],
+      ['xray', '반투명'],
+    ],
+  },
+  {
+    label: '균형 분석',
+    items: [
+      ['com', '질량중심'],
+      ['support', '기저면'],
+      ['xcom', 'XCoM'],
+      ['trail', '궤적'],
+      ['segments', '분절'],
+      ['pair', '두 사람 합성'],
+    ],
+  },
+  {
+    label: '접촉',
+    items: [
+      ['contacts', '겹침 보정'],
+      ['contactMarks', '접촉점'],
+    ],
+  },
 ] as const;
-type ToggleKey = (typeof TOGGLES)[number][0];
+type ToggleKey = (typeof TOGGLE_GROUPS)[number]['items'][number][0];
 const DEFAULT_ON: ToggleKey[] = ['tori', 'uke', 'com', 'support', 'xcom', 'trail', 'contacts', 'contactMarks'];
 
 function initialTime(): number {
@@ -64,13 +72,6 @@ function initialTech() {
   return TECHNIQUES.find((x) => x.id === id) ?? TECHNIQUES[0]!;
 }
 
-/**
- * 반응형 계약
- *   >1024  가운데 3D | 오른쪽 분석 패널 360
- *   <=1024 분석 패널이 BottomSheet로 (useMediaQuery), 툴바의 "분석" 버튼으로 연다.
- *          툴바의 기술·시점 SegmentedControl은 폭이 모자라므로 Selector로 바뀐다
- *   타임라인(footer)은 모든 폭에서 3D 아래에 고정
- */
 export function TechniqueViewer() {
   const [tech, setTech] = useState(initialTech);
   const duration = techDuration(tech);
@@ -82,8 +83,6 @@ export function TechniqueViewer() {
   );
   const [viewNonce, setViewNonce] = useState(0);
   const [shown, setShown] = useState<string[]>(DEFAULT_ON);
-  const [isSheetOpen, setSheetOpen] = useState(false);
-  const isNarrow = useMediaQuery('(max-width: 1024px)');
   const show = (k: ToggleKey) => shown.includes(k);
 
   const opts = useMemo(() => ({ contacts: shown.includes('contacts') }), [shown]);
@@ -117,143 +116,126 @@ export function TechniqueViewer() {
     setT(v);
   };
 
-  const selectTech = (id: string) => {
-    setTech(TECHNIQUES.find((x) => x.id === id)!);
-    setT(0);
-    setPlaying(false);
-  };
-  const selectView = (v: string) => {
-    setView(v as ViewPreset);
-    setViewNonce((n) => n + 1);
-  };
-
-  const panel = (
-    <AnalysisPanel
-      tech={tech}
-      frame={frame}
-      phaseIndex={phase ? tech.phases.indexOf(phase) : -1}
-      shown={shown}
-      onShownChange={setShown}
-    />
+  const controls = (
+    <Stack gap={2}>
+      {/* 1행: 기술(탭) · 시점. 좁으면 줄바꿈되고, 탭은 가로로 스크롤된다 */}
+      <Stack direction="horizontal" gap={3} align="center" justify="between" wrap="wrap">
+        <TabList
+          value={tech.id}
+          onChange={(id) => {
+            setTech(TECHNIQUES.find((x) => x.id === id)!);
+            setT(0);
+            setPlaying(false);
+          }}
+        >
+          {TECHNIQUES.map((x) => (
+            <Tab key={x.id} value={x.id} label={x.koreanName} />
+          ))}
+        </TabList>
+        <SegmentedControl
+          label="카메라 시점"
+          size="sm"
+          value={view}
+          onChange={(v) => {
+            setView(v as ViewPreset);
+            setViewNonce((n) => n + 1);
+          }}
+        >
+          {(Object.keys(VIEW_LABEL) as (keyof typeof VIEW_LABEL)[]).map((v) => (
+            <SegmentedControlItem key={v} value={v} label={VIEW_LABEL[v]} />
+          ))}
+        </SegmentedControl>
+      </Stack>
+      {/* 2행: 표시 토글. 묶음 사이에 세로 구분선, 좁으면 가로 스크롤 */}
+      <Stack direction="horizontal" gap={2} align="center" isScrollable>
+        {TOGGLE_GROUPS.map((g, i) => (
+          <Stack key={g.label} direction="horizontal" gap={2} align="center">
+            {i > 0 && <Divider orientation="vertical" />}
+            <ToggleButtonGroup
+              label={g.label}
+              type="multiple"
+              size="sm"
+              value={shown.filter((k) => g.items.some(([key]) => key === k))}
+              onChange={(v) => {
+                const inGroup = new Set<string>(g.items.map(([key]) => key));
+                setShown([...shown.filter((k) => !inGroup.has(k)), ...(v as string[])]);
+              }}
+            >
+              {g.items.map(([key, label]) => (
+                <ToggleButton key={key} value={key} label={label}>
+                  {label}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Stack>
+        ))}
+      </Stack>
+    </Stack>
   );
 
-  // BottomSheet는 Layout의 content 슬롯과 섞이지 않게 Layout 바깥 형제로 둔다
-  return (
-    <>
-      <Layout
-        header={
-          <LayoutHeader hasDivider>
-            <Toolbar
-              label="기술과 시점"
-              startContent={
-                isNarrow ? (
-                  <Selector
-                    label="기술 선택"
-                    size="sm"
-                    value={tech.id}
-                    onChange={selectTech}
-                    options={TECHNIQUES.map((x) => ({ value: x.id, label: x.koreanName }))}
-                  />
-                ) : (
-                  <SegmentedControl label="기술 선택" value={tech.id} onChange={selectTech}>
-                    {TECHNIQUES.map((x) => (
-                      <SegmentedControlItem key={x.id} value={x.id} label={x.koreanName} />
-                    ))}
-                  </SegmentedControl>
-                )
-              }
-              endContent={
-                <>
-                  {isNarrow ? (
-                    <Selector label="카메라 시점" size="sm" value={view} onChange={selectView} options={VIEW_OPTIONS} />
-                  ) : (
-                    <SegmentedControl label="카메라 시점" value={view} onChange={selectView}>
-                      {VIEW_OPTIONS.map((o) => (
-                        <SegmentedControlItem key={o.value} value={o.value} label={o.label} />
-                      ))}
-                    </SegmentedControl>
-                  )}
-                  {isNarrow && <Button label="분석" size="sm" variant="primary" onClick={() => setSheetOpen(true)} />}
-                </>
-              }
-            />
-          </LayoutHeader>
-        }
-        content={
-          <LayoutContent padding={0} isScrollable={false}>
-            <TechniqueScene frame={frame} samples={samples} show={show} view={view} viewNonce={viewNonce} />
-          </LayoutContent>
-        }
-        footer={
-          <LayoutFooter hasDivider>
-            <Stack gap={2}>
-              <Stack direction="horizontal" gap={3} align="center" wrap="wrap">
-                <IconButton
-                  label={playing ? '일시정지' : '재생'}
-                  variant="primary"
-                  icon={playing ? <Pause size={16} /> : <Play size={16} />}
-                  onClick={() => setPlaying((p) => !p)}
-                />
-                <SegmentedControl label="재생 속도" size="sm" value={speed} onChange={(v) => setSpeed(v as Speed)}>
-                  {SPEEDS.map((s) => (
-                    <SegmentedControlItem key={s} value={s} label={`${s}×`} />
-                  ))}
-                </SegmentedControl>
-                {!isNarrow && (
-                  <SegmentedControl
-                    label="단계로 이동"
-                    size="sm"
-                    value={phase?.name ?? ''}
-                    onChange={(name) => {
-                      const p = tech.phases.find((x) => x.name === name);
-                      if (p) seek((p.start + p.end) / 2);
-                    }}
-                  >
-                    {tech.phases.map((p) => (
-                      <SegmentedControlItem key={p.name} value={p.name} label={p.label.split(' · ')[0]!} />
-                    ))}
-                  </SegmentedControl>
-                )}
-                <Text type="supporting" hasTabularNumbers>
-                  {shownT.toFixed(2)}s / {duration.toFixed(1)}s
-                </Text>
-              </Stack>
-              <Slider
-                label="시간"
-                isLabelHidden
-                min={0}
-                max={duration}
-                step={0.005}
-                value={shownT}
-                valueDisplay="none"
-                onChange={(v: number) => seek(v)}
-                width="100%"
-              />
-              <StabilityChart
-                samples={samples}
-                phases={tech.phases}
-                duration={duration}
-                t={shownT}
-                colors={{ tori: cssVar('tori'), uke: cssVar('uke') }}
-                onSeek={seek}
-              />
-            </Stack>
-          </LayoutFooter>
-        }
-        end={
-          isNarrow ? undefined : (
-            <LayoutPanel width={360} hasDivider label="분석">
-              {panel}
-            </LayoutPanel>
-          )
-        }
+  const timeline = (
+    <Stack gap={2}>
+      <Stack direction="horizontal" gap={3} align="center" wrap="wrap">
+        <IconButton
+          label={playing ? '일시정지' : '재생'}
+          variant="primary"
+          icon={playing ? <Pause size={16} /> : <Play size={16} />}
+          onClick={() => setPlaying((p) => !p)}
+        />
+        <SegmentedControl label="재생 속도" size="sm" value={speed} onChange={(v) => setSpeed(v as Speed)}>
+          {SPEEDS.map((s) => (
+            <SegmentedControlItem key={s} value={s} label={`${s}×`} />
+          ))}
+        </SegmentedControl>
+        <SegmentedControl
+          label="단계로 이동"
+          size="sm"
+          value={phase?.name ?? ''}
+          onChange={(name) => {
+            const p = tech.phases.find((x) => x.name === name);
+            if (p) seek((p.start + p.end) / 2);
+          }}
+        >
+          {tech.phases.map((p) => (
+            <SegmentedControlItem key={p.name} value={p.name} label={p.label.split(' · ')[0]!} />
+          ))}
+        </SegmentedControl>
+        <Text type="supporting" hasTabularNumbers>
+          {shownT.toFixed(2)}s / {duration.toFixed(1)}s
+        </Text>
+      </Stack>
+      <Slider
+        label="시간"
+        isLabelHidden
+        min={0}
+        max={duration}
+        step={0.005}
+        value={shownT}
+        valueDisplay="none"
+        onChange={(v: number) => seek(v)}
+        width="100%"
       />
-      {isNarrow && (
-        <BottomSheet label="분석" isOpen={isSheetOpen} onOpenChange={setSheetOpen}>
-          {panel}
-        </BottomSheet>
-      )}
-    </>
+      <StabilityChart
+        samples={samples}
+        phases={tech.phases}
+        duration={duration}
+        t={shownT}
+        colors={{ tori: cssVar('tori'), uke: cssVar('uke') }}
+        onSeek={seek}
+      />
+    </Stack>
+  );
+
+  return (
+    <Workspace
+      controls={controls}
+      stage={<TechniqueScene frame={frame} samples={samples} show={show} view={view} viewNonce={viewNonce} />}
+      footer={timeline}
+      panel={
+        <AnalysisPanel tech={tech} frame={frame} phaseIndex={phase ? tech.phases.indexOf(phase) : -1} shown={shown} />
+      }
+      panelLabel="분석"
+    />
   );
 }
 
@@ -356,32 +338,23 @@ function AnalysisPanel({
   frame,
   phaseIndex,
   shown,
-  onShownChange,
 }: {
   tech: TechniqueAnimation;
   frame: Frame;
   phaseIndex: number;
   shown: string[];
-  onShownChange: (v: string[]) => void;
 }) {
   const phase = tech.phases[phaseIndex];
   const showTori = shown.includes('tori');
   const showUke = shown.includes('uke');
   return (
     <Stack gap={4}>
-      <Stack gap={1}>
-        <Text type="supporting">
-          {tech.category} · {tech.japaneseName} · {tech.romaji}
-        </Text>
-        <Heading level={2}>{tech.koreanName}</Heading>
-        <Text color="secondary">{tech.summary}</Text>
-      </Stack>
-
+      {/* 재생·탐색 중 가장 자주 읽는 순서로: 지금 단계 → 두 사람 수치 → 맞닿은 곳 → 지도 → 기술 소개 */}
       {phase && (
         <Card variant="muted">
           <Stack gap={2}>
             <Text type="supporting">
-              {phase.name} · {phaseIndex + 1}/{tech.phases.length}
+              {tech.koreanName} · {phase.name} · {phaseIndex + 1}/{tech.phases.length}
             </Text>
             <Heading level={3}>{phase.label}</Heading>
             <Text>{phase.description}</Text>
@@ -397,6 +370,11 @@ function AnalysisPanel({
         </Card>
       )}
 
+      <Grid columns={2} gap={2}>
+        <ActorCard label="토리" color={cssVar('tori')} frame={frame.tori} />
+        <ActorCard label="우케" color={cssVar('uke')} frame={frame.uke} />
+      </Grid>
+
       {frame.contact && (
         <List header={<Text type="label">지금 맞닿은 곳 (토리 ↔ 우케)</Text>} density="compact" hasDividers>
           {frame.contact.contacts.length === 0 ? (
@@ -407,11 +385,6 @@ function AnalysisPanel({
         </List>
       )}
 
-      <Grid columns={2} gap={2}>
-        <ActorCard label="토리" color={cssVar('tori')} frame={frame.tori} />
-        <ActorCard label="우케" color={cssVar('uke')} frame={frame.uke} />
-      </Grid>
-
       <BalanceMap
         entries={[
           ...(showTori ? [{ id: 'tori', label: '토리', color: cssVar('tori'), balance: frame.tori.balance }] : []),
@@ -421,11 +394,13 @@ function AnalysisPanel({
         center={tech.mapCenter ?? { x: 0.15, y: 0.25 }}
       />
 
-      <CheckboxList label="표시" value={shown} onChange={onShownChange} density="compact">
-        {TOGGLES.map(([k, label]) => (
-          <CheckboxListItem key={k} value={k} label={label} />
-        ))}
-      </CheckboxList>
+      <Stack gap={1}>
+        <Text type="supporting">
+          {tech.category} · {tech.japaneseName} · {tech.romaji}
+        </Text>
+        <Heading level={2}>{tech.koreanName}</Heading>
+        <Text color="secondary">{tech.summary}</Text>
+      </Stack>
     </Stack>
   );
 }

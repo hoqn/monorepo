@@ -5,15 +5,12 @@ import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { PoseLandmarker } from '@mediapipe/tasks-vision';
 import wasmLoaderPath from '@mediapipe/tasks-vision/vision_wasm_internal.js?url';
 import wasmBinaryPath from '@mediapipe/tasks-vision/vision_wasm_internal.wasm?url';
@@ -25,6 +22,7 @@ import { estimateLateralOffsets, SKELETON_EDGES, worldLandmarksToBody, type Land
 import type { BodyPoints } from '../body/points';
 import { BalanceMap } from '../components/BalanceMap';
 import { BalanceReadout, formatMargin } from '../components/BalanceReadout';
+import { Workspace } from '../components/Workspace';
 import { BalanceOverlay } from '../scene/BalanceOverlay';
 import { Figure } from '../scene/Figure';
 import { Stage, type ViewPreset } from '../scene/Stage';
@@ -32,15 +30,15 @@ import { cssVar, GI_COLOR, useResolvedColors } from '../ui/tokens';
 
 const MODELS = {
   lite: {
-    label: 'Lite (빠름, ~6MB)',
+    label: 'Lite · 빠름',
     url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
   },
   full: {
-    label: 'Full (균형, ~9MB)',
+    label: 'Full · 균형',
     url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task',
   },
   heavy: {
-    label: 'Heavy (정확, ~30MB)',
+    label: 'Heavy · 정확',
     url: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/latest/pose_landmarker_heavy.task',
   },
 } as const;
@@ -226,147 +224,139 @@ export function VideoPose() {
   const fill = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' } as const;
 
   return (
-    <Layout
-      start={
-        <LayoutPanel width={460} hasDivider label="입력">
-          <Stack gap={4}>
-            <Stack gap={1}>
-              <Text type="supporting">실험 3</Text>
-              <Heading level={2}>영상 → 3D 자세 추출</Heading>
-              <Text color="secondary">
-                Google MediaPipe Pose Landmarker로 사진·영상에서 3D 관절 좌표를 추정하고, 실험 1·2와 같은 무게중심
-                분석을 돌립니다. 모든 처리는 브라우저 안에서만 이루어지며 파일은 업로드되지 않습니다.
-              </Text>
-            </Stack>
-
-            <FileInput
-              label="사진 또는 영상"
-              description="한 사람 또는 두 사람이 전신으로 나오는 사진이나 짧은 영상(10초 이내 권장)"
-              accept="video/*,image/*"
-              value={picked}
-              onChange={(f) => onFile(Array.isArray(f) ? (f[0] ?? null) : f)}
-            />
-            <Grid columns={file?.kind === 'video' ? 2 : 1} gap={2}>
-              <Selector
-                label="모델"
-                value={model}
-                onChange={(v) => setModel(v as ModelId)}
-                options={Object.entries(MODELS).map(([value, m]) => ({ value, label: m.label }))}
-              />
-              {file?.kind === 'video' && (
-                <Selector
-                  label="샘플링"
-                  value={String(fps)}
-                  onChange={(v) => setFps(Number(v))}
-                  options={[5, 10, 15, 30].map((f) => ({ value: String(f), label: `${f} fps` }))}
-                />
-              )}
-            </Grid>
-            <Button label="분석" variant="primary" isDisabled={!file} isLoading={isBusy} onClick={run} width="100%" />
-            <StatusLine status={status} />
-
-            {file && (
-              <Card padding={0}>
-                <Stack height={file.kind === 'video' ? 260 : 300} style={{ position: 'relative' }}>
-                  {file.kind === 'video' && (
-                    <video ref={videoRef} src={file.url} muted playsInline preload="auto" style={fill} />
-                  )}
-                  {file.kind === 'image' && <img ref={imgRef} src={file.url} alt={file.name} style={fill} />}
-                  <canvas ref={overlayRef} style={{ ...fill, pointerEvents: 'none' }} />
-                </Stack>
-              </Card>
-            )}
-
-            {frames.length > 1 && (
-              <Slider
-                label="프레임"
-                min={0}
-                max={frames.length - 1}
-                value={index}
-                onChange={(v: number) => setIndex(v)}
-                valueDisplay="text"
-                formatValue={(v) => `${v + 1} / ${frames.length}`}
-                width="100%"
-              />
-            )}
-            {frames.length > 0 && <Text type="supporting">감지된 사람 {frame?.bodies.length ?? 0}명</Text>}
-
-            {analysis.length > 0 && (
-              <Grid columns={2} gap={2}>
-                {analysis.map((a, i) => (
-                  <BalanceReadout
-                    key={i}
-                    label={`사람 ${i + 1}`}
-                    color={cssVar(PERSON[i % 2]!.token)}
-                    state={a.balance.state}
-                    rows={[
-                      ['정적 여유', formatMargin(a.balance.margin)],
-                      ['CoM 높이', `${(a.com.com.y * 100).toFixed(0)}cm`],
-                    ]}
-                  />
-                ))}
-              </Grid>
-            )}
-            {analysis.length > 0 && (
-              <BalanceMap
-                entries={analysis.map((a, i) => ({
-                  id: String(i),
-                  label: `사람 ${i + 1}`,
-                  color: cssVar(PERSON[i % 2]!.token),
-                  balance: a.balance,
-                }))}
-              />
-            )}
-            <NumberInput
-              label="체중(kg)"
-              description="질량중심 위치는 체중과 무관하고, 분절 비율만 사용합니다."
-              value={mass}
-              onChange={(v) => setMass(v || 70)}
-            />
-
-            <Collapsible trigger={<Text type="label">이 실험의 한계 (중요)</Text>} defaultIsOpen={false}>
-              <Stack gap={1}>
-                {LIMITS.map((l) => (
-                  <Text key={l} as="p" color="secondary">
-                    · {l}
-                  </Text>
-                ))}
-              </Stack>
-            </Collapsible>
+    <Workspace
+      controls={
+        <Stack direction="horizontal" justify="end">
+          <SegmentedControl label="카메라 시점" value={view} onChange={(v) => setView(v as ViewPreset)}>
+            <SegmentedControlItem value="back" label="카메라 쪽" />
+            <SegmentedControlItem value="side" label="측면" />
+            <SegmentedControlItem value="top" label="위" />
+          </SegmentedControl>
+        </Stack>
+      }
+      stage={
+        <Stage view={view}>
+          {analysis.map((a, i) => (
+            <group key={i}>
+              <Figure points={a.points} color={PERSON[i % 2]!.gi} xray />
+              <BalanceOverlay com={a.com} balance={a.balance} color={resolved[PERSON[i % 2]!.token]} showXcom={false} />
+            </group>
+          ))}
+        </Stage>
+      }
+      panel={
+        <Stack gap={4}>
+          <Stack gap={1}>
+            <Text type="supporting">실험 3</Text>
+            <Heading level={2}>영상 → 3D 자세 추출</Heading>
+            <Text color="secondary">
+              Google MediaPipe Pose Landmarker로 사진·영상에서 3D 관절 좌표를 추정하고, 실험 1·2와 같은 무게중심 분석을
+              돌립니다. 모든 처리는 브라우저 안에서만 이루어지며 파일은 업로드되지 않습니다.
+            </Text>
           </Stack>
-        </LayoutPanel>
-      }
-      header={
-        <LayoutHeader hasDivider>
-          <Toolbar
-            label="시점"
-            endContent={
-              <SegmentedControl label="카메라 시점" value={view} onChange={(v) => setView(v as ViewPreset)}>
-                <SegmentedControlItem value="back" label="카메라 쪽" />
-                <SegmentedControlItem value="side" label="측면" />
-                <SegmentedControlItem value="top" label="위" />
-              </SegmentedControl>
-            }
+
+          <FileInput
+            label="사진 또는 영상"
+            description="한 사람 또는 두 사람이 전신으로 나오는 사진이나 짧은 영상(10초 이내 권장)"
+            accept="video/*,image/*"
+            value={picked}
+            onChange={(f) => onFile(Array.isArray(f) ? (f[0] ?? null) : f)}
           />
-        </LayoutHeader>
-      }
-      content={
-        <LayoutContent padding={0} isScrollable={false}>
-          <Stage view={view}>
-            {analysis.map((a, i) => (
-              <group key={i}>
-                <Figure points={a.points} color={PERSON[i % 2]!.gi} xray />
-                <BalanceOverlay
-                  com={a.com}
-                  balance={a.balance}
-                  color={resolved[PERSON[i % 2]!.token]}
-                  showXcom={false}
+          <Stack gap={1}>
+            <Text type="label">모델</Text>
+            <SegmentedControl label="모델" layout="fill" value={model} onChange={(v) => setModel(v as ModelId)}>
+              {Object.entries(MODELS).map(([value, m]) => (
+                <SegmentedControlItem key={value} value={value} label={m.label} />
+              ))}
+            </SegmentedControl>
+          </Stack>
+          {file?.kind === 'video' && (
+            <Stack gap={1}>
+              <Text type="label">샘플링</Text>
+              <SegmentedControl label="샘플링" layout="fill" value={String(fps)} onChange={(v) => setFps(Number(v))}>
+                {[5, 10, 15, 30].map((f) => (
+                  <SegmentedControlItem key={f} value={String(f)} label={`${f} fps`} />
+                ))}
+              </SegmentedControl>
+            </Stack>
+          )}
+          <Button label="분석" variant="primary" isDisabled={!file} isLoading={isBusy} onClick={run} width="100%" />
+          <StatusLine status={status} />
+
+          {file && (
+            <Card padding={0}>
+              <Stack height={file.kind === 'video' ? 260 : 300} style={{ position: 'relative' }}>
+                {file.kind === 'video' && (
+                  <video ref={videoRef} src={file.url} muted playsInline preload="auto" style={fill} />
+                )}
+                {file.kind === 'image' && <img ref={imgRef} src={file.url} alt={file.name} style={fill} />}
+                <canvas ref={overlayRef} style={{ ...fill, pointerEvents: 'none' }} />
+              </Stack>
+            </Card>
+          )}
+
+          {frames.length > 1 && (
+            <Slider
+              label="프레임"
+              min={0}
+              max={frames.length - 1}
+              value={index}
+              onChange={(v: number) => setIndex(v)}
+              valueDisplay="text"
+              formatValue={(v) => `${v + 1} / ${frames.length}`}
+              width="100%"
+            />
+          )}
+          {frames.length > 0 && <Text type="supporting">감지된 사람 {frame?.bodies.length ?? 0}명</Text>}
+
+          {analysis.length > 0 && (
+            <Grid columns={2} gap={2}>
+              {analysis.map((a, i) => (
+                <BalanceReadout
+                  key={i}
+                  label={`사람 ${i + 1}`}
+                  color={cssVar(PERSON[i % 2]!.token)}
+                  state={a.balance.state}
+                  rows={[
+                    ['정적 여유', formatMargin(a.balance.margin)],
+                    ['CoM 높이', `${(a.com.com.y * 100).toFixed(0)}cm`],
+                  ]}
                 />
-              </group>
-            ))}
-          </Stage>
-        </LayoutContent>
+              ))}
+            </Grid>
+          )}
+          {analysis.length > 0 && (
+            <BalanceMap
+              entries={analysis.map((a, i) => ({
+                id: String(i),
+                label: `사람 ${i + 1}`,
+                color: cssVar(PERSON[i % 2]!.token),
+                balance: a.balance,
+              }))}
+            />
+          )}
+          <NumberInput
+            label="체중(kg)"
+            description="질량중심 위치는 체중과 무관하고, 분절 비율만 사용합니다."
+            value={mass}
+            onChange={(v) => setMass(v || 70)}
+          />
+
+          <Collapsible trigger={<Text type="label">이 실험의 한계 (중요)</Text>} defaultIsOpen={false}>
+            <Stack gap={1}>
+              {LIMITS.map((l) => (
+                <Text key={l} as="p" color="secondary">
+                  · {l}
+                </Text>
+              ))}
+            </Stack>
+          </Collapsible>
+        </Stack>
       }
+      panelLabel="입력"
+      panelSide="start"
+      panelWidth={460}
+      narrowFirst="panel"
     />
   );
 }
