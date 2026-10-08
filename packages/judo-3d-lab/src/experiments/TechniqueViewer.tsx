@@ -1,17 +1,21 @@
+import { Line } from '@react-three/drei';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Vector3 } from 'three';
 import { BALANCE_STATE_LABEL } from '../body/balance';
+import type { Contact } from '../body/contact';
 import { BalanceMap } from '../components/BalanceMap';
 import { StabilityChart } from '../components/StabilityChart';
 import { BalanceOverlay, ComTrail } from '../scene/BalanceOverlay';
 import { Figure } from '../scene/Figure';
 import { Stage, VIEW_LABEL, type ViewPreset } from '../scene/Stage';
 import { analyzeFrame, sampleTimeline, type ActorFrame } from '../techniques/analyze';
-import { OSOTO_GARI } from '../techniques/osoto-gari';
+import { TECHNIQUES } from '../techniques';
 import { duration as techDuration, phaseAt } from '../techniques/timeline';
 
-const TECH = OSOTO_GARI;
 /** 질량중심·기저면 표시 색 (도복 색과 구분되게) */
 const ANALYSIS_COLOR = { tori: '#e8590c', uke: '#7048e8' };
+const PAIR_COLOR = '#2b8a3e';
+const CONTACT_COLOR = '#f59f00';
 const SPEEDS = [0.1, 0.25, 0.5, 1] as const;
 
 function initialTime(): number {
@@ -19,17 +23,24 @@ function initialTime(): number {
   return q ? Number(q) || 0 : 0;
 }
 
+function initialTech() {
+  const id = new URLSearchParams(location.search).get('tech');
+  return TECHNIQUES.find((x) => x.id === id) ?? TECHNIQUES[0]!;
+}
+
 export function TechniqueViewer() {
+  const [TECH, setTech] = useState(initialTech);
   const duration = techDuration(TECH);
   const [t, setT] = useState(initialTime);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(0.25);
   const [view, setView] = useState<ViewPreset>(() => (new URLSearchParams(location.search).get('view') as ViewPreset) || 'side');
   const [viewNonce, setViewNonce] = useState(0);
-  const [show, setShow] = useState({ tori: true, uke: true, com: true, support: true, xcom: true, segments: false, trail: true, xray: false });
+  const [show, setShow] = useState({ tori: true, uke: true, com: true, support: true, xcom: true, segments: false, trail: true, xray: false, pair: false, contacts: true, contactMarks: true });
 
-  const samples = useMemo(() => sampleTimeline(TECH, 180), []);
-  const frame = useMemo(() => analyzeFrame(TECH, t), [t]);
+  const opts = useMemo(() => ({ contacts: show.contacts }), [show.contacts]);
+  const samples = useMemo(() => sampleTimeline(TECH, 180, opts), [TECH, opts]);
+  const frame = useMemo(() => analyzeFrame(TECH, t, opts), [TECH, t, opts]);
   const phase = phaseAt(TECH, t);
 
   const last = useRef<number | null>(null);
@@ -81,7 +92,24 @@ export function TechniqueViewer() {
               {show.uke && <ComTrail points={samples.map((s) => s.ukeCom)} color={ANALYSIS_COLOR.uke} />}
             </>
           )}
+          {show.pair && <PairCom position={frame.pairCom} />}
+          {show.contactMarks && frame.contact && <ContactMarks contacts={frame.contact.contacts} />}
         </Stage>
+        <div className="tech-switch" role="group" aria-label="기술 선택">
+          {TECHNIQUES.map((x) => (
+            <button
+              key={x.id}
+              className={x === TECH ? 'is-active' : ''}
+              onClick={() => {
+                setTech(x);
+                setT(0);
+                setPlaying(false);
+              }}
+            >
+              {x.koreanName}
+            </button>
+          ))}
+        </div>
         <div className="view-switch" role="group" aria-label="카메라 시점">
           {(Object.keys(VIEW_LABEL) as (keyof typeof VIEW_LABEL)[]).map((v) => (
             <button
@@ -102,7 +130,7 @@ export function TechniqueViewer() {
       <aside className="viewer__panel">
         <header className="tech-head">
           <p className="eyebrow">
-            {TECH.japaneseName} · {TECH.romaji}
+            {TECH.category} · {TECH.japaneseName} · {TECH.romaji}
           </p>
           <h2>{TECH.koreanName}</h2>
           <p className="muted">{TECH.summary}</p>
@@ -123,6 +151,21 @@ export function TechniqueViewer() {
           </article>
         )}
 
+        {frame.contact && (
+          <div className="contact-list">
+            <b>지금 맞닿은 곳</b> <span className="muted small">(토리 ↔ 우케)</span>
+            {frame.contact.contacts.length === 0 ? (
+              <p className="muted small">손 외에는 닿은 곳 없음</p>
+            ) : (
+              <ul>
+                {frame.contact.contacts.map((c, i) => (
+                  <li key={i}>{c.label}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         <div className="readouts">
           <ActorReadout label="토리" color={ANALYSIS_COLOR.tori} frame={frame.tori} />
           <ActorReadout label="우케" color={ANALYSIS_COLOR.uke} frame={frame.uke} />
@@ -134,7 +177,7 @@ export function TechniqueViewer() {
             ...(show.uke ? [{ id: 'uke', label: '우케', color: ANALYSIS_COLOR.uke, balance: frame.uke.balance }] : []),
           ]}
           extent={1.6}
-          center={{ x: 0.15, y: 0.25 }}
+          center={TECH.mapCenter ?? { x: 0.15, y: 0.25 }}
         />
 
         <fieldset className="toggles">
@@ -149,6 +192,9 @@ export function TechniqueViewer() {
               ['xcom', 'XCoM'],
               ['trail', '질량중심 궤적'],
               ['segments', '분절별 질량중심'],
+              ['pair', '두 사람 합성 질량중심'],
+              ['contacts', '겹침 보정'],
+              ['contactMarks', '접촉 지점'],
             ] as const
           ).map(([k, label]) => (
             <label key={k}>
@@ -214,6 +260,37 @@ export function TechniqueViewer() {
         />
       </section>
     </div>
+  );
+}
+
+/** 두 사람이 맞닿은 지점 */
+function ContactMarks({ contacts }: { contacts: Contact[] }) {
+  return (
+    <group>
+      {contacts.map((c, i) => (
+        <mesh key={i} position={c.position} renderOrder={11}>
+          <sphereGeometry args={[0.026, 16, 12]} />
+          <meshBasicMaterial color={CONTACT_COLOR} depthTest={false} transparent opacity={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** 잡기로 묶인 두 사람을 한 덩어리로 본 질량중심 (업어치기처럼 상대를 업을 때 중요) */
+function PairCom({ position }: { position: Vector3 }) {
+  return (
+    <group>
+      <mesh position={position} renderOrder={10}>
+        <octahedronGeometry args={[0.045]} />
+        <meshBasicMaterial color={PAIR_COLOR} depthTest={false} transparent />
+      </mesh>
+      <Line points={[position, new Vector3(position.x, 0.004, position.z)]} color={PAIR_COLOR} lineWidth={1.5} dashed dashSize={0.04} gapSize={0.03} depthTest={false} renderOrder={8} />
+      <mesh position={[position.x, 0.005, position.z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={8}>
+        <ringGeometry args={[0.03, 0.05, 4]} />
+        <meshBasicMaterial color={PAIR_COLOR} depthTest={false} transparent />
+      </mesh>
+    </group>
   );
 }
 

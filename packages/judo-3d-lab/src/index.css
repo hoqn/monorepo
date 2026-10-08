@@ -182,6 +182,19 @@ button {
   box-shadow: var(--shadow);
 }
 
+.tech-switch {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 4px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+
+.tech-switch button,
 .view-switch button,
 .speed button,
 .phase-jump button,
@@ -195,6 +208,7 @@ button {
   font-weight: 600;
 }
 
+.tech-switch button.is-active,
 .view-switch button.is-active,
 .speed button.is-active,
 .phase-jump button.is-active,
@@ -439,6 +453,19 @@ button {
   background: var(--mat-soft);
   border-radius: var(--radius);
   padding: 10px 12px;
+}
+
+.contact-list {
+  border: 1px solid var(--border);
+  border-left: 3px solid #f59f00;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.contact-list ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
 }
 
 /* ---------- 타임라인 ---------- */
@@ -736,5 +763,11 @@ button.primary:disabled {
 
   .phase-jump {
     display: none;
+  }
+
+  .tech-switch {
+    top: 56px;
+    left: 12px;
+    right: auto;
   }
 }

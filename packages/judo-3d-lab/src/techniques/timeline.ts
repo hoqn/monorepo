@@ -25,7 +25,11 @@ export interface TechniqueAnimation {
   koreanName: string;
   japaneseName: string;
   romaji: string;
+  /** 기술 분류 (예: 발기술) */
+  category: string;
   summary: string;
+  /** 위에서 본 기저면 지도의 중심(XZ). 두 사람이 움직이는 범위의 가운데 */
+  mapCenter?: { x: number; y: number };
   actors: { tori: ActorDef; uke: ActorDef };
   keyframes: Keyframe[];
   phases: Phase[];

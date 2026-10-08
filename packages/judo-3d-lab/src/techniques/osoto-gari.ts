@@ -1,39 +1,7 @@
-import type { ActorDef, PoseSpec } from '../body/rig';
+import { GRIP_PHASE, RIGHT_GRIP, TORI, TORI_SHIZENTAI as toriShizentai, UKE, UKE_SHIZENTAI as ukeShizentai } from './common';
 import type { TechniqueAnimation } from './timeline';
 
-/**
- * 오소토가리(大外刈, 밭다리후리기) — 오른쪽 기준.
- *
- * 수작업 키프레임이다. 실제 선수 데이터를 측정한 것이 아니라, KODOKAN 시범 영상을 보며
- * 단계별 대표 자세를 "기술 설명 단위"(골반 위치, 상체 숙임, 디딤발 위치, 잡기)로 옮겨 적었다.
- * 따라서 각도·위치는 교육용 근사치이며, 분석 결과도 그 정확도를 넘지 않는다.
- *
- * 배치: 토리(던지는 사람)는 처음에 +Z를 바라보고, 우케(받는 사람)는 −Z를 바라본다.
- * 토리의 왼쪽 = +X, 우케의 오른쪽 = +X.
- */
-
-const tori: ActorDef = { id: 'tori', name: '토리 (던지는 사람)', height: 1.75, mass: 75, color: '#f3f1ea' };
-const uke: ActorDef = { id: 'uke', name: '우케 (받는 사람)', height: 1.75, mass: 75, color: '#2f63b5' };
-
-/** 오른쪽 맞잡기: 오른손은 상대 왼깃, 왼손은 상대 오른소매 */
-const RIGHT_GRIP = { R: { grip: 'lapelL' }, L: { grip: 'sleeveR' } } as const satisfies PoseSpec['hands'];
-
-const toriShizentai: PoseSpec = {
-  root: { pos: [0, 0.89, -0.33], yaw: 0, pitch: 3, roll: 0 },
-  torso: { flex: 3, side: 0, twist: 0 },
-  head: { flex: 5, twist: 0 },
-  feet: { L: { at: [0.15, 0.07, -0.4] }, R: { at: [-0.13, 0.07, -0.25] } },
-  hands: RIGHT_GRIP,
-};
-
-const ukeShizentai: PoseSpec = {
-  root: { pos: [0, 0.89, 0.33], yaw: 180, pitch: 3, roll: 0 },
-  torso: { flex: 3, side: 0, twist: 0 },
-  head: { flex: 5, twist: 0 },
-  feet: { R: { at: [0.13, 0.07, 0.25] }, L: { at: [-0.15, 0.07, 0.4] } },
-  hands: RIGHT_GRIP,
-};
-
+/** 오소토가리(大外刈, 밭다리후리기). 좌표·데이터 원칙은 common.ts 참고 */
 export const OSOTO_GARI: TechniqueAnimation = {
   id: 'o-soto-gari',
   koreanName: '밭다리후리기',
@@ -41,16 +9,10 @@ export const OSOTO_GARI: TechniqueAnimation = {
   romaji: 'O-soto-gari',
   summary:
     '상대를 오른쪽 뒤 모서리로 무너뜨려 오른발 뒤꿈치에 체중을 싣게 한 뒤, 디딤발을 상대 오른발 옆에 놓고 오른다리로 상대의 오른다리를 뒤에서 후려 넘기는 발기술입니다.',
-  actors: { tori, uke },
+  category: '발기술 (足技)',
+  actors: { tori: TORI, uke: UKE },
   phases: [
-    {
-      start: 0,
-      end: 0.5,
-      name: '組み手',
-      label: '맞잡기 · 자연체',
-      description: '오른쪽 맞잡기. 두 사람 모두 질량중심이 두 발 사이(기저면) 한가운데에 있어 안정적이다.',
-      cues: ['오른손은 상대 왼깃, 왼손은 상대 오른소매', '무릎을 살짝 굽힌 자연체'],
-    },
+    { start: 0, end: 0.5, ...GRIP_PHASE },
     {
       start: 0.5,
       end: 1.3,

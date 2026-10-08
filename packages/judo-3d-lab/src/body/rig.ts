@@ -27,6 +27,8 @@ export type LimbTarget =
   | { at: Vec3 }
   /** 자기 골반 기준(yaw만 반영) 좌표. x = 왼쪽, y = 위, z = 앞 */
   | { local: Vec3 }
+  /** 자기 골반 기준(yaw·pitch·roll 모두 반영) 좌표. 몸이 뒤집혀도 함께 돈다 — 공중에 뜬 우케의 다리 등 */
+  | { body: Vec3 }
   /** 상대의 잡기 지점 */
   | { grip: GripPoint }
   /** 두 목표를 각각 푼 뒤 섞음(키프레임 보간용). 세 번째 값은 0→1 비율, 네 번째는 걸음처럼 들어 올리는 높이(m) */
@@ -155,11 +157,12 @@ export function gripPosition(body: ResolvedBody, grip: GripPoint): Vector3 {
 
 function resolveTarget(
   t: LimbTarget,
-  self: { pelvisPos: Vector3; yawRot: Quaternion },
+  self: { pelvisPos: Vector3; yawRot: Quaternion; pelvisRot: Quaternion },
   other: ResolvedBody | undefined,
 ): Vector3 {
   if ('at' in t) return v(...t.at);
   if ('local' in t) return v(...t.local).applyQuaternion(self.yawRot).add(self.pelvisPos);
+  if ('body' in t) return v(...t.body).applyQuaternion(self.pelvisRot).add(self.pelvisPos);
   if ('blend' in t) {
     const [a, b, u, lift = 0] = t.blend;
     const out = resolveTarget(a, self, other).lerp(resolveTarget(b, self, other), u);
@@ -203,7 +206,7 @@ function resolveTrunkAndLegs(actor: ActorDef, pose: PoseSpec): ResolvedBody {
   for (const sideKey of ['L', 'R'] as const) {
     const sign = sideKey === 'L' ? 1 : -1;
     const hip = sideKey === 'L' ? p.hipL : p.hipR;
-    const target = resolveTarget(pose.feet[sideKey], { pelvisPos, yawRot }, undefined);
+    const target = resolveTarget(pose.feet[sideKey], { pelvisPos, yawRot, pelvisRot }, undefined);
     // 무릎은 골반 앞쪽 + 살짝 바깥으로 굽는다
     const pole = pelvisForward.clone().addScaledVector(pelvisLateral, sign * 0.15);
     const { mid, end, error } = solveTwoBone(hip, target, DIM.thigh * s, DIM.shank * s, pole);
@@ -242,7 +245,7 @@ function resolveArm(body: ResolvedBody, pose: PoseSpec, side: Side, other: Resol
   const sign = side === 'L' ? 1 : -1;
   const shoulder = side === 'L' ? p.shoulderL : p.shoulderR;
   const yawRot = quatFromEulerDeg(pose.root.yaw, 0, 0);
-  const wristTarget = resolveTarget(pose.hands[side], { pelvisPos: p.pelvis, yawRot }, other);
+  const wristTarget = resolveTarget(pose.hands[side], { pelvisPos: p.pelvis, yawRot, pelvisRot: body.pelvisRot }, other);
 
   // 손목이 아니라 "주먹 중심"이 잡기 지점에 오도록, 목표에서 손 길이만큼 어깨 쪽으로 당긴다
   const toShoulder = new Vector3().subVectors(shoulder, wristTarget);

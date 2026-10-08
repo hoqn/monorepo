@@ -14,7 +14,13 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    // 모노레포의 다른 패키지(React 18)용 @types/react가 pnpm 공용 위치로 끌어올려지면
+    // @react-three/* 타입이 그것을 참조해 JSX 타입이 깨진다. 이 패키지의 React 19 타입으로 고정한다.
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"]
+    }
   },
   "include": ["src", "vite.config.ts"]
 }
